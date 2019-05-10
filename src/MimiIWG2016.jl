@@ -7,6 +7,7 @@ using MimiDICE2010
 using MimiFUND          # pinned to version 3.8.2 in Project.toml
 using ExcelReaders
 using StatsBase
+using Distributions
 using Interpolations
 using Dates
 using DelimitedFiles
@@ -34,7 +35,7 @@ include("core/main.jl")
 
 # Monte carlo support
 include("montecarlo/DICE_mcs.jl")
-# include("montecarlo/FUND_mcs.jl")
+include("montecarlo/FUND_mcs.jl")
 # include("montecarlo/PAGE_mcs.jl")
 include("montecarlo/run_scc_mcs.jl")
 
