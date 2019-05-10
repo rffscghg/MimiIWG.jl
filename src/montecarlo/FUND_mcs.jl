@@ -215,7 +215,7 @@ function run_fund_scc_mcs(mcs::Simulation = get_fund_mcs();
     run_sim(mcs;
         trials = trials, 
         models_to_run = 1,
-        output_dir = joinpath(output_dir, "saveMCS"),
+        output_dir = joinpath(output_dir, "saved_variables"),
         scenario_args = scenario_args,
         scenario_func = scenario_func,
         post_trial_func = post_trial_scc,
