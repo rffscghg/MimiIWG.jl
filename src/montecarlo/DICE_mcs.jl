@@ -62,7 +62,7 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
 
         base = get_dice_model(scenario_name)
         marginal = Model(base)
-        add_marginal_emissions!(marginal)
+        add_dice_marginal_emissions!(marginal)
 
         Mimi.build(base)
         Mimi.build(marginal)
@@ -81,7 +81,7 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
         for (idx, pyear) in enumerate(perturbation_years)
 
             # Call the marginal model with perturbations in each year
-            perturb_marginal_emissions!(marginal, pyear)
+            perturb_dice_marginal_emissions!(marginal, pyear)
             run(marginal)
 
             marg_consump = marginal[:neteconomy, :C]

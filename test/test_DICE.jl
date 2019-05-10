@@ -8,7 +8,13 @@
         m = get_model(DICE, scenario_names[1])
         run(m)
 
-        # run_scc_mcs(DICE, trials=2)
+        md = get_marginaldamages(DICE, scenario_names[1])
+
+        scc = get_scc(DICE, scenario_names[1])
+
+        tmp_dir = joinpath(@__DIR__, "tmp")
+        run_scc_mcs(DICE, trials=2, output_dir = tmp_dir)
+        rm(tmp_dir, recursive=true)
 
     end
 

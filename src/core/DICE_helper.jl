@@ -36,7 +36,7 @@ function get_dice_model(params::Dict)
 end 
 
 """
-    Returns a dictionary of parameter values for the specified scenario.
+    Returns a dictionary of DICE parameter values for the specified scenario.
 """
 function load_dice_scenario_params(scenario_name, scenario_file=nothing)
 
@@ -60,7 +60,7 @@ function load_dice_scenario_params(scenario_name, scenario_file=nothing)
     scenario_file = scenario_file==nothing ? iwg_dice_input_file : scenario_file
     f = openxl(scenario_file)
 
-    Y = readxl(f, "GDP!B2:F32")[:, idx] * inflate           # GDP
+    Y = readxl(f, "GDP!B2:F32")[:, idx] * dice_inflate      # GDP
     N = readxl(f, "Population!B2:F32")[:, idx]              # Population
     E = readxl(f, "IndustrialCO2!B2:F32")[:, idx]           # Industrial CO2
     El = readxl(f, "LandCO2!B2:F32")[:, idx]                # Land CO2 
@@ -103,12 +103,12 @@ end
     If no `year` is specified, will run for an emissions pulse in $_default_year.
     If no `discount` is specified, will return undiscounted marginal damages.
 """
-function get_dice_marginaldamages(scenario_name::Union{String, Nothing}=nothing, year::Union{Int, Nothing}=nothing, discount::Union{Float64, Nothing}=nothing) 
+function get_dice_marginaldamages(scenario_name::String, year::Int, discount::Float64) 
 
     # Check the emissions year
     _is_mid_year = false
     if year < dice_years[1] || year > dice_years[end]
-        error("$year is not a valid year; can only calculate marginal damages within the model's time index $years.")
+        error("$year is not a valid year; can only calculate marginal damages within the model's time index $dice_years.")
     elseif ! (year in dice_years)
         _is_mid_year = true         # boolean flag for if the desired year is in between values of the model's time index
         mid_year = year     # save the desired year to interpolate later
@@ -117,7 +117,7 @@ function get_dice_marginaldamages(scenario_name::Union{String, Nothing}=nothing,
 
     base = get_dice_model(scenario_name)
     marginal = Model(base)
-    add_marginal_emissions!(marginal, year)
+    add_dice_marginal_emissions!(marginal, year)
 
     run(base)
     run(marginal)
@@ -147,10 +147,10 @@ function get_dice_marginaldamages(scenario_name::Union{String, Nothing}=nothing,
 end
 
 """
-    Adds a marginal emissions component to the model. 
+    Adds a marginal emissions component to a DICE model. 
     If a year is specified, 1 GtC is added to emissions in that year.
 """
-function add_marginal_emissions!(m::Model, year=nothing)
+function add_dice_marginal_emissions!(m::Model, year=nothing)
     add_comp!(m, Mimi.adder, :marginalemission, before=:co2cycle)
     time = Mimi.dimension(m, :time)
     addem = zeros(length(time))
@@ -158,7 +158,7 @@ function add_marginal_emissions!(m::Model, year=nothing)
     if year != nothing 
         year_idx = findfirst(isequal(year), dice_years)
         if year_idx == nothing 
-            error("year $year provided to add_marginal_emissions! not in dice time dimension")
+            error("year $year provided to add_dice_marginal_emissions! not in dice time dimension")
         end 
         addem[year_idx] = 1.0
     end 
@@ -171,10 +171,10 @@ function add_marginal_emissions!(m::Model, year=nothing)
 end 
 
 """
-    Perturbs the marginal emissions in the given index year.
+    Perturbs the marginal emissions in the given index year for a DICE model.
     Marginal emissions component must already exist in the model.
 """
-function perturb_marginal_emissions!(marginal::Model, year::Int; comp_name=:marginalemission)
+function perturb_dice_marginal_emissions!(marginal::Model, year::Int; comp_name=:marginalemission)
 
     year_idx = findfirst(isequal(year), dice_years)
     ci = marginal.mi.components[comp_name]
@@ -187,7 +187,7 @@ function perturb_marginal_emissions!(marginal::Model, year::Int; comp_name=:marg
 end
 
 """
-    Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the model.
+    Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the IWG-DICE model.
     User must specify an IWG scenario name `scenario_name`.
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
