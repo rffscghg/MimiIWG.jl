@@ -5,6 +5,7 @@ using Mimi
 using Mimi
 using MimiDICE2010
 using MimiFUND          # pinned to version 3.8.2 in Project.toml
+using MimiPAGE2009
 using ExcelReaders
 using StatsBase
 using Distributions
@@ -19,18 +20,20 @@ include("core/constants.jl")
 # include("core/utils.jl)
 
 # IWG modified components
-# Mimi.load_comps(joinpath(@__DIR__, "components"))     # Need to fix this function in Mimi, then won't need to include each component file separately
 include("components/IWG_DICE_co2cycle.jl")
 include("components/IWG_DICE_radiativeforcing.jl")
 include("components/IWG_DICE_climatedynamics.jl")
 include("components/IWG_DICE_neteconomy.jl")
 include("components/IWG_FUND_impactsealevelrise.jl")
 include("components/IWG_FUND_roebakerclimatesensitivity.jl")
+include("components/IWG_PAGE_ClimateTemperature.jl")
+include("components/IWG_PAGE_ScenarioChoice.jl")
+# Mimi.load_comps(joinpath(@__DIR__, "components"))     # Need to fix this function in Mimi, then won't need to include each component file separately
 
 # Main models and functions
 include("core/DICE_helper.jl")
 include("core/FUND_helper.jl")
-# include("core/PAGE_helper.jl")
+include("core/PAGE_helper.jl")
 include("core/main.jl")
 
 # Monte carlo support

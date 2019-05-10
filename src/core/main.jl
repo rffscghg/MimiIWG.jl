@@ -16,7 +16,7 @@ function get_model(model::model_choice, scenario_name::Union{String, Nothing}=no
     elseif model == FUND 
         return get_fund_model(scenario_name)
     elseif model == PAGE 
-        error("Not yet implemented")
+        return get_page_model(scenario_name)
     end
 end
 
@@ -27,7 +27,8 @@ end
 """
 
 """
-function get_marginaldamages(model::model_choice, scenario_name::Union{String, Nothing}=nothing, year::Union{Int, Nothing}=nothing, discount::Union{Float64, Nothing}=nothing)
+function get_marginaldamages(model::model_choice, scenario_name::Union{String, Nothing}=nothing, year::Union{Int, Nothing}=nothing, discount::Union{Float64, Nothing}=nothing; 
+    regional::Bool=false)
 
     # Check for valid scenario name
     if scenario_name == nothing
@@ -52,9 +53,9 @@ function get_marginaldamages(model::model_choice, scenario_name::Union{String, N
     if model == DICE 
         return get_dice_marginaldamages(scenario_name, year, discount)
     elseif model == FUND 
-        return get_fund_marginaldamages(scenario_name, year, discount)
+        return get_fund_marginaldamages(scenario_name, year, discount)  #, regional)    #TODO: add this option for FUND
     elseif model == PAGE 
-        error("Not yet implemented")
+        return get_page_marginaldamages(scenario_name, year, discount, regional)
     end
 
 end
@@ -62,7 +63,8 @@ end
 """
 
 """
-function get_scc(model::model_choice, scenario_name::Union{String, Nothing}=nothing, year::Union{Int, Nothing}=nothing, discount::Union{Float64, Nothing}=nothing, horizon=_default_horizon)
+function get_scc(model::model_choice, scenario_name::Union{String, Nothing}=nothing, year::Union{Int, Nothing}=nothing, discount::Union{Float64, Nothing}=nothing;
+    horizon=_default_horizon, income_normalized=true, domestic=false)  # some model specific arguments
 
     # Check for valid scenario name
     if scenario_name == nothing
@@ -87,9 +89,9 @@ function get_scc(model::model_choice, scenario_name::Union{String, Nothing}=noth
     if model == DICE 
         return get_dice_scc(scenario_name, year, discount, horizon)
     elseif model == FUND 
-        return get_fund_scc(scenario_name, year, discount)      # TODO: add `income_normalized` option to this general function?
+        return get_fund_scc(scenario_name, year, discount; income_normalized=income_normalized)      # TODO: add `income_normalized` option to this general function?
     elseif model == PAGE 
-        error("Not yet implemented")
+        return get_page_scc(scenario_name, year, discount; domestic=domestic)
     end
 
 end
