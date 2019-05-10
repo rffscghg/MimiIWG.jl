@@ -1,20 +1,10 @@
 
-# helper function
-function readxl_vector(filename, range)
-    arr = readxl(filename, range)           # produces 2D Nx1 matrix
-    return Vector{Float64}(arr[:, 1])       # convert to 1D vector of length N
-end
-
-# Read in the Roe and Baker climate sensitivity distribution as a vector of values and probabilities to use in MC
-dice_cs_values = readxl_vector(RBdistribution_file, "Sheet1!A2:A1001")
-dice_cs_probs  = readxl_vector(RBdistribution_file, "Sheet1!B2:B1001")
-
 """
     Returns a MonteCarloSimulation object with one random variable for climate sensitivity over the Roe Baker distrtibution used by the IWG for DICE.
 """
 function get_dice_mcs()
     mcs = @defsim begin
-        t2xco2 = EmpiricalDistribution(dice_cs_values, dice_cs_probs)
+        t2xco2 = EmpiricalDistribution(RB_cs_values, RB_cs_probs)   # Use the Roe and Baker distribution defined in a file, read in in src/core/constatns.jl
 
         # save(climatedynamics.t2xco2)
     end 
