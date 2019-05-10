@@ -4,6 +4,7 @@ using Mimi
 
 using Mimi
 using MimiDICE2010
+using MimiFUND          # pinned to version 3.8.2 in Project.toml
 using ExcelReaders
 using StatsBase
 using Interpolations
@@ -22,10 +23,12 @@ include("components/IWG_DICE_co2cycle.jl")
 include("components/IWG_DICE_radiativeforcing.jl")
 include("components/IWG_DICE_climatedynamics.jl")
 include("components/IWG_DICE_neteconomy.jl")
+include("components/IWG_FUND_impactsealevelrise.jl")
+include("components/IWG_FUND_roebakerclimatesensitivity.jl")
 
 # Main models and functions
 include("core/DICE_helper.jl")
-# include("core/FUND_helper.jl")
+include("core/FUND_helper.jl")
 # include("core/PAGE_helper.jl")
 include("core/main.jl")
 
