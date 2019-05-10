@@ -115,15 +115,13 @@ return mcs
 
 end
 
-
-
 """
     Run a Monte Carlo Simulation over the IWG version of FUND3.8.
 """
 function run_fund_scc_mcs(mcs::Simulation = get_fund_mcs();
     trials = 10,                                # Number of trials to run in the Monte Carlo simulation
-    perturbation_years = _default_perturbation_years,   # List of years in which to calculate the SCC
-    discount_rates = _default_discount_rates,           # List of discount rates to calculate for
+    perturbation_years = _default_fund_perturbation_years,   # List of years in which to calculate the SCC
+    discount_rates = _default_discount_rates,   # List of discount rates to calculate for
     domestic = false,                           # Option to also calculate domestic SCC values 
     output_dir = nothing,                       # Option to specify different output directory; default is "../output/yyyy-mm-dd HH-MM-SS MC$trials"
     save_trials = false,                        # Option to save all parameter draws to a file
