@@ -27,11 +27,13 @@ end
 function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs(); 
         trials = 10,
         perturbation_years = _default_perturbation_years,
-        discount_rates = _default_discount_rates, 
+        discount_rates = _default_discount_rates,
+        domestic = false, 
         output_dir = nothing, 
         save_trials = false,
         tables = true)
  
+    output_dir == nothing ? error("Must provide an output_dir to run_dice_scc_mcs.") : nothing
     mkpath(output_dir)
 
     # Specify directory to save SCC values in

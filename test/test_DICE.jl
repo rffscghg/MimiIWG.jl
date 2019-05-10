@@ -1,7 +1,7 @@
 
 @testset "DICE" begin
 
-    include("../src/MimiIWG2016.jl")
+    # include("../src/MimiIWG2016.jl")
 
     @testset "API" begin
 
