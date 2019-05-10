@@ -370,6 +370,14 @@ git-tree-sha1 = "e20a4fbb2d63190bee8aedfd60574b356230bd3d"
 uuid = "b3ba11de-429f-11e9-29f7-cb478ab96e7c"
 version = "3.8.2"
 
+[[MimiPAGE2009]]
+deps = ["CSVFiles", "DataFrames", "DelimitedFiles", "Distributions", "Mimi", "Query"]
+git-tree-sha1 = "c28f7ee3eb855ba5b53b0c563727e2fe3ea6216a"
+repo-rev = "master"
+repo-url = "https://github.com/anthofflab/MimiPAGE2009.jl.git"
+uuid = "e25d4f70-4200-11e9-37f3-3b45f1cef54f"
+version = "2.0.2+"
+
 [[Missings]]
 deps = ["SparseArrays", "Test"]
 git-tree-sha1 = "f0719736664b4358aa9ec173077d4285775f8007"

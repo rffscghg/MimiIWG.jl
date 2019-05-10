@@ -1,6 +1,7 @@
 
 
 @enum model_choice DICE FUND PAGE 
+# @enum scenario_choice USG1 USG2 USG3 USG4 USG5
 const scenario_names = ["IMAGE", "MERGE Optimistic", "MESSAGE", "MiniCAM Base", "5th Scenario"]
 
 # Default values for user facing functions
@@ -64,6 +65,36 @@ const fund_scenario_convert = Dict{String, String}(    # convert from names stan
 # 3. PAGE specific constants 
 #------------------------------------------------------------------------------
 
+const iwg_page_datadir = joinpath(@__DIR__, "../../data/IWG_inputs/PAGE/")
+const iwg_page_input_file = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 (550 Avg, for 2013 SCC technical update - Input files).xlsx")   # One input file used for RB distribution in mcs
+
+const page_years = [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300]
+
+const page_inflator = 1.225784    # 2000 USD => 2007 USD
+
+const _default_page_perturbation_years = collect(2010:5:2050)
+
+# list of parameters that are different between the IWG scenarios
+const page_scenario_specific_params = [
+    "gdp_0",
+    "grw_gdpgrowthrate",
+    "GDP_per_cap_focus_0_FocusRegionEU",
+    "pop0_initpopulation",
+    "popgrw_populationgrowth",
+    "e0_baselineCO2emissions",
+    "e0_globalCO2emissions",
+    "er_CO2emissionsgrowth",
+    "f0_CO2baseforcing",
+    "exf_excessforcing"
+]
+
+const page_scenario_convert = Dict{String, String}(    # convert from names standard across all three models and consistent with the TSDs to the PAGE specific names used in the input files
+    "IMAGE"             => "IMAGE",
+    "MERGE Optimistic"  => "MERGE",
+    "MESSAGE"           => "MESSAGE",
+    "MiniCAM Base"      => "MiniCAM",
+    "5th Scenario"      => "550 Avg"
+)
 
 #------------------------------------------------------------------------------
 # 4. Utils
@@ -76,4 +107,24 @@ function _interpolate(values, orig_x, new_x)
                 Line())
     # return [itp(i...) for i in new_x]
     return itp(new_x)
+end
+
+"""
+connect_all!(m::Model, comps::Vector{Pair{Symobl, Symbol}}, src::Pair{Symbol, Symbol})
+    helper function for connecting a list of (compname, paramname) pairs all to the same source pair
+"""
+function connect_all!(m::Model, comps::Vector{Pair{Symbol, Symbol}}, src::Pair{Symbol, Symbol})
+    for dest in comps 
+        connect_param!(m, dest, src)
+    end
+end
+"""
+connect_all!(m::Model, comps::Vector{Symbols}, src::Pair{Symbol, Symbol})
+    helper function for connecting a list of compnames all to the same source pair. The parameter name in all the comps must be the same as in the src pair.
+"""
+function connect_all!(m::Model, comps::Vector{Symbol}, src::Pair{Symbol, Symbol})
+    src_comp, param = src
+    for comp in comps 
+        connect_param!(m, comp=>param, src_comp=>param)
+    end
 end
