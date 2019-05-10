@@ -14,7 +14,7 @@ function get_model(model::model_choice, scenario_name::Union{String, Nothing}=no
     if model == DICE 
         return get_dice_model(scenario_name)
     elseif model == FUND 
-        error("Not yet implemented")
+        return get_fund_model(scenario_name)
     elseif model == PAGE 
         error("Not yet implemented")
     end
@@ -45,14 +45,14 @@ function get_marginaldamages(model::model_choice, scenario_name::Union{String, N
     # Check the discount rate
     if discount == nothing 
         @warn("No `discount` provided to `get_marginaldamages`; will return undiscounted marginal damages.")
-        discount = 0
+        discount = 0.
     end 
 
     # dispatch on provided model choice
     if model == DICE 
-        return get_dice_marginaldamages(scenario_name, year, discount, horizon)
+        return get_dice_marginaldamages(scenario_name, year, discount)
     elseif model == FUND 
-        error("Not yet implemented")
+        return get_fund_marginaldamages(scenario_name, year, discount)
     elseif model == PAGE 
         error("Not yet implemented")
     end
@@ -87,7 +87,7 @@ function get_scc(model::model_choice, scenario_name::Union{String, Nothing}=noth
     if model == DICE 
         return get_dice_scc(scenario_name, year, discount, horizon)
     elseif model == FUND 
-        error("Not yet implemented")
+        return get_fund_scc(scenario_name, year, discount)      # TODO: add `income_normalized` option to this general function?
     elseif model == PAGE 
         error("Not yet implemented")
     end
