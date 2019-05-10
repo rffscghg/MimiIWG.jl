@@ -100,7 +100,7 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
         scenario_func = scenario_setup, 
         scenario_args = scenario_args,
         post_trial_func = post_trial,
-        output_dir = joinpath(output_dir, "MCS"))
+        output_dir = joinpath(output_dir, "saved_variables"))
 
     # Save the SCC values
     for (i, scenario_name) in enumerate(scenario_names), (j, rate) in enumerate(discount_rates)
