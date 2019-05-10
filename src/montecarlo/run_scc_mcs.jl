@@ -24,7 +24,8 @@ function run_scc_mcs(model::model_choice;
         perturbation_years = perturbation_years == nothing ? _default_fund_perturbation_years : perturbation_years
         run_fund_scc_mcs(trials=trials, perturbation_years=perturbation_years, discount_rates=discount_rates, domestic=domestic, output_dir=output_dir, save_trials=save_trials, tables=tables)
     elseif model == PAGE 
-        error("Not yet implemented")
+        perturbation_years = perturbation_years == nothing ? _default_page_perturbation_years : perturbation_years
+        run_page_scc_mcs(trials=trials, perturbation_years=perturbation_years, discount_rates=discount_rates, domestic=domestic, output_dir=output_dir, save_trials=save_trials, tables=tables)
     end
 
     nothing

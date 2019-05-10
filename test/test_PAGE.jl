@@ -1,7 +1,7 @@
 
 @testset "PAGE" begin
 
-include("../src/MimiIWG2016.jl")
+# include("../src/MimiIWG2016.jl")
 
 @testset "API" begin
 
@@ -12,9 +12,9 @@ include("../src/MimiIWG2016.jl")
 
     scc = get_scc(PAGE, scenario_names[1])
 
-    # tmp_dir = joinpath(@__DIR__, "tmp")
-    # run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir)
-    # rm(tmp_dir, recursive=true)
+    tmp_dir = joinpath(@__DIR__, "tmp")
+    run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir)
+    rm(tmp_dir, recursive=true)
 
 end
 
@@ -25,7 +25,7 @@ end
 
     _atol = 0.01    # one cent
 
-    scenario_convert_flip = Dict([v=>k for (k,v) in page_scenario_convert])
+    scenario_convert_flip = Dict([v=>k for (k,v) in page_scenario_convert]) # need to convert scenario names in the other direction from the validation data files
 
     for f in files
         validation_data = readdlm(joinpath(validation_dir, f), ',')

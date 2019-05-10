@@ -1,7 +1,7 @@
 """
 Returns the IWG version of the PAGE 2009 model for the specified scenario.
 """
-function get_page_model(scenario_name::String)
+function get_page_model(scenario_name::Union{String, Nothing}=nothing)
 
     # Get original version of PAGE
     m = MimiPAGE2009.getpage()
@@ -24,14 +24,18 @@ function get_page_model(scenario_name::String)
     update_params!(m, iwg_params, update_timesteps = true)
 
     # Add the scenario choice component and load all the scenario parameter values
-    add_comp!(m, IWG_PAGE_ScenarioChoice, :ScenarioChoice; before = :co2emissions)
+    add_comp!(m, IWG_PAGE_ScenarioChoice, :IWGScenarioChoice; before = :co2emissions)
     set_dimension!(m, :scenarios, length(scenario_names))
     set_page_scenario_params!(m)
     
     # Set the scenario number if a scenario_name was provided
-    scenario_num = findfirst(isequal(scenario_name), scenario_names)
-    scenario_num == nothing ? error("Unknown scenario name $scenario_name. Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))") : nothing
-    set_param!(m, :ScenarioChoice, :scenario_num, scenario_num)
+    if scenario_name == nothing 
+        @warn("No scenario name provided, must set parameter :scenario_num in :IWGScenarioChoice component before running the model.")
+    else
+        scenario_num = findfirst(isequal(scenario_name), scenario_names)
+        scenario_num == nothing ? error("Unknown scenario name $scenario_name. Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))") : nothing
+        set_param!(m, :IWGScenarioChoice, :scenario_num, scenario_num)
+    end
 
     return m
 end
@@ -42,7 +46,7 @@ set_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
 """
-function set_page_scenario_params!(m::Model; comp_name::Symbol = :ScenarioChoice, connect::Bool = true)
+function set_page_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
     params_dict = Dict{String, Array}([k=>[] for k in page_scenario_specific_params])
 
     # add an array of each scenario's value to the dictionary

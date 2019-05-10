@@ -39,7 +39,7 @@ include("core/main.jl")
 # Monte carlo support
 include("montecarlo/DICE_mcs.jl")
 include("montecarlo/FUND_mcs.jl")
-# include("montecarlo/PAGE_mcs.jl")
+include("montecarlo/PAGE_mcs.jl")
 include("montecarlo/run_scc_mcs.jl")
 
 
