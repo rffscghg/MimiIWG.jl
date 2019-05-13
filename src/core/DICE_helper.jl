@@ -1,8 +1,8 @@
 """
     Returns the IWG version of the DICE 2010 model for the specified scenario.
 """
-function get_dice_model(scenario_name::String)
-    params = load_dice_scenario_params(scenario_name)
+function get_dice_model(scenario_choice::scenario_choice)
+    params = load_dice_scenario_params(scenario_choice)
     return get_dice_model(params)
 end 
 
@@ -38,7 +38,7 @@ end
 """
     Returns a dictionary of DICE parameter values for the specified scenario.
 """
-function load_dice_scenario_params(scenario_name, scenario_file=nothing)
+function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 
     params = Dict{Any, Any}()
     nyears = length(dice_years)
@@ -51,10 +51,8 @@ function load_dice_scenario_params(scenario_name, scenario_file=nothing)
     params[:b1]         = 0.00518162                # previously called 'slrcoeff'-- :b1 in SLR
     params[:b2]         = 0.00305776                # previously called 'slrcoeffsq'-- :b2 in SLR 
 
-    idx = findfirst(isequal(scenario_name), scenario_names)
-    if idx === nothing
-        error("$scenario_name is not a valid scenario name. Must provide one of the following scenario names: $(join(scenario_names, ", "))")
-    end
+    # Get the scenario number
+    idx = Int(scenario_choice)
 
     # All scenario data
     scenario_file = scenario_file==nothing ? iwg_dice_input_file : scenario_file
@@ -99,11 +97,11 @@ end
 
 """
     Returns marginal damages each year from an additional emissions pulse in the specified year. 
-    User must specify an IWG scenario name `scenario_name`.
+    User must specify an IWG scenario `scenario_choice`.
     If no `year` is specified, will run for an emissions pulse in $_default_year.
     If no `discount` is specified, will return undiscounted marginal damages.
 """
-function get_dice_marginaldamages(scenario_name::String, year::Int, discount::Float64) 
+function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64) 
 
     # Check the emissions year
     _is_mid_year = false
@@ -115,7 +113,7 @@ function get_dice_marginaldamages(scenario_name::String, year::Int, discount::Fl
         year = dice_years[Int(floor((year - dice_years[1]) / dice_ts) + 1)]    # first calculate for the DICE year below the specified year
     end
 
-    base = get_dice_model(scenario_name)
+    base = get_dice_model(scenario_choice)
     marginal = Model(base)
     add_dice_marginal_emissions!(marginal, year)
 
@@ -130,7 +128,7 @@ function get_dice_marginaldamages(scenario_name::String, year::Int, discount::Fl
     if _is_mid_year     # need to calculate md for next year in time index as well, then interpolate for desired year
         lower_diff = diff
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_diff = get_dice_marginaldamages(scenario_name, next_year, 0.)
+        upper_diff = get_dice_marginaldamages(scenario_choice, next_year, 0.)
         diff = [_interpolate([lower_diff[i], upper_diff[i]], [year, next_year], [mid_year])[1] for i in 1:length(lower_diff)]
     end 
 
@@ -188,11 +186,11 @@ end
 
 """
     Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the IWG-DICE model.
-    User must specify an IWG scenario name `scenario_name`.
+    User must specify an IWG scenario `scenario_choice`.
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_dice_scc(scenario_name::String, year::Int, discount::Float64, horizon=_default_horizon)
+function get_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Float64, horizon=_default_horizon)
 
     # Check if the emissions year is valid, and whether or not we need to interpolate
     _is_mid_year = false
@@ -204,7 +202,7 @@ function get_dice_scc(scenario_name::String, year::Int, discount::Float64, horiz
         year = dice_years[Int(floor((year - dice_years[1]) / dice_ts) + 1)]    # first calculate for the DICE year below the specified year
     end
 
-    md = get_dice_marginaldamages(scenario_name, year, 0.)   # Get undiscounted marginal damages
+    md = get_dice_marginaldamages(scenario_choice, year, 0.)   # Get undiscounted marginal damages
     annual_years = dice_years[1]:horizon
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
@@ -217,7 +215,7 @@ function get_dice_scc(scenario_name::String, year::Int, discount::Float64, horiz
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_scc = get_dice_scc(scenario_name, next_year, discount, horizon)
+        upper_scc = get_dice_scc(scenario_choice, next_year, discount, horizon)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 

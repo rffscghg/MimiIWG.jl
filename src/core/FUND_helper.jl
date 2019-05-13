@@ -1,6 +1,6 @@
 """
     Returns the IWG version of the FUND3.8 model without any scenario parameters set yet. 
-    Need to call apply_scenario!(m, scenario_name) before this model can be run.
+    Need to call apply_scenario!(m, scenario_choice) before this model can be run.
 """
 function get_fund_model()
 
@@ -19,20 +19,20 @@ function get_fund_model()
 end 
 
 """
-    Returns the IWG version of the FUND3.8 model for the specified scenario name.
+    Returns the IWG version of the FUND3.8 model for the specified scenario.
 """
-function get_fund_model(scenario_name::String)
+function get_fund_model(scenario_choice::scenario_choice)
     m = get_fund_model()
-    apply_fund_scenario!(m, scenario_name)
+    apply_fund_scenario!(m, scenario_choice)
     return m 
 end
 
 """
-    Set the scenario-specific parameters in a FUND model m for the specified scenario name.
+    Set the scenario-specific parameters in a FUND model m for the specified scenario.
 """
-function apply_fund_scenario!(m, scenario_name)
+function apply_fund_scenario!(m, scenario_choice)
 
-    scenario_params = load_fund_scenario_params(scenario_name)
+    scenario_params = load_fund_scenario_params(scenario_choice)
 
     # Two global emissions values were previously endogenous; now set them to external IWG scenario values
     set_param!(m, :climatech4cycle, :globch4, scenario_params["globch4"])
@@ -51,9 +51,9 @@ end
 """
     Returns a dictionary of FUND parameter values for the specified scenario.
 """
-function load_fund_scenario_params(scenario_name)
+function load_fund_scenario_params(scenario_choice)
 
-    scenario_file = joinpath(iwg_fund_datadir, "Parameter - EMF22 $(fund_scenario_convert[scenario_name]).xlsm")
+    scenario_file = joinpath(iwg_fund_datadir, "Parameter - EMF22 $(fund_scenario_convert[scenario_choice]).xlsm")
 
     scenario_params = Dict{Any, Any}()
     f = openxl(scenario_file)
@@ -68,19 +68,19 @@ end
 
 """
     Returns marginal damages each year from an additional emissions pulse in the specified year. 
-    User must specify an IWG scenario name `scenario_name`.
+    User must specify an IWG scenario `scenario_choice`.
     If no `year` is specified, will run for an emissions pulse in $_default_year.
     If no `discount` is specified, will return undiscounted marginal damages.
     The `income_normalized` parameter indicates whether the damages from the marginal run should be scaled by the ratio of incomes between the base and marginal runs. 
 """
-function get_fund_marginaldamages(scenario_name::String, year::Int, discount::Float64, income_normalized::Bool=true)
+function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64, income_normalized::Bool=true)
 
     # Check the emissions year
     if ! (year in fund_years)
         error("$year not a valid year; must be in model's time index $fund_years.")
     end
 
-    base = get_fund_model(scenario_name)
+    base = get_fund_model(scenario_choice)
     marginal = Model(base)
     MimiFUND.add_marginal_emissions!(marginal, year)     # Function from original fund code
 
@@ -110,18 +110,18 @@ end
 
 """
     Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the IWG-FUND model.
-    User must specify an IWG scenario name `scenario_name`.
+    User must specify an IWG scenario `scenario_choice`.
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_fund_scc(scenario_name::String, year::Int, discount::Float64, income_normalized::Bool=true)
+function get_fund_scc(scenario_choice::scenario_choice, year::Int, discount::Float64, income_normalized::Bool=true)
 
     # Check the emissions year
     if !(year in fund_years)
         error("$year is not a valid year; can only calculate SCC within the model's time index $fund_years.")
     end
 
-    md = get_fund_marginaldamages(scenario_name, year, discount, income_normalized)
+    md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized)
     scc = sum(md[MimiFUND.getindexfromyear(year):end])    # Sum from the perturbation year to the end (avoid the NaN in the first timestep)
     return scc 
 end

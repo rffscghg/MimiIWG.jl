@@ -1,22 +1,20 @@
 """
 
 """
-function get_model(model::model_choice, scenario_name::Union{String, Nothing}=nothing)
+function get_model(model::model_choice, scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
     # Check for valid scenario name
-    if scenario_name == nothing
-        error("Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))")
-    elseif ! (scenario_name in scenario_names)
-        error("Unknown scenario name \"$scenario_name\". Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))")
+    if scenario_choice == nothing
+        error("Must specifiy one of the following scenarios: USG1, USG2, USG3, USG4, or USG5.")
     end
 
     # dispatch on provided model choice
     if model == DICE 
-        return get_dice_model(scenario_name)
+        return get_dice_model(scenario_choice)
     elseif model == FUND 
-        return get_fund_model(scenario_name)
+        return get_fund_model(scenario_choice)
     elseif model == PAGE 
-        return get_page_model(scenario_name)
+        return get_page_model(scenario_choice)
     end
 end
 
@@ -27,14 +25,14 @@ end
 """
 
 """
-function get_marginaldamages(model::model_choice, scenario_name::Union{String, Nothing}=nothing, year::Union{Int, Nothing}=nothing, discount::Union{Float64, Nothing}=nothing; 
+function get_marginaldamages(model::model_choice, scenario_choice::Union{scenario_choice, Nothing}=nothing; 
+    year::Union{Int, Nothing}=nothing, 
+    discount::Union{Float64, Nothing}=nothing, 
     regional::Bool=false)
 
     # Check for valid scenario name
-    if scenario_name == nothing
-        error("Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))")
-    elseif ! (scenario_name in scenario_names)
-        error("Unknown scenario name \"$scenario_name\". Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))")
+    if scenario_choice == nothing
+        error("Must specifiy one of the following scenarios: USG1, USG2, USG3, USG4, or USG5.")
     end
 
     # Check the emissions year
@@ -51,11 +49,11 @@ function get_marginaldamages(model::model_choice, scenario_name::Union{String, N
 
     # dispatch on provided model choice
     if model == DICE 
-        return get_dice_marginaldamages(scenario_name, year, discount)
+        return get_dice_marginaldamages(scenario_choice, year, discount)
     elseif model == FUND 
-        return get_fund_marginaldamages(scenario_name, year, discount)  #, regional)    #TODO: add this option for FUND
+        return get_fund_marginaldamages(scenario_choice, year, discount)  #, regional)    #TODO: add this option for FUND
     elseif model == PAGE 
-        return get_page_marginaldamages(scenario_name, year, discount, regional)
+        return get_page_marginaldamages(scenario_choice, year, discount, regional)
     end
 
 end
@@ -63,14 +61,16 @@ end
 """
 
 """
-function get_scc(model::model_choice, scenario_name::Union{String, Nothing}=nothing, year::Union{Int, Nothing}=nothing, discount::Union{Float64, Nothing}=nothing;
-    horizon=_default_horizon, income_normalized=true, domestic=false)  # some model specific arguments
+function get_scc(model::model_choice, scenario_choice::Union{scenario_choice, Nothing}=nothing; 
+    year::Union{Int, Nothing}=nothing, 
+    discount::Union{Float64, Nothing}=nothing,
+    horizon=_default_horizon, 
+    income_normalized=true, 
+    domestic=false)  # some model specific arguments
 
     # Check for valid scenario name
-    if scenario_name == nothing
-        error("Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))")
-    elseif ! (scenario_name in scenario_names)
-        error("Unknown scenario name \"$scenario_name\". Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))")
+    if scenario_choice == nothing
+        error("Must specifiy one of the following scenarios: USG1, USG2, USG3, USG4, or USG5.")
     end
 
     # Check the emissions year
@@ -87,11 +87,11 @@ function get_scc(model::model_choice, scenario_name::Union{String, Nothing}=noth
 
     # dispatch on provided model choice
     if model == DICE 
-        return get_dice_scc(scenario_name, year, discount, horizon)
+        return get_dice_scc(scenario_choice, year, discount, horizon)
     elseif model == FUND 
-        return get_fund_scc(scenario_name, year, discount; income_normalized=income_normalized)      # TODO: add `income_normalized` option to this general function?
+        return get_fund_scc(scenario_choice, year, discount, income_normalized)      # TODO: add `income_normalized` option to this general function?
     elseif model == PAGE 
-        return get_page_scc(scenario_name, year, discount; domestic=domestic)
+        return get_page_scc(scenario_choice, year, discount; domestic=domestic)
     end
 
 end

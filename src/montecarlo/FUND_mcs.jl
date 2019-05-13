@@ -136,15 +136,15 @@ function run_fund_scc_mcs(mcs::Simulation = get_fund_mcs();
     MimiFUND.add_marginal_emissions!(marginal)   # adds the marginal emissions component, doesn't set the emission pulse till within MCS
 
     scenario_args = [
-        :scenario_names => scenario_names
+        :scenarios => scenarios
     ] 
 
     nyears = length(fund_years)
 
     # Make an array to hold all calculated scc values
-    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenario_names), length(discount_rates))
+    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
     if domestic 
-        SCC_values_domestic = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenario_names), length(discount_rates))
+        SCC_values_domestic = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
     end
 
     function scenario_func(mcs::Simulation, tup::Tuple)
@@ -153,12 +153,12 @@ function run_fund_scc_mcs(mcs::Simulation = get_fund_mcs();
         base, marginal = mcs.models 
 
         # Unpack the scenario tuple
-        (scenario_name,) = tup
-        global scenario_num = findfirst(isequal(scenario_name), scenario_names)
+        (scenario_choice,) = tup
+        global scenario_num = Int(scenario_choice)
 
         # Apply the scenario data to the base and marginal models
-        apply_fund_scenario!(base, scenario_name)
-        apply_fund_scenario!(marginal, scenario_name)
+        apply_fund_scenario!(base, scenario_choice)
+        apply_fund_scenario!(marginal, scenario_choice)
 
         Mimi.build(base)
         Mimi.build(marginal)
@@ -226,7 +226,8 @@ function run_fund_scc_mcs(mcs::Simulation = get_fund_mcs();
     mkpath(scc_dir)
 
     # Save the SCC values
-    for (i, scenario_name) in enumerate(scenario_names), (j, rate) in enumerate(discount_rates)
+    for scenario in scenarios, (j, rate) in enumerate(discount_rates)
+        i, scenario_name = Int(scenario), string(scenario)
         # Global SCC values
         scc_file = joinpath(scc_dir, "$scenario_name $rate.csv")
         open(scc_file, "w") do f
