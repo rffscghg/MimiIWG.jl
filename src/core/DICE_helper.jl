@@ -40,11 +40,18 @@ end
 """
 function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 
+    # Input parameters from EPA's Matlab code
+    H     = 2300       # Time horizon for calculating SCC [year]
+    A0    = 0.0303220  # First period total factor productivity, from DICE2010
+    gamma = 0.3        # Labor factor productivity, from DICE2010
+    delta = 0.1        # Capital depreciation rate [yr^-1], from DICE2010
+    s     = 0.23       # Approximate optimal savings in DICE2010 
+
     params = Dict{Any, Any}()
     nyears = length(dice_years)
 
     # Replace some parameter values to match EPA's matlab code
-    params[:S]          = repeat([0.23], nyears)    # previously called 'savebase'. :S in neteconomy
+    params[:S]          = repeat([s], nyears)    # previously called 'savebase'. :S in neteconomy
     params[:MIU]        = zeros(nyears)             # previously called 'miubase'-- :MIU in neteconomy;  make this all zeros so abatement in neteconomy is calculated as zero; EPA doesn't include abatement costs
     params[:a1]         = 0.00008162
     params[:a2]         = 0.00204626
@@ -66,7 +73,7 @@ function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
     Fex2 = readxl(f, "OthernonCO2forcings!B2:B32")          # Other non-CO2 forcings
     Fex = Fex1 + Fex2                                       # All non-CO2 forcings
 
-    # Use 2010 EMF value for dice period 2005-2015 etc. (need one additional zero to run the 31st timestep)
+    # Use 2010 EMF value for dice period 2005-2015 etc. (need additional zeros to run past the 31st timestep)
     Y = [Y[2:end]; zeros(nyears - length(Y[2:end]))]
     N = [N[2:end]; zeros(nyears - length(N[2:end]))]
     E = [E[2:end]; zeros(nyears - length(E[2:end]))]

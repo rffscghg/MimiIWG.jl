@@ -1,11 +1,14 @@
+# Differences from the original co2cycle in DICE 2010:
+#       - there's only one inditial concentration for MAT (in 2010, used for the timestep 2005-2015) rather than two
+#       - E is in units of GtCO2 per decade instead of per year (so it doesn't get mulitiplied by 10)
 @defcomp IWG_DICE_co2cycle begin
 
     MAT     = Variable(index=[time])    # Carbon concentration increase in atmosphere (GtC from 1750)
     ML      = Variable(index=[time])    # Carbon concentration increase in lower oceans (GtC from 1750)
     MU      = Variable(index=[time])    # Carbon concentration increase in shallow oceans (GtC from 1750)
 
-    E       = Parameter(index=[time])   # Total CO2 emissions (GtCO2 per year)
-    mat0    = Parameter()               # Initial Concentration in atmosphere 2000 (GtC)
+    E       = Parameter(index=[time])   # Total CO2 emissions (GtCO2 per decade)
+    mat0    = Parameter()               # Initial Concentration in atmosphere 2010 (GtC)
     ml0     = Parameter()               # Initial Concentration in lower strata (GtC)
     mu0     = Parameter()               # Initial Concentration in upper strata (GtC)
 

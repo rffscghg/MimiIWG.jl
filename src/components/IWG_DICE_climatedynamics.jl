@@ -1,3 +1,4 @@
+# Since the IWG sampled from the Roe & Baker distribution for equilibrium climate sensitivity (t2xco2), they added in the catch case for values less than 0.5 in the code below.
 @defcomp IWG_DICE_climatedynamics begin
 
     TATM    = Variable(index=[time])    # Increase in temperature of atmosphere (degrees C from 1900)

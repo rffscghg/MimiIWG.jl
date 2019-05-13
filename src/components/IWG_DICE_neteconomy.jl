@@ -1,3 +1,5 @@
+# The difference in this component compared to the original neteconomy component in DICE2010 is the simlified function for calculating C.
+#       In the original component, there are different values for the first and last timestep calculations of C.
 @defcomp IWG_DICE_neteconomy begin
 
     ABATECOST   = Variable(index=[time])    # Cost of emissions reductions  (trillions 2005 USD per year)

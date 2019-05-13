@@ -27,13 +27,6 @@ const dice_years = 2005:dice_ts:2405   # time dimension of the IWG's DICE model
 
 const _default_dice_perturbation_years = collect(2005:dice_ts:2055)   # used by MCS for SCC calculations
 
-# Input parameters from EPA's Matlab code
-const H     = 2300       # Time horizon for calculating SCC [year]
-const A0    = 0.0303220  # First period total factor productivity, from DICE2010
-const gamma = 0.3        # Labor factor productivity, from DICE2010
-const delta = 0.1        # Capital depreciation rate [yr^-1], from DICE2010
-const s     = 0.23       # Approximate optimal savings in DICE2010 
-
 const dice_inflate = 122.58 / 114.52 # World GDP inflator 2005 => 2007
 
 const dice_scenario_convert = Dict{scenario_choice, String}(    # convert from standard names to the DICE-specific names used in the input files
