@@ -5,7 +5,7 @@ using Mimi
 using Mimi
 using MimiDICE2010
 using MimiFUND          # pinned to version 3.8.2 in Project.toml
-using MimiPAGE2009      # pinned to master 
+using MimiPAGE2009      
 using ExcelReaders
 using StatsBase
 using Distributions
