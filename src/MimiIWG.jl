@@ -1,6 +1,6 @@
 using Mimi
 
-# module MimiIWG2016
+# module MimiIWG
 
 using Mimi
 using MimiDICE2010

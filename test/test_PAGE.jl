@@ -1,7 +1,7 @@
 
 @testset "PAGE" begin
 
-# include("../src/MimiIWG2016.jl")
+# include("../src/MimiIWG.jl")
 
 @testset "API" begin
 

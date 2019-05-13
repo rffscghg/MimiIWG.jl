@@ -1,8 +1,8 @@
 using Test
 
-@testset "MimiIWG2016" begin
+@testset "MimiIWG" begin
 
-include("../src/MimiIWG2016.jl")
+include("../src/MimiIWG.jl")
 
 include("test_DICE.jl")
 include("test_FUND.jl")
