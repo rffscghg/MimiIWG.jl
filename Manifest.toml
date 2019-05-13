@@ -12,6 +12,12 @@ git-tree-sha1 = "1ce1ce9984683f0b6a587d5bdbc688ecb480096f"
 uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
 version = "0.3.0"
 
+[[AxisAlgorithms]]
+deps = ["Compat", "WoodburyMatrices"]
+git-tree-sha1 = "99dabbe853e4f641ab21a676131f2cf9fb29937e"
+uuid = "13072b0f-2c55-5437-9ae7-d433b7a33950"
+version = "0.3.0"
+
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
@@ -257,6 +263,12 @@ version = "0.5.0"
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
+[[Interpolations]]
+deps = ["AxisAlgorithms", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
+git-tree-sha1 = "63665619f2b1a791d3c223acd8bc9155464f3dd3"
+uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+version = "0.12.0"
+
 [[IterTools]]
 deps = ["SparseArrays", "Test"]
 git-tree-sha1 = "79246285c43602384e6f1943b3554042a3712056"
@@ -409,6 +421,12 @@ git-tree-sha1 = "ae1a63457e14554df2159b0b028f48536125092d"
 uuid = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
 version = "0.0.8"
 
+[[OffsetArrays]]
+deps = ["DelimitedFiles"]
+git-tree-sha1 = "49a6d9b5b3dedec18035e4d97ce77e2b2a182c05"
+uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
+version = "0.11.0"
+
 [[OrderedCollections]]
 deps = ["Random", "Serialization", "Test"]
 git-tree-sha1 = "c4c13474d23c60d20a67b217f1d7f22a40edf8f1"
@@ -484,6 +502,12 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 [[Random]]
 deps = ["Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[[Ratios]]
+deps = ["Compat"]
+git-tree-sha1 = "cdbbe0f350581296f3a2e3e7a91b214121934407"
+uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
+version = "0.3.1"
 
 [[Reexport]]
 deps = ["Pkg"]
@@ -664,6 +688,12 @@ deps = ["BinDeps", "Compat", "HTTPClient", "LibExpat", "Libdl", "Libz", "URIPars
 git-tree-sha1 = "2a889d320f3b77d17c037f295859fe570133cfbf"
 uuid = "c17dfb99-b4f7-5aad-8812-456da1ad7187"
 version = "0.4.2"
+
+[[WoodburyMatrices]]
+deps = ["LinearAlgebra", "Random", "SparseArrays", "Test"]
+git-tree-sha1 = "21772c33b447757ec7d3e61fcdfb9ea5c47eedcf"
+uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
+version = "0.4.1"
 
 [[XLSX]]
 deps = ["Dates", "EzXML", "Printf", "Test", "ZipFile"]

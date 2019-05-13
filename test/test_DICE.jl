@@ -1,16 +1,15 @@
+using ExcelReaders
 
 @testset "DICE" begin
 
-    # include("../src/MimiIWG.jl")
-
     @testset "API" begin
 
-        m = get_model(DICE, scenarios[1])
+        m = get_model(DICE, MimiIWG.scenarios[1])
         run(m)
 
-        md = get_marginaldamages(DICE, scenarios[1])
+        md = get_marginaldamages(DICE, MimiIWG.scenarios[1])
 
-        scc = get_scc(DICE, scenarios[1])
+        scc = get_scc(DICE, MimiIWG.scenarios[1])
 
         tmp_dir = joinpath(@__DIR__, "tmp")
         run_scc_mcs(DICE, trials=2, output_dir = tmp_dir)
@@ -25,10 +24,10 @@
 
         _atol = 1e-8
 
-        for scenario in scenarios
+        for scenario in MimiIWG.scenarios
             @testset "$(string(scenario))" begin 
                 for discount in [0.025, 0.03, 0.05]
-                    validation_data = readxl(f, "$(dice_scenario_convert[scenario])_$(discount)_2010-2050!A2:I2")
+                    validation_data = readxl(f, "$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050!A2:I2")
                     for (i, year) in enumerate(2010:5:2050)
                         iwg_scc = validation_data[i]
                         mimi_scc = get_scc(DICE, scenario; year=year, discount=discount)

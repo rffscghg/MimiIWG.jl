@@ -1,4 +1,5 @@
 include("../src/MimiIWG.jl")
+using .MimiIWG
 
 # Get a model
 m = get_model(DICE, USG2)
