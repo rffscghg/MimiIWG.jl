@@ -1,3 +1,5 @@
+# Difference from the original DICE radiativeforcing component:
+#   - In the final timestep, the IWG calculates MAT_avg differently
 @defcomp IWG_DICE_radiativeforcing begin
     FORC      = Variable(index=[time])   # Increase in radiative forcing (watts per m2 from 1900)
 

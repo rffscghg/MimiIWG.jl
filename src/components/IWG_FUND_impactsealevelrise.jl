@@ -1,3 +1,6 @@
+# Difference in the calculation of drycost:
+#   - original FUND 3.8: v.drycost[t, r] = v.dryval[t, r] * v.landloss[t, r]
+#   - IWG: v.drycost[t, r] = v.dryval[t, r] * v.landloss[t, r] * (1 - v.protlev[t, r])
 @defcomp IWG_FUND_impactsealevelrise begin
     regions = Index()
 
