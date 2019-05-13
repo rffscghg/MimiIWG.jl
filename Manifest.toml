@@ -136,10 +136,10 @@ uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
 version = "0.19.2"
 
 [[DoubleFloats]]
-deps = ["GenericSVD", "GenericSchur", "LinearAlgebra", "Polynomials", "Random"]
-git-tree-sha1 = "4d63dd4324d0853796bf177e841d0b7c6d1c3bfb"
+deps = ["GenericSVD", "GenericSchur", "LinearAlgebra", "Polynomials", "Quadmath", "Random"]
+git-tree-sha1 = "f5e54b0a7e73580f6c67b46f67e14f619b3eee1b"
 uuid = "497a8b3b-efae-58df-a0af-a86822472b78"
-version = "0.7.24"
+version = "0.8.0"
 
 [[Electron]]
 deps = ["Base64", "JSON", "Sockets", "Test", "URIParser"]
@@ -372,11 +372,9 @@ version = "3.8.2"
 
 [[MimiPAGE2009]]
 deps = ["CSVFiles", "DataFrames", "DelimitedFiles", "Distributions", "Mimi", "Query"]
-git-tree-sha1 = "c28f7ee3eb855ba5b53b0c563727e2fe3ea6216a"
-repo-rev = "master"
-repo-url = "https://github.com/anthofflab/MimiPAGE2009.jl.git"
+git-tree-sha1 = "03b805fa40f2a5a8edff303cfd7beddf822d043a"
 uuid = "e25d4f70-4200-11e9-37f3-3b45f1cef54f"
-version = "2.0.2+"
+version = "2.0.3"
 
 [[Missings]]
 deps = ["SparseArrays", "Test"]
@@ -460,6 +458,12 @@ deps = ["DataStructures", "LinearAlgebra", "Test"]
 git-tree-sha1 = "3ce467a8e76c6030d4c3786e7d3a73442017cdc0"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 version = "2.0.3"
+
+[[Quadmath]]
+deps = ["Random", "Requires"]
+git-tree-sha1 = "44eada88cb3e60b6389e4151b000678cb5ad41db"
+uuid = "be4d8f0f-7fa4-5f49-b795-2f01399ab2dd"
+version = "0.3.2"
 
 [[Query]]
 deps = ["DataValues", "IterableTables", "MacroTools", "QueryOperators", "Statistics", "TableTraits", "Test"]
