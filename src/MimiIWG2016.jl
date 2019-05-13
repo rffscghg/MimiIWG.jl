@@ -5,7 +5,7 @@ using Mimi
 using Mimi
 using MimiDICE2010
 using MimiFUND          # pinned to version 3.8.2 in Project.toml
-using MimiPAGE2009
+using MimiPAGE2009      # pinned to master 
 using ExcelReaders
 using StatsBase
 using Distributions
@@ -13,11 +13,11 @@ using Interpolations
 using Dates
 using DelimitedFiles
 
-# export get_model #, get_SCC, run_scc_mcs
+# export get_model #, get_SCC, run_scc_mcs, model_choice, scenario_choice
 
 # General constants and functions
 include("core/constants.jl")
-# include("core/utils.jl)
+include("core/utils.jl")
 
 # IWG modified components
 include("components/IWG_DICE_co2cycle.jl")
