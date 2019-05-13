@@ -5,15 +5,15 @@
 
 @testset "API" begin
 
-    m = get_model(PAGE, scenario_names[1])
+    m = get_model(PAGE, scenarios[1])
     run(m)
 
-    md = get_marginaldamages(PAGE, scenario_names[1])
+    md = get_marginaldamages(PAGE, scenarios[1])
 
-    scc = get_scc(PAGE, scenario_names[1])
+    scc = get_scc(PAGE, scenarios[1])
 
     tmp_dir = joinpath(@__DIR__, "tmp")
-    run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir)
+    run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir, domestic=true)
     rm(tmp_dir, recursive=true)
 
 end
@@ -38,7 +38,7 @@ end
                 discount    = validation_data[line, 2]
                 iwg_scc     = validation_data[line, 3] * page_inflator     # 2000$ => $2007
 
-                mimi_scc = get_scc(PAGE, scenario_convert_flip[scenario], year, discount)
+                mimi_scc = get_scc(PAGE, scenario_convert_flip[scenario], year=year, discount=discount)
                 # println(iwg_scc, ",", mimi_scc)
                 @test iwg_scc ≈ mimi_scc atol = _atol
             end

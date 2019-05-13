@@ -31,11 +31,11 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
     mkpath(scc_dir)
 
     # Allocate matrix to store each trial's SCC values
-    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenario_names), length(discount_rates))
+    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
 
     # Specify scenario arguments
     scenario_args = [
-        :name => scenario_names, 
+        :scenario => scenarios, 
         :rate => discount_rates
         ]
 
@@ -48,11 +48,11 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
 
     # MCS "scenario_func" called outside the MCS loop
     function scenario_setup(mcs::Simulation, tup::Tuple)
-        (scenario_name, rate) = tup
-        global scenario_num = findfirst(isequal(scenario_name), scenario_names)
+        (scenario_choice, rate) = tup
+        global scenario_num = Int(scenario_choice)
         global rate_num = findfirst(isequal(rate), discount_rates)
 
-        base = get_dice_model(scenario_name)
+        base = get_dice_model(scenario_choice)
         marginal = Model(base)
         add_dice_marginal_emissions!(marginal)
 
@@ -103,7 +103,8 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
         output_dir = joinpath(output_dir, "saved_variables"))
 
     # Save the SCC values
-    for (i, scenario_name) in enumerate(scenario_names), (j, rate) in enumerate(discount_rates)
+    for scenario in scenarios, (j, rate) in enumerate(discount_rates)
+        i, scenario_name = Int(scenario), string(scenario)
         # File for all SCC years
         scc_file = joinpath(scc_dir, "$(scenario_name) $rate.csv")
         open(scc_file, "w") do f
@@ -121,7 +122,7 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
     if tables
         if all(x -> x in perturbation_years, 2005:10:2055)
             # Make EPA Tables A2, A3, and A4 (use SCC for year 2020, so we need to have the 2010-2050 interpolated summary file)
-            _make_percentile_tables(scc_dir, joinpath(output_dir, "Tables"), scenario_names, discount_rates)
+            _make_percentile_tables(scc_dir, joinpath(output_dir, "Tables"), [string(s) for s in scenarios], discount_rates)
         end
 
         # Make standard error tables

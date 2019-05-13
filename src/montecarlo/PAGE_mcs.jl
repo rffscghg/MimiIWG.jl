@@ -206,7 +206,7 @@ function run_page_scc_mcs(mcs::Simulation = get_page_mcs();
 
     # Set up scenario arguments
     scenario_args = [
-        :scenario_names => scenario_names
+        :scenarios => scenarios
         :discount_rates => discount_rates
     ]
 
@@ -219,16 +219,16 @@ function run_page_scc_mcs(mcs::Simulation = get_page_mcs();
     _need_to_interpolate = all_years == perturbation_years ? false : true    # Boolean flag for whether or not we need to interpolate at the end
 
     # Allocate matrix to store each trial's SCC values
-    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenario_names), length(discount_rates))
+    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
     if domestic 
-        SCC_values_domestic = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenario_names), length(discount_rates))
+        SCC_values_domestic = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
     end
 
     function scenario_setup(mcs::Simulation, tup::Tuple)
 
         # Unpack the scenario arguments
-        (scenario_name, rate) = tup 
-        global scenario_num = findfirst(isequal(scenario_name), scenario_names)
+        (scenario_choice, rate) = tup 
+        global scenario_num = Int(scenario_choice)
         global rate_num = findfirst(isequal(rate), discount_rates)
 
         # Build the page versions for this scenario
@@ -304,20 +304,18 @@ function run_page_scc_mcs(mcs::Simulation = get_page_mcs();
 
     # generic interpolation if user requested SCC values for years in between page_years
     if _need_to_interpolate
-        new_SCC_values = Array{Float64, 4}(undef, trials, length(all_years), length(scenario_names), length(discount_rates))
+        new_SCC_values = Array{Float64, 4}(undef, trials, length(all_years), length(scenarios), length(discount_rates))
 
-        for i in 1:trials, j in 1:length(scenario_names), k in 1:length(discount_rates)
-            itp = interpolate((perturbation_years,), SCC_values[i, :, j, k], Gridded(Linear()))
-            new_SCC_values[i, :, j, k] = [itp[y] for y in all_years]
+        for i in 1:trials, j in 1:length(scenarios), k in 1:length(discount_rates)
+            new_SCC_values[i, :, j, k] = _interpolate(SCC_values[i, :, j, k], perturbation_years, all_years)
         end
 
         SCC_values = new_SCC_values
 
         if domestic 
-            new_domestic_values = Array{Float64, 4}(undef, trials, length(all_years), length(scenario_names), length(discount_rates))
-            for i in 1:trials, j in 1:length(scenario_names), k in 1:length(discount_rates)
-                itp = interpolate((perturbation_years,), SCC_values_domestic[i, :, j, k], Gridded(Linear()))
-                new_domestic_values[i, :, j, k] = [itp[y] for y in all_years]
+            new_domestic_values = Array{Float64, 4}(undef, trials, length(all_years), length(scenarios), length(discount_rates))
+            for i in 1:trials, j in 1:length(scenarios), k in 1:length(discount_rates)
+                new_domestic_values[i, :, j, k] = _interpolate(SCC_values_domestic[i, :, j, k], perturbation_years, all_years)
             end
             SCC_values_domestic = new_domestic_values
         end
@@ -351,7 +349,8 @@ function run_page_scc_mcs(mcs::Simulation = get_page_mcs();
     # end
 
     # Save the SCC values to files
-    for (i, scenario_name) in enumerate(scenario_names), (j, rate) in enumerate(discount_rates)
+    for scenario in scenarios, (j, rate) in enumerate(discount_rates)
+        i, scenario_name = Int(scenario), string(scenario)
         # Global SCC values
         scc_file = joinpath(scc_dir, "$scenario_name $rate.csv")
         open(scc_file, "w") do f
@@ -446,8 +445,8 @@ function _make_summary_table(output_dir, discount_rates, perturbation_years)
 
     for (j, dr) in enumerate([0.05, 0.03, 0.025])
         vals = Matrix{Float64}(undef, 0, length(perturbation_years))
-        for scenario in scenario_names
-            vals = vcat(vals, readdlm(joinpath(scc_dir, "$scenario $dr.csv"), ',')[2:end, :])
+        for scenario in scenarios
+            vals = vcat(vals, readdlm(joinpath(scc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
         end
         data[2:end, j+1] = mean(vals, dims=1)[:]
         if dr==0.03

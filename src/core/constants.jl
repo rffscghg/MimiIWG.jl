@@ -1,12 +1,13 @@
 
-
+# Model and scenario choices
 @enum model_choice DICE FUND PAGE 
-# @enum scenario_choice USG1 USG2 USG3 USG4 USG5
-const scenario_names = ["IMAGE", "MERGE Optimistic", "MESSAGE", "MiniCAM Base", "5th Scenario"]
+@enum scenario_choice USG1=1 USG2=2 USG3=3 USG4=4 USG5=5
+const scenarios = [USG1, USG2, USG3, USG4, USG5]    # for use in iterating
+# const tsd_scenario_names = ["IMAGE", "MERGE Optimistic", "MESSAGE", "MiniCAM Base", "5th Scenario"]
 
 # Default values for user facing functions
 const _default_year = 2020      # default perturbation year for marginal damages and scc
-const _default_discount = 0.03  # 3%
+const _default_discount = 0.03  # 3% constant discounting
 const _default_horizon = 2300   # Same as H (the variable name used by the IWG)
 const _default_discount_rates = [.025, .03, .05]            # used by MCS
 
@@ -24,7 +25,7 @@ const iwg_dice_input_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/SCC_i
 const dice_ts = 10                              # length of DICE timestep: 10 years
 const dice_years = 2005:dice_ts:2405   # time dimension of the IWG's DICE model
 
-const _default_dice_perturbation_years = collect(2005:dice_ts:2295)   # used by MCS for SCC calculations
+const _default_dice_perturbation_years = collect(2005:dice_ts:2055)   # used by MCS for SCC calculations
 
 # Input parameters from EPA's Matlab code
 const H     = 2300       # Time horizon for calculating SCC [year]
@@ -35,14 +36,13 @@ const s     = 0.23       # Approximate optimal savings in DICE2010
 
 const dice_inflate = 122.58 / 114.52 # World GDP inflator 2005 => 2007
 
-const dice_scenario_convert = Dict{String, String}(    # convert from names standard across all three models and consistent with the TSDs to the DICE-specific names used in the input files
-    "IMAGE"            => "IMAGE",
-    "MERGE Optimistic" => "MERGEoptimistic",
-    "MESSAGE"          => "MESSAGE",
-    "MiniCAM Base"     => "MiniCAMbase",
-    "5th Scenario"     => "5thScenario"
+const dice_scenario_convert = Dict{scenario_choice, String}(    # convert from standard names to the DICE-specific names used in the input files
+    USG1 => "IMAGE",
+    USG2 => "MERGEoptimistic",
+    USG3 => "MESSAGE",
+    USG4 => "MiniCAMbase",
+    USG5 => "5thScenario"
 )
-
 
 #------------------------------------------------------------------------------
 # 2. FUND specific constants
@@ -56,14 +56,13 @@ const fund_years = 1950:2300   # number of years to include for the SCC calculat
 
 const _default_fund_perturbation_years = collect(2010:5:2050)
 
-const fund_scenario_convert = Dict{String, String}(    # convert from names standard across all three models and consistent with the TSDs to the FUND-specific names used in the input files
-    "IMAGE"             => "IMAGE",
-    "MERGE Optimistic"  => "MERGE Optimistic",
-    "MESSAGE"           => "MESSAGE",
-    "MiniCAM Base"      => "MiniCAM",
-    "5th Scenario"      => "Policy Level Average"
+const fund_scenario_convert = Dict{scenario_choice, String}(    # convert from standard names to the FUND-specific names used in the input files
+    USG1  => "IMAGE",
+    USG2  => "MERGE Optimistic",
+    USG3  => "MESSAGE",
+    USG4  => "MiniCAM",
+    USG5  => "Policy Level Average"
 )
-
 
 #------------------------------------------------------------------------------
 # 3. PAGE specific constants 
@@ -92,12 +91,12 @@ const page_scenario_specific_params = [
     "exf_excessforcing"
 ]
 
-const page_scenario_convert = Dict{String, String}(    # convert from names standard across all three models and consistent with the TSDs to the PAGE specific names used in the input files
-    "IMAGE"             => "IMAGE",
-    "MERGE Optimistic"  => "MERGE",
-    "MESSAGE"           => "MESSAGE",
-    "MiniCAM Base"      => "MiniCAM",
-    "5th Scenario"      => "550 Avg"
+const page_scenario_convert = Dict{scenario_choice, String}(    # convert from standard names to the PAGE specific names used in the input files
+    USG1  => "IMAGE",
+    USG2  => "MERGE",
+    USG3  => "MESSAGE",
+    USG4  => "MiniCAM",
+    USG5  => "550 Avg"
 )
 
 #------------------------------------------------------------------------------

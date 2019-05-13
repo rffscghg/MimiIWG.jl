@@ -1,7 +1,7 @@
 """
 Returns the IWG version of the PAGE 2009 model for the specified scenario.
 """
-function get_page_model(scenario_name::Union{String, Nothing}=nothing)
+function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
     # Get original version of PAGE
     m = MimiPAGE2009.getpage()
@@ -25,15 +25,14 @@ function get_page_model(scenario_name::Union{String, Nothing}=nothing)
 
     # Add the scenario choice component and load all the scenario parameter values
     add_comp!(m, IWG_PAGE_ScenarioChoice, :IWGScenarioChoice; before = :co2emissions)
-    set_dimension!(m, :scenarios, length(scenario_names))
+    set_dimension!(m, :scenarios, length(scenarios))
     set_page_scenario_params!(m)
     
-    # Set the scenario number if a scenario_name was provided
-    if scenario_name == nothing 
+    # Set the scenario number if a scenario_choice was provided
+    if scenario_choice == nothing 
         @warn("No scenario name provided, must set parameter :scenario_num in :IWGScenarioChoice component before running the model.")
     else
-        scenario_num = findfirst(isequal(scenario_name), scenario_names)
-        scenario_num == nothing ? error("Unknown scenario name $scenario_name. Must provide one of the following scenario names to get_model: $(join(scenario_names, ", "))") : nothing
+        scenario_num = Int(scenario_choice)
         set_param!(m, :IWGScenarioChoice, :scenario_num, scenario_num)
     end
 
@@ -50,7 +49,7 @@ function set_page_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioCho
     params_dict = Dict{String, Array}([k=>[] for k in page_scenario_specific_params])
 
     # add an array of each scenario's value to the dictionary
-    for (i, scenario) in enumerate(scenario_names)
+    for scenario in scenarios
         params = load_page_scenario_params(scenario)
         for p in page_scenario_specific_params
             push!(params_dict[p], params[p])
@@ -85,13 +84,13 @@ end
     Returns a dictionary of the scenario-specific parameter values for the specified scenario.
         (also possible TODO: should I just make data files for all of these instead of using Excel?)
 """
-function load_page_scenario_params(scenario_name::String)
+function load_page_scenario_params(scenario_choice::scenario_choice)
 
     # Build a dictionary of values to return
     p = Dict{Any, Any}()
 
     # Specify the scenario parameter file path
-    fn = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 ($(page_scenario_convert[scenario_name]), for 2013 SCC technical update - Input files).xlsx")
+    fn = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 ($(page_scenario_convert[scenario_choice]), for 2013 SCC technical update - Input files).xlsx")
     f = openxl(fn)
 
     p["pop0_initpopulation"] = dropdims(convert(Array{Float64}, readxl(f, "Base data!E24:E31")), dims=2)    # Population base year
@@ -262,19 +261,19 @@ end
 
 """
     Returns marginal damages each year from an additional emissions pulse in the specified year. 
-    User must specify an IWG scenario name `scenario_name`.
+    User must specify an IWG scenario `scenario_choice`.
     If no `year` is specified, will run for an emissions pulse in $_default_year.
     If no `discount` is specified, will return undiscounted marginal damages.
     Default returns global values; specify `regional=true` for regional values.
 """
-function get_page_marginaldamages(scenario_name::String, year::Int, discount::Float64, regional::Bool=false)
+function get_page_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64, regional::Bool=false)
 
     # Check the emissions year
     if ! (year in page_years)
         error("$year not a valid year; must be in model's time index $page_years.")
     end
 
-    base, marginal = get_marginal_page_models(scenario_name=scenario_name, year=year, discount=discount)
+    base, marginal = get_marginal_page_models(scenario_choice=scenario_choice, year=year, discount=discount)
 
     if discount == 0
         base_impacts = base[:EquityWeighting, :wit_equityweightedimpact]
@@ -303,9 +302,9 @@ end
     end
 end
 
-function get_marginal_page_models(; scenario_name::Union{String, Nothing}=nothing, year=nothing, discount=nothing)
+function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Nothing}=nothing, year=nothing, discount=nothing)
 
-    base = get_page_model(scenario_name)
+    base = get_page_model(scenario_choice)
     if discount != nothing
         update_param!(base, :ptp_timepreference, discount * 100)
     end
@@ -352,11 +351,11 @@ end
 
 """
     Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the IWG-PAGE model.
-    User must specify an IWG scenario name `scenario_name`.
+    User must specify an IWG scenario `scenario_choice`.
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_page_scc(scenario_name::String, year::Int, discount::Float64; domestic=false)
+function get_page_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic=false)
 
     # Check the emissions year
     _need_to_interpolate = false
@@ -368,7 +367,7 @@ function get_page_scc(scenario_name::String, year::Int, discount::Float64; domes
         year = filter(x-> x < year, page_years)[end]    # use the last year less than the desired year as the lower scc value
     end
 
-    base, marginal = get_marginal_page_models(scenario_name=scenario_name, year=year, discount=discount)
+    base, marginal = get_marginal_page_models(scenario_choice=scenario_choice, year=year, discount=discount)
     DF = [(1 / (1 + discount)) ^ (Y - 2000) for Y in page_years]
     idx = getpageindexfromyear(year)
 
@@ -389,7 +388,7 @@ function get_page_scc(scenario_name::String, year::Int, discount::Float64; domes
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = page_years[findfirst(page_years, year) + 1] 
-        upper_scc = get_page_scc(scenario_name, next_year, discount, domestic=domestic)
+        upper_scc = get_page_scc(scenario_choice, next_year, discount, domestic=domestic)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 
