@@ -15,11 +15,11 @@ To get started, you will need to download Julia version 1.1 [here](https://julia
 
 Download this project code using git:
 ```
-git clone "https://github.com/ckingdon95/MimiIWG2016"
+git clone "https://github.com/ckingdon95/MimiIWG"
 ```
 Begin an interactive Julia session. First, navigate into the folder on your computer for this project code:
 ```
-julia> cd("/pathtocode/MimiIWG2016")
+julia> cd("/pathtocode/MimiIWG")
 ```
 Enter the Package REPL by typing "]"
 ```
@@ -33,7 +33,7 @@ pkg> instantiate
 Type a `backspace` to exit the package REPL and get back to the interactive Julia environment.
 To begin using this project, execute:
 ```
-include("src/MimiIWG2016.jl")
+include("src/MimiIWG.jl")
 ```
 
 ### API
@@ -43,7 +43,7 @@ The main available functions are:
 
 - `get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0)`
 
-- `get_scc(MODEL_NAME, SCENARIO_CHOICE, year, discount)`
+- `get_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
 
 - `run_scc_mcs(MODEL_NAME; trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
 

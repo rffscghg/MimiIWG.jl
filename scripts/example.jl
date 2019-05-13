@@ -1,4 +1,4 @@
-include("../src/MimiIWG2016.jl")
+include("../src/MimiIWG.jl")
 
 # Get a model
 m = get_model(DICE, USG2)
