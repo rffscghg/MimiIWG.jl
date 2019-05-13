@@ -33,7 +33,8 @@ pkg> instantiate
 Type a `backspace` to exit the package REPL and get back to the interactive Julia environment.
 To begin using this project, execute:
 ```
-include("src/MimiIWG.jl")
+julia> include("src/MimiIWG.jl")
+julia> using .MimiIWG
 ```
 
 ### API
