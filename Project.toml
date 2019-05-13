@@ -1,5 +1,11 @@
 [deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+ExcelReaders = "c04bee98-12a5-510c-87df-2a230cb6e075"
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 Mimi = "e4e893b0-ee5e-52ea-8111-44b3bdec128c"
 MimiDICE2010 = "4f2c5d70-42a7-11e9-1de8-c370bd984083"
 MimiFUND = "b3ba11de-429f-11e9-29f7-cb478ab96e7c"
 MimiPAGE2009 = "e25d4f70-4200-11e9-37f3-3b45f1cef54f"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"

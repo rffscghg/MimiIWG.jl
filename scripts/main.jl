@@ -1,4 +1,5 @@
 include("../src/MimiIWG.jl")
+using .MimiIWG
 
 N = 10000
 

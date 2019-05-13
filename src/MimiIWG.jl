@@ -1,6 +1,9 @@
 using Mimi
+using MimiDICE2010
+using MimiFUND          # pinned to version 3.8.2 in Project.toml
+using MimiPAGE2009 
 
-# module MimiIWG
+module MimiIWG
 
 using Mimi
 using MimiDICE2010
@@ -13,7 +16,9 @@ using Interpolations
 using Dates
 using DelimitedFiles
 
-# export get_model #, get_SCC, run_scc_mcs, model_choice, scenario_choice
+export get_model, get_marginaldamages, get_scc, run_scc_mcs, 
+        DICE, FUND, PAGE, # export the enumerated model_choice options
+        USG1, USG2, USG3, USG4, USG5 # export the enumerate scenario_choice options 
 
 # General constants and functions
 include("core/constants.jl")
@@ -28,7 +33,6 @@ include("components/IWG_FUND_impactsealevelrise.jl")
 include("components/IWG_FUND_roebakerclimatesensitivity.jl")
 include("components/IWG_PAGE_ClimateTemperature.jl")
 include("components/IWG_PAGE_ScenarioChoice.jl")
-# Mimi.load_comps(joinpath(@__DIR__, "components"))     # Need to fix this function in Mimi, then won't need to include each component file separately
 
 # Main models and functions
 include("core/DICE_helper.jl")
@@ -43,4 +47,4 @@ include("montecarlo/PAGE_mcs.jl")
 include("montecarlo/run_scc_mcs.jl")
 
 
-# end
+end
