@@ -183,279 +183,55 @@ function get_page_mcs()
 
 end
 
-"""
-    Run a Monte Carlo Simulation of the IWG version of PAGE09.
-"""
-function run_page_scc_mcs(mcs::Simulation = get_page_mcs(); 
-        trials = 10,
-        perturbation_years = _default_page_perturbation_years,
-        discount_rates = _default_discount_rates, 
-        save_trials = false,
-        domestic = false,
-        # interpolate_fiveyears = false,
-        output_dir = nothing, 
-        tables = true)
+# function page_scenario_func(mcs::Simulation, tup::Tuple)
+#     # Unpack the scenario arguments
+#     (scenario_choice, rate) = tup 
+#     global scenario_num = Int(scenario_choice)
+#     global rate_num = findfirst(isequal(rate), discount_rates)
 
-    # Set up output directory for trials and saved values
-    output_dir == nothing ? error("Must provide an output_dir to run_page_scc_mcs.") : nothing
-    mkpath(output_dir)
+#     # Build the page versions for this scenario
+#     base, marginal = mcs.models
+#     set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
+#     set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
+#     update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
+#     update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
 
-    # Make subdirectory for SCC output
-    scc_dir = joinpath(output_dir, "SCC/")
-    mkpath(scc_dir)
+#     Mimi.build(base)
+#     Mimi.build(marginal)
+# end 
+# function page_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
+#     # Unpack the scenario arguments
+#     (scenario_name, rate) = tup
+#     DF = discount_factors[rate_num]
 
-    # Set up scenario arguments
-    scenario_args = [
-        :scenarios => scenarios
-        :discount_rates => discount_rates
-    ]
+#     # Access the models
+#     base, marginal = mcs.models 
+    
+#     # Get base impacts:
+#     td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
+#     if domestic 
+#         td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
+#     end
 
-    # Precompute discount factors for each of the discount rates
-    discount_factors = [[(1 / (1 + r)) ^ (Y - 2000) for Y in page_years] for r in discount_rates]
+#     EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
+#     UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)
 
-    # Check if any desired perturbation years need to be interpolated (aren't in the time index)
-    all_years = copy(perturbation_years)    # preserve a copy of the original desired SCC years
-    perturbation_years = page_years[1 : length(filter(x->x<maximum(all_years), page_years)) + 1]
-    _need_to_interpolate = all_years == perturbation_years ? false : true    # Boolean flag for whether or not we need to interpolate at the end
+#     for pyear in perturbation_years 
+#         idx = getpageindexfromyear(pyear)
 
-    # Allocate matrix to store each trial's SCC values
-    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
-    if domestic 
-        SCC_values_domestic = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
-    end
-
-    function scenario_setup(mcs::Simulation, tup::Tuple)
-
-        # Unpack the scenario arguments
-        (scenario_choice, rate) = tup 
-        global scenario_num = Int(scenario_choice)
-        global rate_num = findfirst(isequal(rate), discount_rates)
-
-        # Build the page versions for this scenario
-        base, marginal = mcs.models
-        set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
-        set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
-        update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
-        update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
-
-        Mimi.build(base)
-        Mimi.build(marginal)
-
-    end 
-
-    function post_trial_scc(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
-
-        # Unpack the scenario arguments
-        (scenario_name, rate) = tup
-        DF = discount_factors[rate_num]
-
-        # Access the models
-        base, marginal = mcs.models 
+#         perturb_marginal_page_emissions!(base, marginal, pyear)
+#         run(marginal)
+#         td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts] 
+#         UDFT_marginal = DF[idx] * (marginal[:EquityWeighting, :cons_percap_consumption][idx, 1] / base[:EquityWeighting, :cons_percap_consumption_0][idx]) ^ (-EMUC)
         
-        # Get base impacts:
-        td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
-        if domestic 
-            td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
-        end
+#         scc = ((td_marginal / UDFT_marginal) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
+#         j = findfirst(isequal(pyear), perturbation_years)
+#         SCC_values[trialnum, j, scenario_num, rate_num] = scc   
 
-        EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
-        UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)
-
-        for pyear in perturbation_years 
-            idx = getpageindexfromyear(pyear)
-
-            perturb_marginal_page_emissions!(base, marginal, pyear)
-            run(marginal)
-            td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts] 
-            UDFT_marginal = DF[idx] * (marginal[:EquityWeighting, :cons_percap_consumption][idx, 1] / base[:EquityWeighting, :cons_percap_consumption_0][idx]) ^ (-EMUC)
-            
-            scc = ((td_marginal / UDFT_marginal) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
-            j = findfirst(isequal(pyear), perturbation_years)
-            # if isnan(scc)
-                # println(td_marginal, " - ", td_base)
-                # println(base[:EquityWeighting, :rcons_percap_dis])
-                # println(base[:Discontinuity, :rcons_per_cap_NonMarketRemainConsumption])
-            # end 
-            SCC_values[trialnum, j, scenario_num, rate_num] = scc   
-
-            if domestic 
-                td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
-                scc_domestic = ((td_marginal_domestic / UDFT_marginal) - (td_base_domestic / UDFT_base[idx])) / 100000 * page_inflator
-                SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
-            end
-
-        end 
-    end 
-
-    fn = save_trials ? joinpath(output_dir, "trials.csv") : nothing 
-    generate_trials!(mcs, trials; filename = fn)
-
-    base, marginal = get_marginal_page_models()  
-    set_models!(mcs, [base, marginal])
-
-    run_sim(mcs; 
-        trials = trials, 
-        models_to_run = 1,
-        output_dir = joinpath(output_dir, "saved_variables"),
-        scenario_args = scenario_args,
-        scenario_func = scenario_setup, 
-        post_trial_func = post_trial_scc
-    )
-
-    # generic interpolation if user requested SCC values for years in between page_years
-    if _need_to_interpolate
-        new_SCC_values = Array{Float64, 4}(undef, trials, length(all_years), length(scenarios), length(discount_rates))
-
-        for i in 1:trials, j in 1:length(scenarios), k in 1:length(discount_rates)
-            new_SCC_values[i, :, j, k] = _interpolate(SCC_values[i, :, j, k], perturbation_years, all_years)
-        end
-
-        SCC_values = new_SCC_values
-
-        if domestic 
-            new_domestic_values = Array{Float64, 4}(undef, trials, length(all_years), length(scenarios), length(discount_rates))
-            for i in 1:trials, j in 1:length(scenarios), k in 1:length(discount_rates)
-                new_domestic_values[i, :, j, k] = _interpolate(SCC_values_domestic[i, :, j, k], perturbation_years, all_years)
-            end
-            SCC_values_domestic = new_domestic_values
-        end
-
-        perturbation_years = all_years
-    end
-
-    # Interpolate 2010:10:2050 to 2010:5:2050
-    # if interpolate_fiveyears
-    #     new_years = collect(2010:5:2050)
-    #     new_SCC_values = Array{Float64, 4}(trials, length(new_years), length(scenario_names), length(discount_rates))
-
-    #     for i in 1:trials, j in 1:length(scenario_names), k in 1:length(discount_rates)
-    #         itp = interpolate((perturbation_years,), SCC_values[i, :, j, k], Gridded(Linear()))
-    #         new_SCC_values[i, :, j, k] = [itp[y] for y in new_years]
-    #     end
-
-    #     SCC_values = new_SCC_values
-
-    #     if domestic 
-    #         new_domestic_values = Array{Float64, 4}(trials, length(new_years), length(scenario_names), length(discount_rates))
-    #         for i in 1:trials, j in 1:length(scenario_names), k in 1:length(discount_rates)
-    #             itp = interpolate((perturbation_years,), SCC_values_domestic[i, :, j, k], Gridded(Linear()))
-    #             new_domestic_values[i, :, j, k] = [itp[y] for y in new_years]
-    #         end
-    #         SCC_values_domestic = new_domestic_values
-    #     end
-
-    #     perturbation_years = new_years
-
-    # end
-
-    # Save the SCC values to files
-    for scenario in scenarios, (j, rate) in enumerate(discount_rates)
-        i, scenario_name = Int(scenario), string(scenario)
-        # Global SCC values
-        scc_file = joinpath(scc_dir, "$scenario_name $rate.csv")
-        open(scc_file, "w") do f
-            write(f, join(perturbation_years, ","), "\n")
-            writedlm(f, SCC_values[:, :, i, j], ',')
-        end
-        # Domestic SCC values
-        if domestic 
-            scc_file = joinpath(scc_dir, "$scenario_name $rate domestic.csv")
-            open(scc_file, "w") do f
-                write(f, join(perturbation_years, ","), "\n")
-                writedlm(f, SCC_values_domestic[:, :, i, j], ',')
-            end
-        end
-    end
-
-    # Make TSD tables and standard error tables
-    if tables
-        _make_page_percentile_tables(output_dir, discount_rates, perturbation_years)
-        _make_page_stderror_tables(output_dir, discount_rates, perturbation_years)
-        if discount_rates == _default_discount_rates
-            _make_summary_table(output_dir, discount_rates, perturbation_years)
-        end
-    end
-
-end
-
-"""
-Replicate the percentile summary tables from the IWG TSD documents.
-"""
-function _make_page_percentile_tables(output_dir, discount_rates, perturbation_years)
-
-    scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
-    tables = "$output_dir/Tables/Percentiles"   # folder to save TSD tables to
-    mkpath(tables)
-
-    results = readdir(scc_dir)      # all saved SCC output files
-
-    pcts = [.01, .05, .1, .25, .5, :avg, .75, .90, .95, .99]
-
-    for dr in discount_rates, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SCC Percentiles - $dr.csv")
-        open(table, "w") do f 
-            write(f, "Scenario,1st,5th,10th,25th,50th,Avg,75th,90th,95th,99th\n")
-            for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
-                scenario = split(fn)[1] # get the scenario name
-                d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx] # just keep 2020 values
-                filter!(x->!isnan(x), d)
-                values = [pct == :avg ? Int(round(mean(d))) : Int(round(quantile(d, pct))) for pct in pcts]
-                write(f, "$scenario,", join(values, ","), "\n")
-            end 
-        end
-    end
-    nothing  
-end
-
-function _make_page_stderror_tables(output_dir, discount_rates, perturbation_years)
-
-    scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
-    tables = "$output_dir/Tables/Std Errors"   # folder to save TSD tables to
-    mkpath(tables)
-
-    results = readdir(scc_dir)      # all saved SCC output files
-
-    for dr in discount_rates, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SCC Std Errors - $dr.csv")
-        open(table, "w") do f 
-            write(f, "Scenario,Mean,SE\n")
-            for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
-                scenario = split(fn)[1] # get the scenario name
-                d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx] # just keep 2020 values
-                filter!(x->!isnan(x), d)
-                write(f, "$scenario, $(round(mean(d), digits=2)), $(round(sem(d), digits=2)) \n")
-            end 
-        end
-    end
-    nothing  
-end
-
-function _make_summary_table(output_dir, discount_rates, perturbation_years)
-
-    scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
-    tables = "$output_dir/Tables"   # folder to save TSD tables to
-    mkpath(tables)
-
-    results = readdir(scc_dir)      # all saved SCC output files
-
-
-    data = Array{Any, 2}(undef, length(perturbation_years)+1, 5)
-    data[1, :] = ["Year","5% Average","3% Average","2.5% Average", "High Impact (95th Pct at 3%)"]
-    data[2:end, 1] = perturbation_years
-
-    for (j, dr) in enumerate([0.05, 0.03, 0.025])
-        vals = Matrix{Float64}(undef, 0, length(perturbation_years))
-        for scenario in scenarios
-            vals = vcat(vals, readdlm(joinpath(scc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
-        end
-        data[2:end, j+1] = mean(vals, dims=1)[:]
-        if dr==0.03
-            data[2:end, end] = [quantile(vals[2:end, y], .95) for y in 1:length(perturbation_years)]
-        end
-    end
-
-    table = joinpath(tables, "Summary Table.csv")
-    writedlm(table, data, ',')
-    nothing 
-end
-
+#         if domestic 
+#             td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
+#             scc_domestic = ((td_marginal_domestic / UDFT_marginal) - (td_base_domestic / UDFT_base[idx])) / 100000 * page_inflator
+#             SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
+#         end
+#     end 
+# end 

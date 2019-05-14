@@ -10,6 +10,7 @@ const _default_year = 2020      # default perturbation year for marginal damages
 const _default_discount = 0.03  # 3% constant discounting
 const _default_horizon = 2300   # Same as H (the variable name used by the IWG in DICE)
 const _default_discount_rates = [.025, .03, .05]            # used by MCS
+const _default_perturbation_years = 2010:5:2050             # years for which to calculate the SCC
 
 # Roe and Baker climate sensitivity distribution file
 const RBdistribution_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls")
@@ -24,8 +25,6 @@ const iwg_dice_input_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/SCC_i
 
 const dice_ts = 10                              # length of DICE timestep: 10 years
 const dice_years = 2005:dice_ts:2405   # time dimension of the IWG's DICE model
-
-const _default_dice_perturbation_years = collect(2005:dice_ts:2055)   # used by MCS for SCC calculations
 
 const dice_inflate = 122.58 / 114.52 # World GDP inflator 2005 => 2007
 
@@ -47,8 +46,6 @@ const fund_inflator = 1.3839  # 1990(?)$ => 2007$
 
 const fund_years = 1950:2300   # number of years to include for the SCC calculation, even though model is run to 3000
 
-const _default_fund_perturbation_years = collect(2010:5:2050)
-
 const fund_scenario_convert = Dict{scenario_choice, String}(    # convert from standard names to the FUND-specific names used in the input files
     USG1  => "IMAGE",
     USG2  => "MERGE Optimistic",
@@ -67,8 +64,6 @@ const iwg_page_input_file = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 (550 A
 const page_years = [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300]
 
 const page_inflator = 1.225784    # 2000 USD => 2007 USD
-
-const _default_page_perturbation_years = collect(2010:5:2050)
 
 # list of parameters that are different between the IWG scenarios
 const page_scenario_specific_params = [

@@ -112,209 +112,59 @@ mcs = @defsim begin
 end 
 
 return mcs
-
 end
 
-"""
-    Run a Monte Carlo Simulation over the IWG version of FUND3.8.
-"""
-function run_fund_scc_mcs(mcs::Simulation = get_fund_mcs();
-    trials = 10,                                # Number of trials to run in the Monte Carlo simulation
-    perturbation_years = _default_fund_perturbation_years,   # List of years in which to calculate the SCC
-    discount_rates = _default_discount_rates,   # List of discount rates to calculate for
-    domestic = false,                           # Option to also calculate domestic SCC values 
-    output_dir = nothing,                       # Option to specify different output directory; default is "../output/yyyy-mm-dd HH-MM-SS MC$trials"
-    save_trials = false,                        # Option to save all parameter draws to a file
-    tables = true)                              # Option to compute TSD and Std Error tables
 
-    output_dir == nothing ? error("Must provide an output_dir to run_fund_scc_mcs.") : nothing
-    mkpath(output_dir)
+# function fund_scenario_func(mcs::Simulation, tup::Tuple)
+#     # Access the models
+#     base, marginal = mcs.models 
 
-    # Get base and marginal models
-    base = get_fund_model()
-    marginal = get_fund_model()
-    MimiFUND.add_marginal_emissions!(marginal)   # adds the marginal emissions component, doesn't set the emission pulse till within MCS
+#     # Unpack the scenario tuple
+#     (scenario_choice,) = tup
+#     global scenario_num = Int(scenario_choice)
 
-    scenario_args = [
-        :scenarios => scenarios
-    ] 
+#     # Apply the scenario data to the base and marginal models
+#     apply_fund_scenario!(base, scenario_choice)
+#     apply_fund_scenario!(marginal, scenario_choice)
 
-    nyears = length(fund_years)
+#     Mimi.build(base)
+#     Mimi.build(marginal)
+# end
 
-    # Make an array to hold all calculated scc values
-    SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
-    if domestic 
-        SCC_values_domestic = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
-    end
+# function fund_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
+#     # Access the models
+#     base, marginal = mcs.models 
+#     damages1 = base[:impactaggregation, :loss]
 
-    function scenario_func(mcs::Simulation, tup::Tuple)
+#     # Loop through perturbation years for scc calculations, and only re-run the marinal model
+#     for (j, pyear) in enumerate(perturbation_years)
 
-        # Access the models
-        base, marginal = mcs.models 
+#         MimiFUND.perturb_marginal_emissions!(marginal, pyear)
+#         run(marginal; ntimesteps=ntimesteps)
 
-        # Unpack the scenario tuple
-        (scenario_choice,) = tup
-        global scenario_num = Int(scenario_choice)
+#         damages2 = marginal[:impactaggregation, :loss] ./ marginal[:socioeconomic, :income] .* base[:socioeconomic, :income]
+#         marginaldamages = (damages2 .- damages1) / 10000000.
+#         global_marginaldamages = sum(marginaldamages, dims = 2)    # sum across regions
 
-        # Apply the scenario data to the base and marginal models
-        apply_fund_scenario!(base, scenario_choice)
-        apply_fund_scenario!(marginal, scenario_choice)
+#         function _get_scc(pyear, marginaldamages, discount_rates)
+#             scc = zeros(length(discount_rates))
+#             p_idx = MimiFUND.getindexfromyear(pyear)
+#             final = nyears
+            
+#             for (i, rate) in enumerate(discount_rates)
+#                 discount_factor = [(1/(1 + rate)) ^ (t - p_idx) for t in p_idx:final]
+#                 scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor) * 12.0 / 44.0
+#             end
+#             return scc 
+#         end
 
-        Mimi.build(base)
-        Mimi.build(marginal)
+#         scc_global = _get_scc(pyear, global_marginaldamages, discount_rates)
+#         SCC_values[trialnum, j, scenario_num, :] = scc_global * fund_inflator
 
-    end
-
-    function post_trial_scc(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
-
-        # Access the models
-        base, marginal = mcs.models 
-        damages1 = base[:impactaggregation, :loss]
-
-        # Loop through perturbation years for scc calculations, and only re-run the marinal model
-        for (j, pyear) in enumerate(perturbation_years)
-
-            MimiFUND.perturb_marginal_emissions!(marginal, pyear)
-            run(marginal; ntimesteps=ntimesteps)
-
-            damages2 = marginal[:impactaggregation, :loss] ./ marginal[:socioeconomic, :income] .* base[:socioeconomic, :income]
-            marginaldamages = (damages2 .- damages1) / 10000000.
-            global_marginaldamages = sum(marginaldamages, dims = 2)    # sum across regions
-
-            function _get_scc(pyear, marginaldamages, discount_rates)
-                scc = zeros(length(discount_rates))
-                p_idx = MimiFUND.getindexfromyear(pyear)
-                final = nyears
-                
-                for (i, rate) in enumerate(discount_rates)
-                    discount_factor = [(1/(1 + rate)) ^ (t - p_idx) for t in p_idx:final]
-                    scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor) * 12.0 / 44.0
-                end
-                return scc 
-            end
-
-            scc_global = _get_scc(pyear, global_marginaldamages, discount_rates)
-            SCC_values[trialnum, j, scenario_num, :] = scc_global * fund_inflator
-
-            if domestic
-                domestic_marginaldamages = marginaldamages[:, 1]
-                scc_domestic = _get_scc(pyear, domestic_marginaldamages, discount_rates)
-                SCC_values_domestic[trialnum, j, scenario_num, :] = scc_domestic * fund_inflator
-            end
-        end
-
-    end
-
-    fn = save_trials ? joinpath(output_dir, "trials.csv") : nothing 
-    generate_trials!(mcs, trials; filename = fn)
-
-    # Set the base and marginal models
-    set_models!(mcs, [base, marginal])
-
-    # Run the MC simulation
-    run_sim(mcs;
-        trials = trials, 
-        models_to_run = 1,
-        output_dir = joinpath(output_dir, "saved_variables"),
-        scenario_args = scenario_args,
-        scenario_func = scenario_func,
-        post_trial_func = post_trial_scc,
-        ntimesteps = nyears)
-
-    # Make subdirectory for SCC output
-    scc_dir = joinpath(output_dir, "SCC/")
-    mkpath(scc_dir)
-
-    # Save the SCC values
-    for scenario in scenarios, (j, rate) in enumerate(discount_rates)
-        i, scenario_name = Int(scenario), string(scenario)
-        # Global SCC values
-        scc_file = joinpath(scc_dir, "$scenario_name $rate.csv")
-        open(scc_file, "w") do f
-            write(f, join(perturbation_years, ","), "\n")
-            writedlm(f, SCC_values[:, :, i, j], ',')
-        end
-        # Domestic SCC values
-        if domestic 
-            scc_file = joinpath(scc_dir, "$scenario_name $rate domestic.csv")
-            open(scc_file, "w") do f
-                write(f, join(perturbation_years, ","), "\n")
-                writedlm(f, SCC_values_domestic[:, :, i, j], ',')
-            end
-        end
-    end
-
-    # Build the stats tables
-    if tables
-        build_tsd_tables(output_dir, discount_rates, perturbation_years)
-        build_stderror_tables(output_dir, discount_rates, perturbation_years)
-    end
-
-    return nothing
-end 
-
-"""
-Replicate the 2020 percentile summary tables from the IWG TSD documents.
-"""
-function build_tsd_tables(output_dir, discount_rates, perturbation_years)
-
-    scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
-    tables = "$output_dir/tables"   # folder to save TSD tables to
-    mkpath(tables)
-
-    results = readdir(scc_dir)      # all saved SCC output files
-    y = findfirst(isequal(2020), perturbation_years)
-
-    percentiles1 = [.01, .05, .1, .25, .5] 
-    percentiles2 = [.75, .90, .95, .99]
-    for dr in discount_rates
-        table = joinpath(tables, "2020 TSDtable - $dr.csv")
-        touch(table)
-        f = open(table, "w")
-        write(f, "Scenario,1st,5th,10th,25th,50th,Avg,75th,90th,95th,99th\n")
-        for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
-            scenario = split(fn)[1] # get the scenario name
-            write(f, scenario)
-            d = readdlm(joinpath(scc_dir, fn), ',')[2:end, y] # just keep 2020 values
-            for q in percentiles1 
-                write(f, ",$(Int(round(quantile(d, q); digits=0)))")
-            end 
-            write(f,",$(Int(round(mean(d); digits=0)))")
-            for q in percentiles2 
-                write(f, ",$(Int(round(quantile(d, q); digits=0)))")
-            end 
-            write(f,"\n")
-        end 
-        close(f)
-    end
-    nothing  
-end
-
-"""
-Save tables with standard error and mean values for each scenario for 2020 SCC values.
-"""
-function build_stderror_tables(output_dir, discount_rates, perturbation_years)
-
-    scc_dir = "$output_dir/SCC"
-    tables = "$output_dir/tables"
-    mkpath(tables)
-
-    results = readdir(scc_dir)
-    y = findfirst(isequal(2020), perturbation_years)
-
-    for dr in discount_rates
-        table = joinpath(tables, "Std Errors - $dr.csv")
-        touch(table)
-        f = open(table, "w")
-        write(f, "Scenario,SE,Mean\n")
-        for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
-            scenario = split(fn)[1] # get the scenario name
-            write(f, scenario)
-            d = readdlm(joinpath(scc_dir, fn), ',')[2:end, y] # just keep 2020 values
-            write(f, ",$(round(sem(d); digits=2))")
-            write(f, ",$(round(mean(d); digits=2))\n")
-        end 
-        close(f)
-    end  
-    nothing
-end
+#         if domestic
+#             domestic_marginaldamages = marginaldamages[:, 1]
+#             scc_domestic = _get_scc(pyear, domestic_marginaldamages, discount_rates)
+#             SCC_values_domestic[trialnum, j, scenario_num, :] = scc_domestic * fund_inflator
+#         end
+#     end
+# end
