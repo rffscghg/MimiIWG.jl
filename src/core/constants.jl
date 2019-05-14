@@ -8,7 +8,7 @@ const scenarios = [USG1, USG2, USG3, USG4, USG5]    # for use in iterating
 # Default values for user facing functions
 const _default_year = 2020      # default perturbation year for marginal damages and scc
 const _default_discount = 0.03  # 3% constant discounting
-const _default_horizon = 2300   # Same as H (the variable name used by the IWG)
+const _default_horizon = 2300   # Same as H (the variable name used by the IWG in DICE)
 const _default_discount_rates = [.025, .03, .05]            # used by MCS
 
 # Roe and Baker climate sensitivity distribution file
