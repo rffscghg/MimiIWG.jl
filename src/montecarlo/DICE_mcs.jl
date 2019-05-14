@@ -18,7 +18,8 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
         trials = 10,
         perturbation_years = _default_dice_perturbation_years,
         discount_rates = _default_discount_rates,
-        domestic = false, 
+        domestic = false,
+        horizon = _default_horizon, 
         output_dir = nothing, 
         save_trials = false,
         tables = true)
@@ -40,11 +41,11 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
         ]
 
     # precompute discount factors for the defined rates
-    last_idx = H - 2005 + 1
+    last_idx = horizon - 2005 + 1
     discount_factors = Dict([rate => [(1 + rate) ^ y for y in 0:last_idx-1] for rate in discount_rates])
 
     nyears = length(dice_years)
-    annual_years = dice_years[1]:H
+    annual_years = dice_years[1]:horizon
 
     # MCS "scenario_func" called outside the MCS loop
     function scenario_setup(mcs::Simulation, tup::Tuple)
@@ -81,7 +82,7 @@ function run_dice_scc_mcs(mcs::Simulation = get_dice_mcs();
             annual_md = _interpolate(md, dice_years, annual_years)  # get annual marginal damages
 
             first_idx = pyear - 2005 + 1
-            scc = sum(annual_md[first_idx:last_idx] ./ DF[1:H-pyear+1])
+            scc = sum(annual_md[first_idx:last_idx] ./ DF[1:horizon - pyear + 1])
 
             SCC_values[trial, idx, scenario_num, rate_num] = scc 
         end

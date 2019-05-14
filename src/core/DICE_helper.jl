@@ -41,7 +41,6 @@ end
 function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 
     # Input parameters from EPA's Matlab code
-    H     = 2300       # Time horizon for calculating SCC [year]
     A0    = 0.0303220  # First period total factor productivity, from DICE2010
     gamma = 0.3        # Labor factor productivity, from DICE2010
     delta = 0.1        # Capital depreciation rate [yr^-1], from DICE2010
