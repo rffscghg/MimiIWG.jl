@@ -64,10 +64,10 @@ run_scc_mcs(MODEL,
     trials = 10000,  # the size of the Monte Carlo sample
     perturbation_years = 2010:5:2050,  # List of years for which to calculate the SCC
     discount_rates = [0.025, 0.03, 0.05],  # List of discount rates for which to calculate the SCC
-    domestic = false,  # Whether or not to calculate domestic SCC values, in addition to calculating the global values
+    domestic = false,  # Whether to calculate domestic SCC values, in addition to calculating the global values
     output_dir = nothing,  # Output directory. If unspecified, a directory with the following name will be created: "output/MODEL yyyy-mm-dd HH-MM-SS SCC MC#trials"
     save_trials = false,   # Whether to save all of the input data sampled for each trial of the Monte Carlo Simulation. If true, values get saved to "output_dir/trials.csv"
-    tables = true   # Whether or not to save a series of summary tables in the output folder; these include statistics such as percentiles and std errors of the SCC values.
+    tables = true   # Whether to save a series of summary tables in the output folder; these include statistics such as percentiles and std errors of the SCC values.
 )
 ```
 Note that the Monte Carlo Simulations are run across all five of the USG socioeconomics scenarios.

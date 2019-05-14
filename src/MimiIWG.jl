@@ -18,7 +18,7 @@ using DelimitedFiles
 
 export get_model, get_marginaldamages, get_scc, run_scc_mcs, 
         DICE, FUND, PAGE, # export the enumerated model_choice options
-        USG1, USG2, USG3, USG4, USG5 # export the enumerate scenario_choice options 
+        USG1, USG2, USG3, USG4, USG5 # export the enumerated scenario_choice options 
 
 # General constants and functions
 include("core/constants.jl")
