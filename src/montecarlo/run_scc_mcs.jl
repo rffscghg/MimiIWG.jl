@@ -70,6 +70,8 @@ function run_scc_mcs(model::model_choice;
         model_years = dice_years
 
     elseif model == FUND 
+        horizon != _default_horizon ? error("SCC calculations for horizons other than $_default_horizon not yet implemented for FUND") : nothing
+
         mcs = get_fund_mcs()
         scenario_args = [:scenarios => scenarios] 
 
@@ -141,6 +143,8 @@ function run_scc_mcs(model::model_choice;
         model_years = fund_years
 
     elseif model == PAGE 
+        horizon != _default_horizon ? error("SCC calculations for horizons other than $_default_horizon not yet implemented for PAGE") : nothing
+
         mcs = get_page_mcs()
         scenario_args = [:scenarios => scenarios, :discount_rates => discount_rates]
 
@@ -227,6 +231,7 @@ function run_scc_mcs(model::model_choice;
     # Make an array to hold all calculated scc values
     SCC_values = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
     if domestic 
+        model==DICE ? @warn("DICE is a global model. Domestic SCC values will be calculated as 10% of the global values.") : nothing
         SCC_values_domestic = Array{Float64, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
     end
 
@@ -267,7 +272,10 @@ function run_scc_mcs(model::model_choice;
     # Save the SCC values
     scc_dir = joinpath(output_dir, "SCC/")
     write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
-    domestic ? write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic=true) : nothing
+    if domestic 
+        model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
+        write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic=true)
+    end
 
     # Build the stats tables
     if tables
