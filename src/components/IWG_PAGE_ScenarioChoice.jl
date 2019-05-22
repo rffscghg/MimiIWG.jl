@@ -37,20 +37,30 @@
             # Get the specified scenario
             scenario_num = p.scenario_num
             if scenario_num == 0
-                error("scenario_num must be set in IWGScenarioChoice component, either by calling get_model(scenario_name) or set_param!(m, :IWGScenarioChoice, :scenario_num, number)")
+                # @warn("scenario_num was not set in the IWG_PAGE_ScenarioChoice component. Will use average values of all five scenarios.")
+                v.gdp_0[:] = dropdims(mean(p.gdp_0_all[:, :], dims=2), dims=2)
+                v.grw_gdpgrowthrate[:, :] = dropdims(mean(p.grw_gdpgrowthrate_all[:, :, :], dims=3), dims=3)
+                v.GDP_per_cap_focus_0_FocusRegionEU = mean(p.GDP_per_cap_focus_0_FocusRegionEU_all[:])
+                v.pop0_initpopulation[:] = dropdims(mean(p.pop0_initpopulation_all[:, :], dims=2), dims=2)
+                v.popgrw_populationgrowth[:, :] = dropdims(mean(p.popgrw_populationgrowth_all[:, :, :], dims=3), dims=3)
+                v.e0_baselineCO2emissions[:] = dropdims(mean(p.e0_baselineCO2emissions_all[:, :], dims=2), dims=2)
+                v.e0_globalCO2emissions = mean(p.e0_globalCO2emissions_all[:])
+                v.er_CO2emissionsgrowth[:, :] = dropdims(mean(p.er_CO2emissionsgrowth_all[:, :, :], dims=3), dims=3)
+                v.f0_CO2baseforcing = mean(p.f0_CO2baseforcing_all[:])
+                v.exf_excessforcing[:] = dropdims(mean(p.exf_excessforcing_all[:, :], dims=2), dims=2)
+            else
+                # Copy over all of the values for that scenario
+                v.gdp_0[:] = p.gdp_0_all[:, scenario_num]
+                v.grw_gdpgrowthrate[:, :] = p.grw_gdpgrowthrate_all[:, :, scenario_num]
+                v.GDP_per_cap_focus_0_FocusRegionEU = p.GDP_per_cap_focus_0_FocusRegionEU_all[scenario_num]
+                v.pop0_initpopulation[:] = p.pop0_initpopulation_all[:, scenario_num]
+                v.popgrw_populationgrowth[:, :] = p.popgrw_populationgrowth_all[:, :, scenario_num]
+                v.e0_baselineCO2emissions[:] = p.e0_baselineCO2emissions_all[:, scenario_num] 
+                v.e0_globalCO2emissions = p.e0_globalCO2emissions_all[scenario_num]
+                v.er_CO2emissionsgrowth[:, :] = p.er_CO2emissionsgrowth_all[:, :, scenario_num]
+                v.f0_CO2baseforcing = p.f0_CO2baseforcing_all[scenario_num]
+                v.exf_excessforcing[:] = p.exf_excessforcing_all[:, scenario_num]
             end
-
-            # Copy over all of the values for that scenario
-            v.gdp_0[:] = p.gdp_0_all[:, scenario_num]
-            v.grw_gdpgrowthrate[:, :] = p.grw_gdpgrowthrate_all[:, :, scenario_num]
-            v.GDP_per_cap_focus_0_FocusRegionEU = p.GDP_per_cap_focus_0_FocusRegionEU_all[scenario_num]
-            v.pop0_initpopulation[:] = p.pop0_initpopulation_all[:, scenario_num]
-            v.popgrw_populationgrowth[:, :] = p.popgrw_populationgrowth_all[:, :, scenario_num]
-            v.e0_baselineCO2emissions[:] = p.e0_baselineCO2emissions_all[:, scenario_num] 
-            v.e0_globalCO2emissions = p.e0_globalCO2emissions_all[scenario_num]
-            v.er_CO2emissionsgrowth[:, :] = p.er_CO2emissionsgrowth_all[:, :, scenario_num]
-            v.f0_CO2baseforcing = p.f0_CO2baseforcing_all[scenario_num]
-            v.exf_excessforcing[:] = p.exf_excessforcing_all[:, scenario_num]
         end
     end
 
