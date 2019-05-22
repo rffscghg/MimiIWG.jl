@@ -33,6 +33,7 @@ include("components/IWG_FUND_impactsealevelrise.jl")
 include("components/IWG_FUND_roebakerclimatesensitivity.jl")
 include("components/IWG_PAGE_ClimateTemperature.jl")
 include("components/IWG_PAGE_ScenarioChoice.jl")
+include("components/IWG_PAGE_GDP.jl")
 
 # Main models and functions
 include("core/DICE_helper.jl")

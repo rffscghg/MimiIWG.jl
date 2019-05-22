@@ -10,6 +10,7 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     set_dimension!(m, :time, page_years)
 
     # Replace modified components
+    replace_comp!(m, IWG_PAGE_GDP, :GDP)
     replace_comp!(m, IWG_PAGE_ClimateTemperature, :ClimateTemperature)
 
     # Load all of the IWG parameters from excel that aren't scenario specific

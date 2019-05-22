@@ -7,10 +7,10 @@ uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
 version = "0.0.4"
 
 [[Arpack]]
-deps = ["BinaryProvider", "Libdl", "LinearAlgebra", "Random", "SparseArrays", "Test"]
-git-tree-sha1 = "1ce1ce9984683f0b6a587d5bdbc688ecb480096f"
+deps = ["BinaryProvider", "Libdl", "LinearAlgebra"]
+git-tree-sha1 = "07a2c077bdd4b6d23a40342a8a108e2ee5e58ab6"
 uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
-version = "0.3.0"
+version = "0.3.1"
 
 [[AxisAlgorithms]]
 deps = ["Compat", "WoodburyMatrices"]
@@ -149,9 +149,9 @@ version = "0.19.2"
 
 [[DoubleFloats]]
 deps = ["GenericSVD", "GenericSchur", "LinearAlgebra", "Polynomials", "Quadmath", "Random"]
-git-tree-sha1 = "f5e54b0a7e73580f6c67b46f67e14f619b3eee1b"
+git-tree-sha1 = "9da6779fd9a5b0760320f2c97477afd19fe82835"
 uuid = "497a8b3b-efae-58df-a0af-a86822472b78"
-version = "0.8.0"
+version = "0.8.1"
 
 [[Electron]]
 deps = ["Base64", "JSON", "Sockets", "Test", "URIParser"]
@@ -159,23 +159,11 @@ git-tree-sha1 = "878383d7d61c8efd24790d8078b8b7d5be664b9b"
 uuid = "a1bb12fb-d4d1-54b4-b10a-ee7951ef7ad3"
 version = "0.4.0"
 
-[[ExcelFiles]]
-deps = ["DataValues", "Dates", "ExcelReaders", "FileIO", "IterableTables", "IteratorInterfaceExtensions", "Printf", "PyCall", "TableShowUtils", "TableTraits", "TableTraitsUtils", "Test", "XLSX"]
-git-tree-sha1 = "e157d1ea01f94df971e0515b0fba322cbc812f14"
-uuid = "89b67f3b-d1aa-5f6f-9ca4-282e8d98620d"
-version = "0.9.1"
-
 [[ExcelReaders]]
 deps = ["DataValues", "Dates", "PyCall", "Test"]
 git-tree-sha1 = "6f9db420dd362bd5bcea3a0f6dabf8bda587fec3"
 uuid = "c04bee98-12a5-510c-87df-2a230cb6e075"
 version = "0.11.0"
-
-[[EzXML]]
-deps = ["BinaryProvider", "Libdl", "Pkg", "Printf", "Test"]
-git-tree-sha1 = "ad00b79cca4bb3eabb4209217859c553af4401f5"
-uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
-version = "0.9.1"
 
 [[FileIO]]
 deps = ["Pkg", "Random", "Test"]
@@ -300,10 +288,9 @@ uuid = "1c8ee90f-4401-5389-894e-7a04a3dc0f4d"
 version = "0.11.0"
 
 [[IteratorInterfaceExtensions]]
-deps = ["Test"]
-git-tree-sha1 = "5484e5ede2a4137b9643f4d646e8e7b87b794415"
+git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
-version = "0.1.1"
+version = "1.0.0"
 
 [[JLD2]]
 deps = ["CodecZlib", "DataStructures", "FileIO", "LinearAlgebra", "Mmap", "Printf", "Random", "Test"]
@@ -383,10 +370,10 @@ uuid = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
 version = "0.6.1"
 
 [[Mimi]]
-deps = ["CSVFiles", "Compose", "DataFrames", "DataStructures", "Dates", "DelimitedFiles", "Distributions", "Electron", "ExcelFiles", "FileIO", "FilePaths", "GlobalSensitivityAnalysis", "GraphPlot", "IterTools", "IterableTables", "JSON", "LightGraphs", "LinearAlgebra", "Logging", "MacroTools", "MetaGraphs", "NamedArrays", "Pkg", "ProgressMeter", "Query", "Random", "Serialization", "Statistics", "StatsBase", "StringBuilders", "TableTraits", "VegaLite"]
-git-tree-sha1 = "1fff2c680e83eef57c64a9e81eb9c221c45b0b51"
+deps = ["CSVFiles", "Compose", "DataFrames", "DataStructures", "Dates", "DelimitedFiles", "Distributions", "Electron", "FileIO", "FilePaths", "GlobalSensitivityAnalysis", "GraphPlot", "IterTools", "IteratorInterfaceExtensions", "JSON", "LightGraphs", "LinearAlgebra", "Logging", "MacroTools", "MetaGraphs", "NamedArrays", "Pkg", "ProgressMeter", "Random", "Serialization", "Statistics", "StatsBase", "StringBuilders", "TableTraits", "VegaLite"]
+path = "C:\\Users\\kingdon\\.julia\\dev\\Mimi"
 uuid = "e4e893b0-ee5e-52ea-8111-44b3bdec128c"
-version = "0.8.6"
+version = "0.8.7-DEV"
 
 [[MimiDICE2010]]
 deps = ["ExcelReaders", "Mimi"]
@@ -402,9 +389,9 @@ version = "3.8.2"
 
 [[MimiPAGE2009]]
 deps = ["CSVFiles", "DataFrames", "DelimitedFiles", "Distributions", "Mimi", "Query"]
-git-tree-sha1 = "03b805fa40f2a5a8edff303cfd7beddf822d043a"
+path = "C:\\Users\\kingdon\\.julia\\dev\\MimiPAGE2009"
 uuid = "e25d4f70-4200-11e9-37f3-3b45f1cef54f"
-version = "2.0.3"
+version = "2.0.4-DEV"
 
 [[Missings]]
 deps = ["SparseArrays", "Test"]
@@ -661,10 +648,10 @@ uuid = "5e66a065-1f0a-5976-b372-e0b8c017ca10"
 version = "0.2.5"
 
 [[TableTraits]]
-deps = ["IteratorInterfaceExtensions", "Test"]
-git-tree-sha1 = "eba4b1d0a82bdd773307d652c6e5f8c82104c676"
+deps = ["IteratorInterfaceExtensions"]
+git-tree-sha1 = "b1ad568ba658d8cbb3b892ed5380a6f3e781a81e"
 uuid = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
-version = "0.4.1"
+version = "1.0.0"
 
 [[TableTraitsUtils]]
 deps = ["DataValues", "IteratorInterfaceExtensions", "Missings", "TableTraits", "Test"]
@@ -674,9 +661,9 @@ version = "0.4.0"
 
 [[Tables]]
 deps = ["IteratorInterfaceExtensions", "LinearAlgebra", "Requires", "TableTraits", "Test"]
-git-tree-sha1 = "9e748316f5aa7b7753c90de612ef98fe8b0ea297"
+git-tree-sha1 = "5ab16d650736b21449731fa712bbdae60b3a7ab1"
 uuid = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
-version = "0.2.1"
+version = "0.2.2"
 
 [[Test]]
 deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
@@ -742,15 +729,3 @@ deps = ["LinearAlgebra", "Random", "SparseArrays", "Test"]
 git-tree-sha1 = "21772c33b447757ec7d3e61fcdfb9ea5c47eedcf"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "0.4.1"
-
-[[XLSX]]
-deps = ["Dates", "EzXML", "Printf", "Test", "ZipFile"]
-git-tree-sha1 = "f906a228a6df5447f007c2b2360206a01e4d34de"
-uuid = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
-version = "0.4.7"
-
-[[ZipFile]]
-deps = ["BinaryProvider", "Libdl", "Printf", "Test"]
-git-tree-sha1 = "5f6f663890dfb9bad6af75a86a43f67904e5050e"
-uuid = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
-version = "0.8.1"
