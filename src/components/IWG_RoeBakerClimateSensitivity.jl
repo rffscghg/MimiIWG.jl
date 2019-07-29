@@ -1,4 +1,4 @@
-@defcomp IWG_FUND_roebakerclimatesensitivity begin
+@defcomp IWG_RoeBakerClimateSensitivity begin
 
     roebakercsparameter = Parameter(default = 0.62)
     climatesensitivity = Variable()

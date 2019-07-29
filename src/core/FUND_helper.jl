@@ -11,7 +11,7 @@ function get_fund_model()
     replace_comp!(m, IWG_FUND_impactsealevelrise, :impactsealevelrise)
 
     # Add Roe Baker Climate Sensitivity parameter and make connection from Climate Dynamics component
-    add_comp!(m, IWG_FUND_roebakerclimatesensitivity, :roebakerclimatesensitivity; before = :climatedynamics)
+    add_comp!(m, IWG_RoeBakerClimateSensitivity, :roebakerclimatesensitivity; before = :climatedynamics)
     connect_param!(m, :climatedynamics, :climatesensitivity, :roebakerclimatesensitivity, :climatesensitivity)
 
     return m
