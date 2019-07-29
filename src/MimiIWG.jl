@@ -1,13 +1,9 @@
-using Mimi
-using MimiDICE2010
-using MimiFUND          # pinned to version 3.8.2 in Project.toml
-using MimiPAGE2009 
 
 module MimiIWG
 
 using Mimi
 using MimiDICE2010
-using MimiFUND          # pinned to version 3.8.2 in Project.toml
+using MimiFUND          # pinned to version 3.8.2 in package registration Compat.toml
 using MimiPAGE2009      
 using ExcelReaders
 using StatsBase
@@ -30,7 +26,7 @@ include("components/IWG_DICE_radiativeforcing.jl")
 include("components/IWG_DICE_climatedynamics.jl")
 include("components/IWG_DICE_neteconomy.jl")
 include("components/IWG_FUND_impactsealevelrise.jl")
-include("components/IWG_FUND_roebakerclimatesensitivity.jl")
+include("components/IWG_RoeBakerClimateSensitivity.jl")
 include("components/IWG_PAGE_ClimateTemperature.jl")
 include("components/IWG_PAGE_ScenarioChoice.jl")
 include("components/IWG_PAGE_GDP.jl")
