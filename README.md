@@ -5,19 +5,20 @@ This package contains code replicating the models used by the EPA's Interagency 
 - FUND 3.8 (originally written in C#)
 - PAGE 2009 (originally written in Excel with the @RISK package)
 
-This project replicates the versions of these models used by the IWG in the Julia programming language, using the Julia package for Integrated Assesment Modeling, Mimi.jl. For more information on Mimi and its applications, visit the [Mimi Framework website](https://www.mimiframework.org/). For more information on Julia, documentation can be found [here](https://docs.julialang.org/en/v1/).
+This package replicates the versions of these models used by the IWG in the Julia programming language, using the Julia package for Integrated Assesment Modeling, Mimi.jl. For more information on Mimi and its applications, visit the [Mimi Framework website](https://www.mimiframework.org/). For more information on Julia, documentation can be found [here](https://docs.julialang.org/en/v1/).
 
 ## Project Overview
 
 ### Getting set up
 
+It is highly recommended to use the Julia package management system to download this package code rather than cloning through github.
 To get started, you will need to download Julia version 1.1 [here](https://julialang.org/downloads/).
 
 Begin an interactive Julia session and enter the Package REPL by typing "]"
 ```
 julia> ]
 ```
-Then in the package REPL, you will need to add the custom Julia package regsitry, "MimiRegsitry" with the first command. Then the second command adds the MimiIWG package:
+Next you will need to add the [MimiRegistry](https://github.com/mimiframework/MimiRegistry), which is a custom Julia package regsitry of integrated assessment models that use Mimi.jl. Then you will be able to add the MimiIWG package. In the package REPL, do the following:
 ```
 pkg> registry add https://github.com/mimiframework/MimiRegistry.git
 pkg> add MimiIWG
@@ -89,7 +90,7 @@ To view the shape of this distribution, try the following:
 using Plots
 plot(MimiIWG.RB_cs_values, MimiIWG.RB_cs_probs)
 ```
-These data are also available as an Excel file in "data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls".
+These data are also available as an Excel file in "MimiIWG/data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls".
 
 ### DICE notes
 
@@ -120,4 +121,4 @@ The main changes made by the IWG to PAGE2009, reflected in this project code are
 - The time index: the original version of PAGE 2009 is run on timesteps of [2009, 2010, 2020, 2030, 2040, 2050, 2075, 2100, 2150, 2200]. The IWG changed this time index to [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300].
 - The use of the five USG socioeconomic scenarios
 - In the original version of PAGE 2009, equilibrium climate sensitivity is calculated endogenously based on values for transient climate sensitivity. The IWG changed this, and instead sampled values for ECS directly from the Roe and Baker distribution. 
-- No sampling of `ptp_timepreference parameter`, because the IWG used constant discounting so this value is explicitly set for the different discount rates used and is not sampled during the Monte Carlo simulation. The `emuc_utilityconvexity` parameter is also not sampled in this version, and is always set to zero, because the IWG only used constant pure rate of time preference discounting.
+- In the original Monte Carlo simulation for PAGE, values are sampled for the `ptp_timepreference parameter` parameter, but the IWG used constant discounting so this value is explicitly set for the different discount rates used and is not sampled during the Monte Carlo simulation in this package. The `emuc_utilityconvexity` parameter is also not sampled in this version, and is always set to zero, because the IWG only used constant pure rate of time preference discounting with no equity weighting.
