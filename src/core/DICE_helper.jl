@@ -1,15 +1,7 @@
 """
     Returns the IWG version of the DICE 2010 model for the specified scenario.
 """
-function get_dice_model(scenario_choice::scenario_choice)
-    params = load_dice_scenario_params(scenario_choice)
-    return get_dice_model(params)
-end 
-
-"""
-    Returns the IWG version of the DICE 2010 model for the specified parameter dictionary.
-"""
-function get_dice_model(params::Dict)
+function get_dice_model(scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
     # Get the original default version of DICE2010
     m = MimiDICE2010.construct_dice()
@@ -25,18 +17,66 @@ function get_dice_model(params::Dict)
     replace_comp!(m, IWG_DICE_climatedynamics, :climatedynamics)
     replace_comp!(m, IWG_DICE_neteconomy, :neteconomy)
 
-    # Delete emissions component
+    # Delete the emissions component; emissions are now exogenous
     delete!(m, :emissions)
-    set_param!(m, :co2cycle, :E, params[:E])    # Emissions in co2cycle are now exogenous
 
-    # Update all parameter values for this scenario
-    update_params!(m, params, update_timesteps=true)
+    # Update all IWG parameter values that are not scenario-specific
+    iwg_params = load_dice_iwg_params()
+    update_params!(m, iwg_params, update_timesteps=true)
+
+    # Add the scenario choice component and load all the scenario parameter values
+    add_comp!(m, IWG_DICE_ScenarioChoice, :IWGScenarioChoice; before = :grosseconomy)
+    set_dimension!(m, :scenarios, length(scenarios))
+    set_dice_all_scenario_params!(m)
+     
+    # Set the scenario number if a scenario_choice was provided
+    if scenario_choice !== nothing 
+        scenario_num = Int(scenario_choice)
+        set_param!(m, :IWGScenarioChoice, :scenario_num, scenario_num)
+    end
 
     return m
 end 
 
 """
-    Returns a dictionary of DICE parameter values for the specified scenario.
+set_dice_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
+    m: a Mimi model with and IWGScenarioChoice component
+    comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
+    connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
+"""
+function set_dice_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
+    params_dict = Dict{Symbol, Array}([k=>[] for k in dice_scenario_specific_params])
+
+    # add an array of each scenario's value to the dictionary
+    for scenario in scenarios
+        params = load_dice_scenario_params(scenario)
+        for p in dice_scenario_specific_params
+            push!(params_dict[p], params[p])
+        end
+    end
+
+    # reshape each array of values into one array for each param, then set that value in the model
+    for (k, v) in params_dict
+        _size = size(v[1])
+        param = zeros(_size..., 5)
+        for i in 1:5
+            param[[1:l for l in _size]..., i] = v[i]
+        end
+        set_param!(m, comp_name, Symbol("$(k)_all"), param)
+    end
+
+    if connect 
+        connect_all!(m, [:grosseconomy, :neteconomy], comp_name=>:l)
+        connect_param!(m, :co2cycle=>:E, comp_name=>:E)
+        connect_param!(m, :radiativeforcing=>:forcoth, comp_name=>:forcoth)
+        connect_param!(m, :grosseconomy=>:al, comp_name=>:al)
+        connect_param!(m, :grosseconomy=>:k0, comp_name=>:k0)
+    end
+
+end
+
+"""
+    Returns a dictionary of the scenario-specific parameter values for the specified scenario.
 """
 function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 
@@ -45,23 +85,15 @@ function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
     gamma = 0.3        # Labor factor productivity, from DICE2010
     delta = 0.1        # Capital depreciation rate [yr^-1], from DICE2010
     s     = 0.23       # Approximate optimal savings in DICE2010 
-
+    
     params = Dict{Any, Any}()
     nyears = length(dice_years)
-
-    # Replace some parameter values to match EPA's matlab code
-    params[:S]          = repeat([s], nyears)    # previously called 'savebase'. :S in neteconomy
-    params[:MIU]        = zeros(nyears)             # previously called 'miubase'-- :MIU in neteconomy;  make this all zeros so abatement in neteconomy is calculated as zero; EPA doesn't include abatement costs
-    params[:a1]         = 0.00008162
-    params[:a2]         = 0.00204626
-    params[:b1]         = 0.00518162                # previously called 'slrcoeff'-- :b1 in SLR
-    params[:b2]         = 0.00305776                # previously called 'slrcoeffsq'-- :b2 in SLR 
 
     # Get the scenario number
     idx = Int(scenario_choice)
 
     # All scenario data
-    scenario_file = scenario_file==nothing ? iwg_dice_input_file : scenario_file
+    scenario_file = scenario_file === nothing ? iwg_dice_input_file : scenario_file
     f = openxl(scenario_file)
 
     Y = readxl(f, "GDP!B2:F32")[:, idx] * dice_inflate      # GDP
@@ -102,12 +134,31 @@ function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 end
 
 """
+    Returns a dicitonary of IWG parameters that are the same for all IWG scenarios. (Does not include scenario-specific parameters.)
+"""
+function load_dice_iwg_params()
+
+    params = Dict{Any, Any}()
+    nyears = length(dice_years)
+
+    # Replace some parameter values to match EPA's matlab code
+    params[:S]          = repeat([0.23], nyears)    # previously called 'savebase'. :S in neteconomy
+    params[:MIU]        = zeros(nyears)             # previously called 'miubase'-- :MIU in neteconomy;  make this all zeros so abatement in neteconomy is calculated as zero; EPA doesn't include abatement costs
+    params[:a1]         = 0.00008162
+    params[:a2]         = 0.00204626
+    params[:b1]         = 0.00518162                # previously called 'slrcoeff'-- :b1 in SLR
+    params[:b2]         = 0.00305776                # previously called 'slrcoeffsq'-- :b2 in SLR 
+
+    return params
+end
+
+"""
     Returns marginal damages each year from an additional emissions pulse in the specified year. 
     User must specify an IWG scenario `scenario_choice`.
     If no `year` is specified, will run for an emissions pulse in $_default_year.
     If no `discount` is specified, will return undiscounted marginal damages.
 """
-function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64) 
+function get_dice_marginaldamages(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64) 
 
     # Check the emissions year
     _is_mid_year = false
@@ -161,15 +212,15 @@ function add_dice_marginal_emissions!(m::Model, year=nothing)
 
     if year != nothing 
         year_idx = findfirst(isequal(year), dice_years)
-        if year_idx == nothing 
+        if year_idx === nothing 
             error("year $year provided to add_dice_marginal_emissions! not in dice time dimension")
         end 
         addem[year_idx] = 1.0
     end 
 
     set_param!(m, :marginalemission, :add, addem)
-    connect_param!(m.md, :marginalemission, :input, :E)    # connect to the external parameter (exogenous emissions)
-    connect_param!(m, :co2cycle, :E, :marginalemission, :output)
+    connect_param!(m, :marginalemission => :input, :IWGScenarioChoice => :E)    # connect to the external parameter (exogenous emissions)
+    connect_param!(m, :co2cycle => :E, :marginalemission => :output)
 
     nothing
 end 
