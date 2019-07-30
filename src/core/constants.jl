@@ -36,6 +36,14 @@ const dice_scenario_convert = Dict{scenario_choice, String}(    # convert from s
     USG5 => "5thScenario"
 )
 
+const dice_scenario_specific_params = [
+    :l,
+    :E,
+    :forcoth,
+    :al,
+    :k0
+]
+
 #------------------------------------------------------------------------------
 # 2. FUND specific constants
 #------------------------------------------------------------------------------
@@ -53,6 +61,15 @@ const fund_scenario_convert = Dict{scenario_choice, String}(    # convert from s
     USG4  => "MiniCAM",
     USG5  => "Policy Level Average"
 )
+
+const fund_scenario_specific_params = [
+    "globch4",
+    "globn2o",
+    "pgrowth",
+    "ypcgrowth",
+    "aeei",
+    "acei"
+]
 
 #------------------------------------------------------------------------------
 # 3. PAGE specific constants 

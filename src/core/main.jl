@@ -4,8 +4,8 @@
 function get_model(model::model_choice, scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
     # Check for valid scenario name
-    if scenario_choice == nothing
-        error("Must specifiy one of the following scenarios: USG1, USG2, USG3, USG4, or USG5.")
+    if scenario_choice === nothing
+        @warn("No scenario name provided. If :scenario_num is not set in the :IWGScenarioChoice component before running the model, the average of the five scenarios will be used.")
     end
 
     # dispatch on provided model choice
@@ -31,18 +31,18 @@ function get_marginaldamages(model::model_choice, scenario_choice::Union{scenari
     regional::Bool=false)
 
     # Check for valid scenario name
-    if scenario_choice == nothing
-        error("Must specifiy one of the following scenarios: USG1, USG2, USG3, USG4, or USG5.")
+    if scenario_choice === nothing
+        @warn("No scenario name provided. If :scenario_num is not set in the :IWGScenarioChoice component before running the model, the average of the five scenarios will be used.")
     end
 
     # Check the emissions year
-    if year == nothing 
+    if year === nothing 
         @warn("No `year` provided to `get_marginaldamages`; will return marginal damages from an emissions pulse in $_default_year.")
         year = _default_year
     end
 
     # Check the discount rate
-    if discount == nothing 
+    if discount === nothing 
         @warn("No `discount` provided to `get_marginaldamages`; will return undiscounted marginal damages.")
         discount = 0.
     end 
@@ -69,18 +69,18 @@ function get_scc(model::model_choice, scenario_choice::Union{scenario_choice, No
     domestic=false)  # some model specific arguments
 
     # Check for valid scenario name
-    if scenario_choice == nothing
-        error("Must specifiy one of the following scenarios: USG1, USG2, USG3, USG4, or USG5.")
+    if scenario_choice === nothing
+        @warn("No scenario name provided. If :scenario_num is not set in the :IWGScenarioChoice component before running the model, the average of the five scenarios will be used.")
     end
 
     # Check the emissions year
-    if year == nothing 
+    if year === nothing 
         @warn("No `year` provided to `get_scc`; will return SCC from an emissions pulse in $_default_year.")
         year = _default_year
     end
 
     # Check the discount rate
-    if discount == nothing 
+    if discount === nothing 
         @warn("No `discount` provided to `get_scc`; will return SCC for a discount rate of $(_default_discount * 100)%.")
         discount = _default_discount
     end 

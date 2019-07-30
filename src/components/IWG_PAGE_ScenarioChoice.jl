@@ -1,4 +1,4 @@
-# This component holds data for all IWG scenarios in its parameters, and the `scenario_num` parameter specifies which scenario to use.
+# This component holds data for all IWG scenarios for PAGE in its parameters, and the `scenario_num` parameter specifies which scenario to use.
 # During the first timestep, values for the specified scenario are copied into the variables.
 # Functions for loading in the necessaring parameters are defined in src/core/PAGE_helper.jl
 @defcomp IWG_PAGE_ScenarioChoice begin
@@ -63,7 +63,4 @@
             end
         end
     end
-
 end
-
-
