@@ -1,6 +1,6 @@
 # MimiIWG
 
-This repository contains code replicating the models used by the EPA's Interagency Work Group (IWG) on the Social Cost of Carbon. The IWG used three integrated assessment models for calculating the social cost of carbon:
+This package contains code replicating the models used by the EPA's Interagency Work Group (IWG) on the Social Cost of Carbon. The IWG used three integrated assessment models for calculating the social cost of carbon:
 - DICE 2010 (originally written in Excel and GAMS; re-written in Matlab by the IWG)
 - FUND 3.8 (originally written in C#)
 - PAGE 2009 (originally written in Excel with the @RISK package)
@@ -13,28 +13,19 @@ This project replicates the versions of these models used by the IWG in the Juli
 
 To get started, you will need to download Julia version 1.1 [here](https://julialang.org/downloads/).
 
-Download this project code using git:
-```
-git clone "https://github.com/ckingdon95/MimiIWG"
-```
-Begin an interactive Julia session. First, navigate into the folder on your computer for this project code:
-```
-julia> cd("/pathtocode/MimiIWG")
-```
-Enter the Package REPL by typing "]"
+Begin an interactive Julia session and enter the Package REPL by typing "]"
 ```
 julia> ]
 ```
-Then in the package REPL activate the Julia environment for this project with the following commands. This will download and install all of the necessary package dependencies, including Mimi and the original versions of the models.
+Then in the package REPL, you will need to add the custom Julia package regsitry, "MimiRegsitry" with the first command. Then the second command adds the MimiIWG package:
 ```
-pkg> activate .
-pkg> instantiate
+pkg> registry add https://github.com/mimiframework/MimiRegistry.git
+pkg> add MimiIWG
 ```
 Type a `backspace` to exit the package REPL and get back to the interactive Julia environment.
 To begin using this project, execute:
 ```
-julia> include("src/MimiIWG.jl")
-julia> using .MimiIWG
+julia> using MimiIWG
 ```
 
 ### API
