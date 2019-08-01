@@ -34,9 +34,9 @@ include("components/IWG_PAGE_GDP.jl")
 include("components/IWG_RoeBakerClimateSensitivity.jl")
 
 # Main models and functions
-include("core/DICE_helper.jl")
-include("core/FUND_helper.jl")
-include("core/PAGE_helper.jl")
+include("core/DICE_main.jl")
+include("core/FUND_main.jl")
+include("core/PAGE_main.jl")
 include("core/main.jl")
 
 # Monte carlo support
