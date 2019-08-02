@@ -13,7 +13,7 @@
     k0      = Variable()                # initial capital stock
 
     # The number for which scenario to use 
-    scenario_num::Integer = Parameter(default = 0)
+    scenario_num::Integer = Parameter()
 
     # Parameters (each one holds all five scenarios)
     l_all       = Parameter(index = [time, scenarios])
@@ -26,13 +26,8 @@
         if is_first(t)
             # Get the specified scenario
             scenario_num = p.scenario_num
-            if scenario_num == 0
-                # @warn("scenario_num was not set in the IWG_DICE_ScenarioChoice component. Will use average values of all five scenarios.")
-                v.l[:]          = dropdims(mean(p.l_all[:, :], dims=2), dims=2)
-                v.E[:]          = dropdims(mean(p.E_all[:, :], dims=2), dims=2)
-                v.forcoth[:]    = dropdims(mean(p.forcoth_all[:, :], dims=2), dims=2)
-                v.al[:]         = dropdims(mean(p.al_all[:, :], dims=2), dims=2)
-                v.k0            = mean(p.k0_all[:])
+            if ! (scenario_num in d.scenarios)
+                error("Invalid :scenario_num in :IWGScenarioChoice component: $scenario_num. :scenario_num must be in $(d.scenarios).")
             else
                 # Copy over all of the values for that scenario
                 v.l[:]          = p.l_all[:, scenario_num]

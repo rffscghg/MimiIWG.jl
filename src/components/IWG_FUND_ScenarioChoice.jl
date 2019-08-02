@@ -14,7 +14,7 @@
     acei        = Variable(index = [time, regions])
 
     # The number for which scenario to use 
-    scenario_num::Integer = Parameter(default = 0)
+    scenario_num::Integer = Parameter()
 
     # Parameters (each one holds all five scenarios)
     globch4_all     = Parameter(index = [time, scenarios])
@@ -28,15 +28,8 @@
         if is_first(t)
             # Get the specified scenario
             scenario_num = p.scenario_num
-            if scenario_num == 0
-                # @warn("scenario_num was not set in the IWG_DICE_ScenarioChoice component. Will use average values of all five scenarios.")
-                v.globch4[:]        = dropdims(mean(p.globch4_all[:, :], dims=2), dims=2)
-                v.globn2o[:]        = dropdims(mean(p.globn2o_all[:, :], dims=2), dims=2)
-                v.pgrowth[:, :]     = dropdims(mean(p.pgrowth_all[:, :, :], dims=3), dims=3)
-                v.ypcgrowth[:, :]   = dropdims(mean(p.ypcgrowth_all[:, :, :], dims=3), dims=3)
-                v.aeei[:, :]        = dropdims(mean(p.aeei_all[:, :, :], dims=3), dims=3)
-                v.acei[:, :]        = dropdims(mean(p.acei_all[:, :, :], dims=3), dims=3)
-
+            if ! (scenario_num in d.scenarios)
+                error("Invalid :scenario_num in :IWGScenarioChoice component: $scenario_num. :scenario_num must be in $(d.scenarios).")
             else
                 # Copy over all of the values for that scenario
                 v.globch4[:]        = p.globch4_all[:, scenario_num]

@@ -3,11 +3,6 @@
 """
 function get_model(model::model_choice, scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
-    # Check for valid scenario name
-    if scenario_choice === nothing
-        @warn("No scenario name provided. If :scenario_num is not set in the :IWGScenarioChoice component before running the model, the average of the five scenarios will be used.")
-    end
-
     # dispatch on provided model choice
     if model == DICE 
         return get_dice_model(scenario_choice)
@@ -27,11 +22,6 @@ function get_marginaldamages(model::model_choice, scenario_choice::Union{scenari
     year::Union{Int, Nothing}=nothing, 
     discount::Union{Float64, Nothing}=nothing, 
     regional::Bool=false)
-
-    # Check for valid scenario name
-    if scenario_choice === nothing
-        @warn("No scenario name provided. If :scenario_num is not set in the :IWGScenarioChoice component before running the model, the average of the five scenarios will be used.")
-    end
 
     # Check the emissions year
     if year === nothing 
@@ -67,11 +57,6 @@ function compute_scc(model::model_choice, scenario_choice::Union{scenario_choice
     horizon=_default_horizon, 
     income_normalized=true, 
     domestic=false)  # some model specific arguments
-
-    # Check for valid scenario name
-    if scenario_choice === nothing
-        @warn("No scenario name provided. If :scenario_num is not set in the :IWGScenarioChoice component before running the model, the average of the five scenarios will be used.")
-    end
 
     # Check the emissions year
     if year === nothing 
