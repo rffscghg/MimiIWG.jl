@@ -8,7 +8,7 @@
 
         md = get_marginaldamages(FUND, MimiIWG.scenarios[1])
 
-        scc = get_scc(FUND, MimiIWG.scenarios[1])
+        scc = compute_scc(FUND, MimiIWG.scenarios[1])
 
         tmp_dir = joinpath(@__DIR__, "tmp")
         run_scc_mcs(FUND, trials=2, output_dir = tmp_dir, domestic=true)

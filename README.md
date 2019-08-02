@@ -36,7 +36,7 @@ The main available functions are:
 
 - `get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0)`
 
-- `get_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
+- `compute_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
 
 - `run_scc_mcs(MODEL_NAME; trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
 

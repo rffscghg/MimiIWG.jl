@@ -135,7 +135,7 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_fund_scc(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64, income_normalized::Bool=true)
+function compute_fund_scc(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64, income_normalized::Bool=true)
 
     # Check the emissions year
     if !(year in fund_years)

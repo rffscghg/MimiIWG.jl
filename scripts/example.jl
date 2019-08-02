@@ -10,4 +10,4 @@ explore(m)
 md = get_marginaldamages(FUND, USG3, year=2020, discount=0.025)
 
 # Calculate a determinisitc SCC value
-scc = get_scc(PAGE, USG1, year=2020, discount=0.03)
+scc = compute_scc(PAGE, USG1, year=2020, discount=0.03)

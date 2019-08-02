@@ -143,7 +143,7 @@ function fund_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, t
         g = [globalypc[t]/globalypc[t-1] - 1 for t in 2:final]
     end
 
-    # Loop through perturbation years for scc calculations, and only re-run the marinal model
+    # Loop through perturbation years for scc calculations, and only re-run the marginal model
     for (j, pyear) in enumerate(perturbation_years)
 
         MimiFUND.perturb_marginal_emissions!(marginal, pyear)
@@ -153,7 +153,7 @@ function fund_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, t
         marginaldamages = (damages2 .- damages1) / 10000000.
         global_marginaldamages = sum(marginaldamages, dims = 2)    # sum across regions
 
-        function _get_scc(pyear, marginaldamages, rates)
+        function _compute_scc(pyear, marginaldamages, rates)
             scc = zeros(length(rates))
             p_idx = MimiFUND.getindexfromyear(pyear)
             
@@ -168,12 +168,12 @@ function fund_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, t
             return scc 
         end
 
-        scc_global = _get_scc(pyear, global_marginaldamages, rates)
+        scc_global = _compute_scc(pyear, global_marginaldamages, rates)
         SCC_values[trialnum, j, scenario_num, :] = scc_global * fund_inflator
 
         if SCC_values_domestic !== nothing
             domestic_marginaldamages = marginaldamages[:, 1]
-            scc_domestic = _get_scc(pyear, domestic_marginaldamages, rates)
+            scc_domestic = _compute_scc(pyear, domestic_marginaldamages, rates)
             SCC_values_domestic[trialnum, j, scenario_num, :] = scc_domestic * fund_inflator
         end
     end

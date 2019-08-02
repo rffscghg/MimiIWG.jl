@@ -354,7 +354,7 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_page_scc(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64; domestic=false)
+function compute_page_scc(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64; domestic=false)
 
     # Check the emissions year
     _need_to_interpolate = false
@@ -387,7 +387,7 @@ function get_page_scc(scenario_choice::Union{scenario_choice, Nothing}, year::In
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = page_years[findfirst(page_years, year) + 1] 
-        upper_scc = get_page_scc(scenario_choice, next_year, discount, domestic=domestic)
+        upper_scc = compute_page_scc(scenario_choice, next_year, discount, domestic=domestic)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 

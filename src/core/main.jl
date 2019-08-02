@@ -61,7 +61,7 @@ end
 """
 
 """
-function get_scc(model::model_choice, scenario_choice::Union{scenario_choice, Nothing}=nothing; 
+function compute_scc(model::model_choice, scenario_choice::Union{scenario_choice, Nothing}=nothing; 
     year::Union{Int, Nothing}=nothing, 
     discount::Union{Float64, Nothing}=nothing,
     horizon=_default_horizon, 
@@ -75,23 +75,23 @@ function get_scc(model::model_choice, scenario_choice::Union{scenario_choice, No
 
     # Check the emissions year
     if year === nothing 
-        @warn("No `year` provided to `get_scc`; will return SCC from an emissions pulse in $_default_year.")
+        @warn("No `year` provided to `compute_scc`; will return SCC from an emissions pulse in $_default_year.")
         year = _default_year
     end
 
     # Check the discount rate
     if discount === nothing 
-        @warn("No `discount` provided to `get_scc`; will return SCC for a discount rate of $(_default_discount * 100)%.")
+        @warn("No `discount` provided to `compute_scc`; will return SCC for a discount rate of $(_default_discount * 100)%.")
         discount = _default_discount
     end 
 
     # dispatch on provided model choice
     if model == DICE 
-        return get_dice_scc(scenario_choice, year, discount, horizon)
+        return compute_dice_scc(scenario_choice, year, discount, horizon)
     elseif model == FUND 
-        return get_fund_scc(scenario_choice, year, discount, income_normalized)      # TODO: add `income_normalized` option to this general function?
+        return compute_fund_scc(scenario_choice, year, discount, income_normalized)      # TODO: add `income_normalized` option to this general function?
     elseif model == PAGE 
-        return get_page_scc(scenario_choice, year, discount; domestic=domestic)
+        return compute_page_scc(scenario_choice, year, discount; domestic=domestic)
     else
         error()
     end
