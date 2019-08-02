@@ -15,12 +15,10 @@ function get_model(model::model_choice, scenario_choice::Union{scenario_choice, 
         return get_fund_model(scenario_choice)
     elseif model == PAGE 
         return get_page_model(scenario_choice)
+    else
+        error()
     end
 end
-
-# function get_model(args...)
-#     error("Must specifiy one of the following model choices as the first argument to `get_model`: DICE, FUND, or PAGE.")
-# end
 
 """
 
@@ -54,6 +52,8 @@ function get_marginaldamages(model::model_choice, scenario_choice::Union{scenari
         return get_fund_marginaldamages(scenario_choice, year, discount)  #, regional)    #TODO: add this option for FUND
     elseif model == PAGE 
         return get_page_marginaldamages(scenario_choice, year, discount, regional)
+    else
+        error()
     end
 
 end
@@ -92,6 +92,8 @@ function get_scc(model::model_choice, scenario_choice::Union{scenario_choice, No
         return get_fund_scc(scenario_choice, year, discount, income_normalized)      # TODO: add `income_normalized` option to this general function?
     elseif model == PAGE 
         return get_page_scc(scenario_choice, year, discount; domestic=domestic)
+    else
+        error()
     end
 
 end
