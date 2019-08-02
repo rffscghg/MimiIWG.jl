@@ -9,7 +9,7 @@ using DelimitedFiles
 
     md = get_marginaldamages(PAGE, MimiIWG.scenarios[1])
 
-    scc = get_scc(PAGE, MimiIWG.scenarios[1])
+    scc = compute_scc(PAGE, MimiIWG.scenarios[1])
 
     tmp_dir = joinpath(@__DIR__, "tmp")
     run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir, domestic=true)
@@ -37,7 +37,7 @@ end
                 discount    = validation_data[line, 2]
                 iwg_scc     = validation_data[line, 3] * MimiIWG.page_inflator     # 2000$ => $2007
 
-                mimi_scc = get_scc(PAGE, scenario_convert_flip[scenario], year=year, discount=discount)
+                mimi_scc = compute_scc(PAGE, scenario_convert_flip[scenario], year=year, discount=discount)
                 # println(iwg_scc, ",", mimi_scc)
                 @test iwg_scc ≈ mimi_scc atol = _atol
             end

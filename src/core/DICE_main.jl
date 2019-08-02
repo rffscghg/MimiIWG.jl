@@ -247,7 +247,7 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Float64, horizon=_default_horizon)
+function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Float64, horizon=_default_horizon)
 
     # Check if the emissions year is valid, and whether or not we need to interpolate
     _is_mid_year = false
@@ -272,7 +272,7 @@ function get_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Flo
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_scc = get_dice_scc(scenario_choice, next_year, discount, horizon)
+        upper_scc = compute_dice_scc(scenario_choice, next_year, discount, horizon)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 
