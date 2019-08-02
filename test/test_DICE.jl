@@ -1,18 +1,19 @@
+using MimiIWG
 using ExcelReaders
 
 @testset "DICE" begin
 
     @testset "API" begin
 
-        m = get_model(DICE, MimiIWG.scenarios[1])
+        m = MimiIWG.get_model(DICE, MimiIWG.scenarios[1])
         run(m)
 
-        md = get_marginaldamages(DICE, MimiIWG.scenarios[1])
+        md = MimiIWG.get_marginaldamages(DICE, MimiIWG.scenarios[1])
 
         scc = compute_scc(DICE, MimiIWG.scenarios[1])
 
         tmp_dir = joinpath(@__DIR__, "tmp")
-        run_scc_mcs(DICE, trials=2, output_dir = tmp_dir)
+        MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir)
         rm(tmp_dir, recursive=true)
 
     end
@@ -30,7 +31,7 @@ using ExcelReaders
                     validation_data = readxl(f, "$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050!A2:I2")
                     for (i, year) in enumerate(2010:5:2050)
                         iwg_scc = validation_data[i]
-                        mimi_scc = compute_scc(DICE, scenario; year=year, discount=discount)
+                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; year=year, discount=discount)
                         # println(iwg_scc, ",", mimi_scc)
                         @test iwg_scc ≈ mimi_scc atol = _atol
                     end

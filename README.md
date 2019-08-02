@@ -32,13 +32,13 @@ julia> using MimiIWG
 ### API
 
 The main available functions are:
-- `get_model(MODEL_NAME, SCENARIO_CHOICE)`
+- `MimiIWG.get_model(MODEL_NAME, SCENARIO_CHOICE)`
 
-- `get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0)`
+- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0)`
 
-- `compute_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
+- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
 
-- `run_scc_mcs(MODEL_NAME; trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
+- `MimiIWG.run_scc_mcs(MODEL_NAME; trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
 
 The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
@@ -50,9 +50,9 @@ For example uses of the code, see "scripts/example.jl".
 
 To run the same suite of Monte Carlo simulations that the IWG used for estimating the Social Cost of Carbon, see "scripts/main.jl".
 
-The first argument to `run_scc_mcs` must be the name of one of the three models, `DICE`, `FUND`, or `PAGE`. After that, there are several keyword arguments to choose from. The following list describes these arguments and their default values if the user does not specifiy them.
+The first argument to `MimiIWG.run_scc_mcs` must be the name of one of the three models, `DICE`, `FUND`, or `PAGE`. After that, there are several keyword arguments to choose from. The following list describes these arguments and their default values if the user does not specifiy them.
 ```
-run_scc_mcs(MODEL,
+MimiIWG.run_scc_mcs(MODEL,
     trials = 10000,  # the size of the Monte Carlo sample
     perturbation_years = 2010:5:2050,  # List of years for which to calculate the SCC
     discount_rates = [0.025, 0.03, 0.05],  # List of discount rates for which to calculate the SCC
