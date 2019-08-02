@@ -10,7 +10,7 @@ using ExcelReaders
 
         md = MimiIWG.get_marginaldamages(DICE, MimiIWG.scenarios[1])
 
-        scc = compute_scc(DICE, MimiIWG.scenarios[1])
+        scc = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1])
 
         tmp_dir = joinpath(@__DIR__, "tmp")
         MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir)

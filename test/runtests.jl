@@ -2,8 +2,7 @@ using Test
 
 @testset "MimiIWG" begin
 
-include("../src/MimiIWG.jl")
-using .MimiIWG
+using MimiIWG
 
 include("test_DICE.jl")
 include("test_FUND.jl")
