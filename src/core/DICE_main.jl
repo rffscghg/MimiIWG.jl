@@ -158,7 +158,7 @@ end
     If no `year` is specified, will run for an emissions pulse in $_default_year.
     If no `discount` is specified, will return undiscounted marginal damages.
 """
-function get_dice_marginaldamages(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64) 
+function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64) 
 
     # Check the emissions year
     _is_mid_year = false
@@ -247,7 +247,7 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Float64, horizon=_default_horizon)
+function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic::Bool = false, horizon::Int = _default_horizon)
 
     # Check if the emissions year is valid, and whether or not we need to interpolate
     _is_mid_year = false
@@ -272,9 +272,14 @@ function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount:
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_scc = compute_dice_scc(scenario_choice, next_year, discount, horizon)
+        upper_scc = compute_dice_scc(scenario_choice, next_year, discount, domestic = false, horizon = horizon)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 
-    return scc 
+    if domestic
+        @warn("DICE is a global model. Domestic SCC will be calculated as 10% of the global SCC value.")
+        return 0.1 * scc
+    else
+        return scc 
+    end
 end

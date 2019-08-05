@@ -94,7 +94,7 @@ end
     If no `discount` is specified, will return undiscounted marginal damages.
     The `income_normalized` parameter indicates whether the damages from the marginal run should be scaled by the ratio of incomes between the base and marginal runs. 
 """
-function get_fund_marginaldamages(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64, income_normalized::Bool=true)
+function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true)
 
     # Check the emissions year
     if ! (year in fund_years)
@@ -115,16 +115,20 @@ function get_fund_marginaldamages(scenario_choice::Union{scenario_choice, Nothin
         damages2 = marginal[:impactaggregation, :loss]
     end
 
-    global_diff = sum((damages2 .- damages1), dims = 2) / 10000000. * 12.0/44.0 * fund_inflator   # /10 for 10 year pulse; /10^6 for Mt pulse
+    if regional
+        diff = (damages2 .- damages1) ./ 10000000. * 12.0/44.0 * fund_inflator
+    else
+        diff = sum((damages2 .- damages1), dims = 2) / 10000000. * 12.0/44.0 * fund_inflator   # /10 for 10 year pulse; /10^6 for Mt pulse
+    end
 
     nyears = length(fund_years)
     if discount != 0 
         DF = zeros(nyears)
         first = MimiFUND.getindexfromyear(year)
         DF[first:end] = [1/(1+discount)^t for t in 0:(nyears-first)]
-        return global_diff[1:nyears] .* DF
+        return diff[1:nyears, :] .* DF
     else
-        return global_diff[1:nyears]
+        return diff[1:nyears, :]
     end
 
 end
@@ -135,14 +139,19 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function compute_fund_scc(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64, income_normalized::Bool=true)
+function compute_fund_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic::Bool = false, income_normalized::Bool = true)
 
     # Check the emissions year
     if !(year in fund_years)
         error("$year is not a valid year; can only calculate SCC within the model's time index $fund_years.")
     end
 
-    md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized)
+    if domestic
+        md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized = income_normalized, regional = true)[:, 1]
+    else
+        md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized = income_normalized, regional = false)
+    end
+        
     scc = sum(md[MimiFUND.getindexfromyear(year):end])    # Sum from the perturbation year to the end (avoid the NaN in the first timestep)
     return scc 
 end

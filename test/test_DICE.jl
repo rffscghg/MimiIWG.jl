@@ -10,10 +10,12 @@ using ExcelReaders
 
         md = MimiIWG.get_marginaldamages(DICE, MimiIWG.scenarios[1])
 
-        scc = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1])
+        scc1 = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1])
+        scc2 = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1], domestic = true)
+        @test scc2 == 0.1 * scc1
 
         tmp_dir = joinpath(@__DIR__, "tmp")
-        MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir)
+        MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir, domestic = true)
         rm(tmp_dir, recursive=true)
 
     end
