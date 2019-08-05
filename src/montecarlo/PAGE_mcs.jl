@@ -194,7 +194,7 @@ function page_scenario_func(mcs::Simulation, tup::Tuple)
     base, marginal = mcs.models
     set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
     set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
-    update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate (`rate` will be the rho value if ramsey discounting)
+    update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
     update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
 
     Mimi.build(base)
@@ -207,28 +207,15 @@ function page_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, t
     base, marginal = mcs.models 
 
     # Unpack the payload object 
-    rates, discount_factors, ramsey, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    discount_rates, discount_factors, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
 
-    # Get base impacts:
-    # if ramsey
-    #     domestic ? error("domestic SCC for ramsey discounting in PAGE not yet implemented") : nothing
-    #     base_impacts = base[:EquityWeighting, :wit_equityweightedimpact]
-
-    #     annual_years = page_years[1]:horizon
-
-    #     glob_ypc = sum(base[:GDP, :gdp], dims=2) ./ sum(base[:GDP, :pop_population], dims=2)
-    #     annual_glob_ypc = _interpolate(glob_ypc[:], page_years, annual_years)
-    #     g = [annual_glob_ypc[t]/annual_glob_ypc[t-1] - 1 for t in 2:length(annual_glob_ypc)]
-    #     base_impacts = base[:EquityWeighting, :widt_equityweightedimpact_discounted]
-    # else
-        DF = discount_factors[rate_num]
-        td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
-        if SCC_values_domestic !== nothing 
-            td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
-        end
-        EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
-        UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)    
-    # end
+    DF = discount_factors[rate_num]
+    td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
+    if SCC_values_domestic !== nothing 
+        td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
+    end
+    EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
+    UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)    
 
     for (j, pyear) in enumerate(perturbation_years)
         idx = getpageindexfromyear(pyear)
@@ -236,27 +223,14 @@ function page_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, t
         perturb_marginal_page_emissions!(base, marginal, pyear)
         run(marginal)
 
-        # if ramsey
-        #     # marg_impacts = marginal[:EquityWeighting, :widt_equityweightedimpact_discounted]
-        #     # scc = sum(base_impacts .- marg_impacts) / 100000 * page_inflator
-        #     annual_pidx = findfirst(isequal(pyear), annual_years)
-        #     marg_impacts = marginal[:EquityWeighting, :wit_equityweightedimpact]
-        #     global_md = dropdims(sum(base_impacts .- marg_impacts, dims=2), dims=2) ./ 100000 .* page_inflator
-        #     annual_md = _interpolate(global_md, page_years, annual_years)
-        #     scc = scc_ramsey(annual_md[annual_pidx:end], rate, eta, g[annual_pidx-1:end])
-        # else
-            td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts] 
-            # UDFT_marginal = DF[idx] * (marginal[:EquityWeighting, :cons_percap_consumption][idx, 1] / base[:EquityWeighting, :cons_percap_consumption_0][idx]) ^ (-EMUC)
-            
-            # scc = ((td_marginal / UDFT_marginal) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
-            scc = ((td_marginal / UDFT_base[idx]) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
+        td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]             
+        scc = ((td_marginal / UDFT_base[idx]) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
 
-            if SCC_values_domestic !== nothing 
-                td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
-                scc_domestic = ((td_marginal_domestic / UDFT_base[idx]) - (td_base_domestic / UDFT_base[idx])) / 100000 * page_inflator
-                SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
-            end
-        # end
+        if SCC_values_domestic !== nothing 
+            td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
+            scc_domestic = ((td_marginal_domestic / UDFT_base[idx]) - (td_base_domestic / UDFT_base[idx])) / 100000 * page_inflator
+            SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
+        end
         SCC_values[trialnum, j, scenario_num, rate_num] = scc   
     end 
 end

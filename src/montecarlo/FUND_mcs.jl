@@ -134,14 +134,9 @@ function fund_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, t
     damages1 = base[:impactaggregation, :loss]
 
     # Unpack the payload object 
-    rates, ramsey, model_years, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    discount_rates, model_years, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
 
     final = length(model_years)
-
-    if ramsey 
-        globalypc = base[:socioeconomic, :globalypc]
-        g = [globalypc[t]/globalypc[t-1] - 1 for t in 2:final]
-    end
 
     # Loop through perturbation years for scc calculations, and only re-run the marginal model
     for (j, pyear) in enumerate(perturbation_years)
@@ -158,22 +153,18 @@ function fund_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, t
             p_idx = MimiFUND.getindexfromyear(pyear)
             
             for (i, rate) in enumerate(rates)
-                if ramsey
-                    scc[i] = scc_ramsey(marginaldamages[p_idx:final], rate, eta, g[p_idx-1:final-1])
-                else
-                    discount_factor = [(1/(1 + rate)) ^ (t - p_idx) for t in p_idx:final]
-                    scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor) * 12.0 / 44.0
-                end
+                discount_factor = [(1/(1 + rate)) ^ (t - p_idx) for t in p_idx:final]
+                scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor) * 12.0 / 44.0
             end
             return scc 
         end
 
-        scc_global = _compute_scc(pyear, global_marginaldamages, rates)
+        scc_global = _compute_scc(pyear, global_marginaldamages, discount_rates)
         SCC_values[trialnum, j, scenario_num, :] = scc_global * fund_inflator
 
         if SCC_values_domestic !== nothing
             domestic_marginaldamages = marginaldamages[:, 1]
-            scc_domestic = _compute_scc(pyear, domestic_marginaldamages, rates)
+            scc_domestic = _compute_scc(pyear, domestic_marginaldamages, discount_rates)
             SCC_values_domestic[trialnum, j, scenario_num, :] = scc_domestic * fund_inflator
         end
     end

@@ -28,20 +28,14 @@ function dice_post_trial_func(mcs::Simulation, trial::Int, ntimesteps::Int, tup:
     (name, rate) = tup
     (base, marginal) = mcs.models
 
-    rates, discount_factors, ramsey, model_years, horizon, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    rates, discount_factors, model_years, horizon, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
 
     last_idx = horizon - 2005 + 1
     annual_years = dice_years[1]:horizon
 
     base_consump = base[:neteconomy, :C]    # interpolate to annual timesteps for SCC calculation
 
-    if ramsey
-        glob_ypc = base[:neteconomy, :YGROSS] ./ base[:neteconomy, :l]
-        annual_glob_ypc = _interpolate(glob_ypc[1:30], model_years[1:30], annual_years)
-        g = [annual_glob_ypc[t]/annual_glob_ypc[t-1] - 1 for t in 2:length(annual_glob_ypc)]
-    else
-        DF = discount_factors[rate]             # access the pre-computed discount factor for this rate
-    end
+    DF = discount_factors[rate]             # access the pre-computed discount factor for this rate
 
     for (idx, pyear) in enumerate(perturbation_years)
 
@@ -55,11 +49,7 @@ function dice_post_trial_func(mcs::Simulation, trial::Int, ntimesteps::Int, tup:
 
         first_idx = pyear - 2005 + 1
 
-        if ramsey 
-            scc = scc_ramsey(annual_md[first_idx:end], rate, eta, g[first_idx-1:end])
-        else
-            scc = sum(annual_md[first_idx:last_idx] ./ DF[1:horizon - pyear + 1])
-        end
+        scc = sum(annual_md[first_idx:last_idx] ./ DF[1:horizon - pyear + 1])
 
         SCC_values[trial, idx, scenario_num, rate_num] = scc 
     end

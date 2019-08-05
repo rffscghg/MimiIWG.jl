@@ -265,7 +265,7 @@ end
     If no `discount` is specified, will return undiscounted marginal damages.
     Default returns global values; specify `regional=true` for regional values.
 """
-function get_page_marginaldamages(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64, regional::Bool=false)
+function get_page_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64; regional::Bool=false)
 
     # Check the emissions year
     if ! (year in page_years)
@@ -354,7 +354,7 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function compute_page_scc(scenario_choice::Union{scenario_choice, Nothing}, year::Int, discount::Float64; domestic=false)
+function compute_page_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic=false)
 
     # Check the emissions year
     _need_to_interpolate = false

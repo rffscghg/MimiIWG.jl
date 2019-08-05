@@ -8,9 +8,12 @@ using DelimitedFiles
     m = MimiIWG.get_model(PAGE, MimiIWG.scenarios[1])
     run(m)
 
-    md = get_marginaldamages(PAGE, MimiIWG.scenarios[1])
+    md1 = MimiIWG.get_marginaldamages(PAGE, MimiIWG.scenarios[1])
+    md2 = MimiIWG.get_marginaldamages(PAGE, MimiIWG.scenarios[1], regional = true)
 
-    scc = MimiIWG.compute_scc(PAGE, MimiIWG.scenarios[1])
+    scc1 = MimiIWG.compute_scc(PAGE, MimiIWG.scenarios[1])
+    scc2 = MimiIWG.compute_scc(PAGE, MimiIWG.scenarios[1], domestic = true)
+    @test scc2 < scc1
 
     tmp_dir = joinpath(@__DIR__, "tmp")
     MimiIWG.run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir, domestic=true)
