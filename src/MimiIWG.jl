@@ -12,8 +12,7 @@ using Interpolations
 using Dates
 using DelimitedFiles
 
-export get_model, get_marginaldamages, get_scc, run_scc_mcs, 
-        DICE, FUND, PAGE, # export the enumerated model_choice options
+export DICE, FUND, PAGE, # export the enumerated model_choice options
         USG1, USG2, USG3, USG4, USG5 # export the enumerated scenario_choice options 
 
 # General constants and functions
@@ -24,17 +23,19 @@ include("core/utils.jl")
 include("components/IWG_DICE_co2cycle.jl")
 include("components/IWG_DICE_radiativeforcing.jl")
 include("components/IWG_DICE_climatedynamics.jl")
+include("components/IWG_DICE_ScenarioChoice.jl")
 include("components/IWG_DICE_neteconomy.jl")
 include("components/IWG_FUND_impactsealevelrise.jl")
-include("components/IWG_RoeBakerClimateSensitivity.jl")
+include("components/IWG_FUND_ScenarioChoice.jl")
 include("components/IWG_PAGE_ClimateTemperature.jl")
 include("components/IWG_PAGE_ScenarioChoice.jl")
 include("components/IWG_PAGE_GDP.jl")
+include("components/IWG_RoeBakerClimateSensitivity.jl")
 
 # Main models and functions
-include("core/DICE_helper.jl")
-include("core/FUND_helper.jl")
-include("core/PAGE_helper.jl")
+include("core/DICE_main.jl")
+include("core/FUND_main.jl")
+include("core/PAGE_main.jl")
 include("core/main.jl")
 
 # Monte carlo support

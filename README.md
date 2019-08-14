@@ -1,52 +1,44 @@
 # MimiIWG
 
-This repository contains code replicating the models used by the EPA's Interagency Work Group (IWG) on the Social Cost of Carbon. The IWG used three integrated assessment models for calculating the social cost of carbon:
+This package contains code replicating the models used by the EPA's Interagency Work Group (IWG) on the Social Cost of Carbon. The IWG used three integrated assessment models for calculating the social cost of carbon:
 - DICE 2010 (originally written in Excel and GAMS; re-written in Matlab by the IWG)
 - FUND 3.8 (originally written in C#)
 - PAGE 2009 (originally written in Excel with the @RISK package)
 
-This project replicates the versions of these models used by the IWG in the Julia programming language, using the Julia package for Integrated Assesment Modeling, Mimi.jl. For more information on Mimi and its applications, visit the [Mimi Framework website](https://www.mimiframework.org/). For more information on Julia, documentation can be found [here](https://docs.julialang.org/en/v1/).
+This package replicates the versions of these models used by the IWG in the Julia programming language, using the Julia package for Integrated Assesment Modeling, Mimi.jl. For more information on Mimi and its applications, visit the [Mimi Framework website](https://www.mimiframework.org/). For more information on Julia, documentation can be found [here](https://docs.julialang.org/en/v1/).
 
 ## Project Overview
 
 ### Getting set up
 
+It is highly recommended to use the Julia package management system to download this package code rather than cloning through github.
 To get started, you will need to download Julia version 1.1 [here](https://julialang.org/downloads/).
 
-Download this project code using git:
-```
-git clone "https://github.com/ckingdon95/MimiIWG"
-```
-Begin an interactive Julia session. First, navigate into the folder on your computer for this project code:
-```
-julia> cd("/pathtocode/MimiIWG")
-```
-Enter the Package REPL by typing "]"
+Begin an interactive Julia session and enter the Package REPL by typing "]"
 ```
 julia> ]
 ```
-Then in the package REPL activate the Julia environment for this project with the following commands. This will download and install all of the necessary package dependencies, including Mimi and the original versions of the models.
+Next you will need to add the [MimiRegistry](https://github.com/mimiframework/MimiRegistry), which is a custom Julia package regsitry of integrated assessment models that use Mimi.jl. Then you will be able to add the MimiIWG package. In the package REPL, do the following:
 ```
-pkg> activate .
-pkg> instantiate
+pkg> registry add https://github.com/mimiframework/MimiRegistry.git
+pkg> add MimiIWG
 ```
 Type a `backspace` to exit the package REPL and get back to the interactive Julia environment.
 To begin using this project, execute:
 ```
-julia> include("src/MimiIWG.jl")
-julia> using .MimiIWG
+julia> using MimiIWG
 ```
 
 ### API
 
 The main available functions are:
-- `get_model(MODEL_NAME, SCENARIO_CHOICE)`
+- `MimiIWG.get_model(MODEL_NAME, SCENARIO_CHOICE)`
 
-- `get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0)`
+- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0)`
 
-- `get_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
+- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
 
-- `run_scc_mcs(MODEL_NAME; trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
+- `MimiIWG.run_scc_mcs(MODEL_NAME; trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
 
 The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
@@ -58,9 +50,9 @@ For example uses of the code, see "scripts/example.jl".
 
 To run the same suite of Monte Carlo simulations that the IWG used for estimating the Social Cost of Carbon, see "scripts/main.jl".
 
-The first argument to `run_scc_mcs` must be the name of one of the three models, `DICE`, `FUND`, or `PAGE`. After that, there are several keyword arguments to choose from. The following list describes these arguments and their default values if the user does not specifiy them.
+The first argument to `MimiIWG.run_scc_mcs` must be the name of one of the three models, `DICE`, `FUND`, or `PAGE`. After that, there are several keyword arguments to choose from. The following list describes these arguments and their default values if the user does not specifiy them.
 ```
-run_scc_mcs(MODEL,
+MimiIWG.run_scc_mcs(MODEL,
     trials = 10000,  # the size of the Monte Carlo sample
     perturbation_years = 2010:5:2050,  # List of years for which to calculate the SCC
     discount_rates = [0.025, 0.03, 0.05],  # List of discount rates for which to calculate the SCC
@@ -98,7 +90,7 @@ To view the shape of this distribution, try the following:
 using Plots
 plot(MimiIWG.RB_cs_values, MimiIWG.RB_cs_probs)
 ```
-These data are also available as an Excel file in "data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls".
+These data are also available as an Excel file in "MimiIWG/data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls".
 
 ### DICE notes
 
@@ -129,4 +121,4 @@ The main changes made by the IWG to PAGE2009, reflected in this project code are
 - The time index: the original version of PAGE 2009 is run on timesteps of [2009, 2010, 2020, 2030, 2040, 2050, 2075, 2100, 2150, 2200]. The IWG changed this time index to [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300].
 - The use of the five USG socioeconomic scenarios
 - In the original version of PAGE 2009, equilibrium climate sensitivity is calculated endogenously based on values for transient climate sensitivity. The IWG changed this, and instead sampled values for ECS directly from the Roe and Baker distribution. 
-- No sampling of `ptp_timepreference parameter`, because the IWG used constant discounting so this value is explicitly set for the different discount rates used and is not sampled during the Monte Carlo simulation. The `emuc_utilityconvexity` parameter is also not sampled in this version, and is always set to zero, because the IWG only used constant pure rate of time preference discounting.
+- In the original Monte Carlo simulation for PAGE, values are sampled for the `ptp_timepreference parameter` parameter, but the IWG used constant discounting so this value is explicitly set for the different discount rates used and is not sampled during the Monte Carlo simulation in this package. The `emuc_utilityconvexity` parameter is also not sampled in this version, and is always set to zero, because the IWG only used constant pure rate of time preference discounting with no equity weighting.

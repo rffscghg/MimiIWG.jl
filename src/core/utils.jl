@@ -23,18 +23,6 @@ function connect_all!(m::Model, comps::Vector{Symbol}, src::Pair{Symbol, Symbol}
     end
 end
 
-# helper for calculating the SCC using Ramsey discounting
-# marginaldamages: stream of global marginal damages starting in the scc emission year
-# g: stream of annual global gdp/cap growth rates starting in the scc emission year
-function scc_ramsey(marginaldamages, rho, eta, g)
-    r = rho .+ eta .* g     # calculate annual discount rates
-    # discount_factor = [exp(-1 * sum(r[1:t])) for t in 0:length(r)-1]   # calculate the discount factor for each year using continuous time discounting
-    discount_factor = [exp(-1 * sum(r[1:t])) for t in 1:length(r)]   # calculate the discount factor for each year using continuous time discounting
-    npv_md = discount_factor .* marginaldamages     # calculate net present value of marginal damages in each year
-    scc = sum(npv_md)    # sum damages to the scc
-    return scc
-end
-
 # helper function for writing the SCC values to files at the end of a monte carlo simulation
 function write_scc_values(values, output_dir, perturbation_years, discount_rates; domestic=false)
     mkpath(output_dir)

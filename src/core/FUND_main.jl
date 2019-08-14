@@ -2,7 +2,7 @@
     Returns the IWG version of the FUND3.8 model without any scenario parameters set yet. 
     Need to call apply_scenario!(m, scenario_choice) before this model can be run.
 """
-function get_fund_model()
+function get_fund_model(scenario_choice::Union{scenario_choice, Nothing} = nothing)
 
     # Get the default FUND model
     m = getfund()
@@ -14,38 +14,59 @@ function get_fund_model()
     add_comp!(m, IWG_RoeBakerClimateSensitivity, :roebakerclimatesensitivity; before = :climatedynamics)
     connect_param!(m, :climatedynamics, :climatesensitivity, :roebakerclimatesensitivity, :climatesensitivity)
 
-    return m
+    # Add the scenario choice component and load all the scenario parameter values
+    add_comp!(m, IWG_FUND_ScenarioChoice, :IWGScenarioChoice; before = :population)
+    set_dimension!(m, :scenarios, length(scenarios))
+    set_fund_all_scenario_params!(m)
+        
+    # Set the scenario number if a scenario_choice was provided
+    if scenario_choice !== nothing 
+        scenario_num = Int(scenario_choice)
+        set_param!(m, :IWGScenarioChoice, :scenario_num, scenario_num)
+    end
 
+    return m
 end 
 
 """
-    Returns the IWG version of the FUND3.8 model for the specified scenario.
+set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
+    m: a Mimi model with and IWGScenarioChoice component
+    comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
+    connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
 """
-function get_fund_model(scenario_choice::scenario_choice)
-    m = get_fund_model()
-    apply_fund_scenario!(m, scenario_choice)
-    return m 
-end
+function set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
+    params_dict = Dict{String, Array}([k=>[] for k in fund_scenario_specific_params])
 
-"""
-    Set the scenario-specific parameters in a FUND model m for the specified scenario.
-"""
-function apply_fund_scenario!(m, scenario_choice)
+    # add an array of each scenario's value to the dictionary
+    for scenario in scenarios
+        params = load_fund_scenario_params(scenario)
+        for p in fund_scenario_specific_params
+            push!(params_dict[p], params[p])
+        end
+    end
 
-    scenario_params = load_fund_scenario_params(scenario_choice)
+    # reshape each array of values into one array for each param, then set that value in the model
+    for (k, v) in params_dict
+        _size = size(v[1])
+        param = zeros(_size..., 5)
+        for i in 1:5
+            param[[1:l for l in _size]..., i] = v[i]
+        end
+        set_param!(m, comp_name, Symbol("$(k)_all"), param)
+    end
 
-    # Two global emissions values were previously endogenous; now set them to external IWG scenario values
-    set_param!(m, :climatech4cycle, :globch4, scenario_params["globch4"])
-    set_param!(m, :climaten2ocycle, :globn2o, scenario_params["globn2o"])
+    if connect 
+        # Two global emissions values were previously endogenous; now set them to external IWG scenario values
+        connect_param!(m, :climatech4cycle => :globch4, comp_name => :globch4)
+        connect_param!(m, :climaten2ocycle => :globn2o, comp_name => :globn2o)
 
-    set_param!(m, :population, :pgrowth, scenario_params["pgrowth"])
-    set_param!(m, :socioeconomic, :pgrowth, scenario_params["pgrowth"])
-    set_param!(m, :socioeconomic, :ypcgrowth, scenario_params["ypcgrowth"])
-    set_param!(m, :emissions, :aeei, scenario_params["aeei"])
-    set_param!(m, :emissions, :acei, scenario_params["acei"])
-    set_param!(m, :emissions, :pgrowth, scenario_params["pgrowth"])
-    set_param!(m, :emissions, :ypcgrowth, scenario_params["ypcgrowth"])
+        # Socioeconomics
+        connect_all!(m, [:population, :socioeconomic, :emissions], comp_name => :pgrowth)
+        connect_all!(m, [:socioeconomic, :emissions], comp_name => :ypcgrowth)
+        connect_param!(m, :emissions => :aeei, comp_name => :aeei)
+        connect_param!(m, :emissions => :acei, comp_name => :acei)
 
+    end
 end
 
 """
@@ -73,7 +94,7 @@ end
     If no `discount` is specified, will return undiscounted marginal damages.
     The `income_normalized` parameter indicates whether the damages from the marginal run should be scaled by the ratio of incomes between the base and marginal runs. 
 """
-function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64, income_normalized::Bool=true)
+function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true)
 
     # Check the emissions year
     if ! (year in fund_years)
@@ -94,16 +115,20 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, d
         damages2 = marginal[:impactaggregation, :loss]
     end
 
-    global_diff = sum((damages2 .- damages1), dims = 2) / 10000000. * 12.0/44.0 * fund_inflator   # /10 for 10 year pulse; /10^6 for Mt pulse
+    if regional
+        diff = (damages2 .- damages1) ./ 10000000. * 12.0/44.0 * fund_inflator
+    else
+        diff = sum((damages2 .- damages1), dims = 2) / 10000000. * 12.0/44.0 * fund_inflator   # /10 for 10 year pulse; /10^6 for Mt pulse
+    end
 
     nyears = length(fund_years)
     if discount != 0 
         DF = zeros(nyears)
         first = MimiFUND.getindexfromyear(year)
         DF[first:end] = [1/(1+discount)^t for t in 0:(nyears-first)]
-        return global_diff[1:nyears] .* DF
+        return diff[1:nyears, :] .* DF
     else
-        return global_diff[1:nyears]
+        return diff[1:nyears, :]
     end
 
 end
@@ -114,14 +139,19 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_fund_scc(scenario_choice::scenario_choice, year::Int, discount::Float64, income_normalized::Bool=true)
+function compute_fund_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic::Bool = false, income_normalized::Bool = true)
 
     # Check the emissions year
     if !(year in fund_years)
         error("$year is not a valid year; can only calculate SCC within the model's time index $fund_years.")
     end
 
-    md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized)
+    if domestic
+        md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized = income_normalized, regional = true)[:, 1]
+    else
+        md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized = income_normalized, regional = false)
+    end
+        
     scc = sum(md[MimiFUND.getindexfromyear(year):end])    # Sum from the perturbation year to the end (avoid the NaN in the first timestep)
     return scc 
 end

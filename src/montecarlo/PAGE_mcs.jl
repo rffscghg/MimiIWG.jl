@@ -2,7 +2,7 @@
 """
 Returns a Monte Carlo Simulation object over the uncertain parameters used by the IWG for the PAGE model.
     The only changes are that sens_climatesensitivity is now a RV with Empirical Roe and Baker Distribution,
-    and tcr_transientresponse and emuc_utilityconvexity are no longer RVs.
+    and tcr_transientresponse and emuc_utilityconvexity are no longer RVs. Latin Hypercube sampling is used.
 """
 function get_page_mcs()
 
@@ -11,6 +11,7 @@ function get_page_mcs()
         # ADDITIONAL IWG DISTRIBUTIONAL PARAMETER:
         sens_climatesensitivity = EmpiricalDistribution(RB_cs_values, RB_cs_probs)
 
+        # Use Latin Hypercube Sampling
         sampling(LHSData)
 
         # ORIGINAL PAGE RANDOM VARIABLES:
@@ -183,55 +184,53 @@ function get_page_mcs()
 
 end
 
-# function page_scenario_func(mcs::Simulation, tup::Tuple)
-#     # Unpack the scenario arguments
-#     (scenario_choice, rate) = tup 
-#     global scenario_num = Int(scenario_choice)
-#     global rate_num = findfirst(isequal(rate), discount_rates)
+function page_scenario_func(mcs::Simulation, tup::Tuple)
+    # Unpack the scenario arguments
+    (scenario_choice, rate) = tup 
+    global scenario_num = Int(scenario_choice)
+    global rate_num = findfirst(isequal(rate), Mimi.payload(mcs)[1])
 
-#     # Build the page versions for this scenario
-#     base, marginal = mcs.models
-#     set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
-#     set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
-#     update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
-#     update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
+    # Build the page versions for this scenario
+    base, marginal = mcs.models
+    set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
+    set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
+    update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
+    update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
 
-#     Mimi.build(base)
-#     Mimi.build(marginal)
-# end 
-# function page_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
-#     # Unpack the scenario arguments
-#     (scenario_name, rate) = tup
-#     DF = discount_factors[rate_num]
+    Mimi.build(base)
+    Mimi.build(marginal)
+end 
 
-#     # Access the models
-#     base, marginal = mcs.models 
-    
-#     # Get base impacts:
-#     td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
-#     if domestic 
-#         td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
-#     end
+function page_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
 
-#     EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
-#     UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)
+    # Access the models
+    base, marginal = mcs.models 
 
-#     for pyear in perturbation_years 
-#         idx = getpageindexfromyear(pyear)
+    # Unpack the payload object 
+    discount_rates, discount_factors, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
 
-#         perturb_marginal_page_emissions!(base, marginal, pyear)
-#         run(marginal)
-#         td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts] 
-#         UDFT_marginal = DF[idx] * (marginal[:EquityWeighting, :cons_percap_consumption][idx, 1] / base[:EquityWeighting, :cons_percap_consumption_0][idx]) ^ (-EMUC)
-        
-#         scc = ((td_marginal / UDFT_marginal) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
-#         j = findfirst(isequal(pyear), perturbation_years)
-#         SCC_values[trialnum, j, scenario_num, rate_num] = scc   
+    DF = discount_factors[rate_num]
+    td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
+    if SCC_values_domestic !== nothing 
+        td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
+    end
+    EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
+    UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)    
 
-#         if domestic 
-#             td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
-#             scc_domestic = ((td_marginal_domestic / UDFT_marginal) - (td_base_domestic / UDFT_base[idx])) / 100000 * page_inflator
-#             SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
-#         end
-#     end 
-# end 
+    for (j, pyear) in enumerate(perturbation_years)
+        idx = getpageindexfromyear(pyear)
+
+        perturb_marginal_page_emissions!(base, marginal, pyear)
+        run(marginal)
+
+        td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]             
+        scc = ((td_marginal / UDFT_base[idx]) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
+
+        if SCC_values_domestic !== nothing 
+            td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
+            scc_domestic = ((td_marginal_domestic / UDFT_base[idx]) - (td_base_domestic / UDFT_base[idx])) / 100000 * page_inflator
+            SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
+        end
+        SCC_values[trialnum, j, scenario_num, rate_num] = scc   
+    end 
+end

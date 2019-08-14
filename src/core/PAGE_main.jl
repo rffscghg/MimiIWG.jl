@@ -27,12 +27,10 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     # Add the scenario choice component and load all the scenario parameter values
     add_comp!(m, IWG_PAGE_ScenarioChoice, :IWGScenarioChoice; before = :co2emissions)
     set_dimension!(m, :scenarios, length(scenarios))
-    set_page_scenario_params!(m)
+    set_page_all_scenario_params!(m)
     
     # Set the scenario number if a scenario_choice was provided
-    if scenario_choice == nothing 
-        @warn("No scenario name provided, must set parameter :scenario_num in :IWGScenarioChoice component before running the model.")
-    else
+    if scenario_choice !== nothing 
         scenario_num = Int(scenario_choice)
         set_param!(m, :IWGScenarioChoice, :scenario_num, scenario_num)
     end
@@ -41,13 +39,13 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 end
 
 """
-set_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
+set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
     m: a Mimi model with and IWGScenarioChoice component
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
 """
-function set_page_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
-    params_dict = Dict{String, Array}([k=>[] for k in page_scenario_specific_params])
+function set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
+    params_dict = Dict{String, Array}([k => [] for k in page_scenario_specific_params])
 
     # add an array of each scenario's value to the dictionary
     for scenario in scenarios
@@ -68,16 +66,16 @@ function set_page_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioCho
     end
 
     if connect 
-        connect_param!(m, :GDP=>:gdp_0, comp_name=>:gdp_0)
-        connect_all!(m, [:GDP, :EquityWeighting], comp_name=>:grw_gdpgrowthrate)
-        connect_all!(m, [:Discontinuity, :MarketDamages, :NonMarketDamages, :SLRDamages], comp_name=>:GDP_per_cap_focus_0_FocusRegionEU)
-        connect_all!(m, [:GDP, :Population], comp_name=>:pop0_initpopulation)
-        connect_all!(m, [:EquityWeighting, :Population], comp_name=>:popgrw_populationgrowth)
-        connect_all!(m, [:co2emissions=>:e0_baselineCO2emissions, :AbatementCostsCO2=>:e0_baselineemissions, :AbatementCostParametersCO2=>:e0_baselineemissions], comp_name=>:e0_baselineCO2emissions)
-        connect_param!(m, :co2cycle=>:e0_globalCO2emissions, comp_name=>:e0_globalCO2emissions)
-        connect_all!(m, [:co2emissions=>:er_CO2emissionsgrowth, :AbatementCostsCO2=>:er_emissionsgrowth], comp_name=>:er_CO2emissionsgrowth)
-        connect_param!(m, :co2forcing=>:f0_CO2baseforcing, comp_name=>:f0_CO2baseforcing)
-        connect_param!(m, :TotalForcing=>:exf_excessforcing, comp_name=>:exf_excessforcing)
+        connect_param!(m, :GDP => :gdp_0, comp_name => :gdp_0)
+        connect_all!(m, [:GDP, :EquityWeighting], comp_name => :grw_gdpgrowthrate)
+        connect_all!(m, [:Discontinuity, :MarketDamages, :NonMarketDamages, :SLRDamages], comp_name => :GDP_per_cap_focus_0_FocusRegionEU)
+        connect_all!(m, [:GDP, :Population], comp_name => :pop0_initpopulation)
+        connect_all!(m, [:EquityWeighting, :Population], comp_name => :popgrw_populationgrowth)
+        connect_all!(m, [:co2emissions => :e0_baselineCO2emissions, :AbatementCostsCO2 => :e0_baselineemissions, :AbatementCostParametersCO2 => :e0_baselineemissions], comp_name => :e0_baselineCO2emissions)
+        connect_param!(m, :co2cycle => :e0_globalCO2emissions, comp_name => :e0_globalCO2emissions)
+        connect_all!(m, [:co2emissions => :er_CO2emissionsgrowth, :AbatementCostsCO2 => :er_emissionsgrowth], comp_name => :er_CO2emissionsgrowth)
+        connect_param!(m, :co2forcing => :f0_CO2baseforcing, comp_name => :f0_CO2baseforcing)
+        connect_param!(m, :TotalForcing => :exf_excessforcing, comp_name => :exf_excessforcing)
     end
 end
 
@@ -109,7 +107,7 @@ function load_page_scenario_params(scenario_choice::scenario_choice)
 end
 
 """
-    Returns a dicitonary of all of the necessary parameters that are the same for all IWG scenarios.
+    Returns a dicitonary of all of the necessary parameters that are the same for all IWG scenarios. (Does not include scenario-specific parameters.)
 """
 function load_page_iwg_params()
 
@@ -267,7 +265,7 @@ end
     If no `discount` is specified, will return undiscounted marginal damages.
     Default returns global values; specify `regional=true` for regional values.
 """
-function get_page_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64, regional::Bool=false)
+function get_page_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64; regional::Bool=false)
 
     # Check the emissions year
     if ! (year in page_years)
@@ -312,8 +310,8 @@ function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Noth
     marginal = Model(base)
 
     add_comp!(marginal, PAGE_marginal_emissions, :marginal_emissions; before = :co2emissions)
-    connect_param!(marginal, :co2emissions=>:er_CO2emissionsgrowth, :marginal_emissions=>:er_CO2emissionsgrowth)
-    connect_param!(marginal, :AbatementCostsCO2=>:er_emissionsgrowth, :marginal_emissions=>:er_CO2emissionsgrowth)
+    connect_param!(marginal, :co2emissions => :er_CO2emissionsgrowth, :marginal_emissions => :er_CO2emissionsgrowth)
+    connect_param!(marginal, :AbatementCostsCO2 => :er_emissionsgrowth, :marginal_emissions => :er_CO2emissionsgrowth)
 
     if year != nothing
         run(base)
@@ -356,7 +354,7 @@ end
     If no `year` is specified, will return SCC for $_default_year.
     If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
 """
-function get_page_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic=false)
+function compute_page_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic=false)
 
     # Check the emissions year
     _need_to_interpolate = false
@@ -389,7 +387,7 @@ function get_page_scc(scenario_choice::scenario_choice, year::Int, discount::Flo
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = page_years[findfirst(page_years, year) + 1] 
-        upper_scc = get_page_scc(scenario_choice, next_year, discount, domestic=domestic)
+        upper_scc = compute_page_scc(scenario_choice, next_year, discount, domestic=domestic)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 
