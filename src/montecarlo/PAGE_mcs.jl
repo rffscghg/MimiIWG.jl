@@ -183,7 +183,7 @@ function get_page_mcs()
 
 end
 
-function page_scenario_func(mcs::Simulation, tup::Tuple)
+function page_scenario_func(mcs::SimulationInstance, tup::Tuple)
     # Unpack the scenario arguments
     (scenario_choice, rate) = tup 
     global scenario_num = Int(scenario_choice)
@@ -200,7 +200,7 @@ function page_scenario_func(mcs::Simulation, tup::Tuple)
     Mimi.build(marginal)
 end 
 
-function page_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
+function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps::Int, tup::Tuple)
 
     # Access the models
     base, marginal = mcs.models 

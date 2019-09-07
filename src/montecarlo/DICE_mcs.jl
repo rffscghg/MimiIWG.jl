@@ -11,7 +11,7 @@ function get_dice_mcs()
     return mcs 
 end
 
-function dice_scenario_func(mcs::Simulation, tup::Tuple)
+function dice_scenario_func(mcs::SimulationInstance, tup::Tuple)
     (scenario_choice, rate) = tup
     global scenario_num = Int(scenario_choice)
     global rate_num = findfirst(isequal(rate), Mimi.payload(mcs)[1])
@@ -24,7 +24,7 @@ function dice_scenario_func(mcs::Simulation, tup::Tuple)
     Mimi.build(marginal)
 end
 
-function dice_post_trial_func(mcs::Simulation, trial::Int, ntimesteps::Int, tup::Tuple)
+function dice_post_trial_func(mcs::SimulationInstance, trial::Int, ntimesteps::Int, tup::Tuple)
     (name, rate) = tup
     (base, marginal) = mcs.models
 
