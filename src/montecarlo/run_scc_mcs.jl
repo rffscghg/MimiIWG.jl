@@ -1,13 +1,12 @@
-
 """
-run_scc_mcs(model::model_choice; 
-    trials = 10000, 
-    perturbation_years = _default_perturbation_years,
-    discount_rates = _default_discount_rates, 
-    domestic = false,
-    output_dir = nothing, 
-    save_trials = false,
-    tables = true)
+    run_scc_mcs(model::model_choice; 
+        trials = 10000, 
+        perturbation_years = _default_perturbation_years,
+        discount_rates = _default_discount_rates, 
+        domestic = false,
+        output_dir = nothing, 
+        save_trials = false,
+        tables = true)
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
@@ -54,7 +53,7 @@ function run_scc_mcs(model::model_choice;
         base = get_dice_model(USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
         marginal = get_dice_model(USG1)
         add_dice_marginal_emissions!(marginal)  # adds the marginal emissions component, but with no year specified, no pulse is added yet
-        set_models!(mcs, [base, marginal])
+        models = [base, marginal]
 
         domestic ? @warn("DICE is a global model. Domestic SCC values will be calculated as 10% of the global values.") : nothing
 
@@ -75,9 +74,7 @@ function run_scc_mcs(model::model_choice;
         base = get_fund_model(USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
         marginal = get_fund_model(USG1)
         MimiFUND.add_marginal_emissions!(marginal)   # adds the marginal emissions component, doesn't set the emission pulse till within MCS
-
-        # Set the base and marginal models
-        set_models!(mcs, [base, marginal])
+        models = [base, marginal]
 
     elseif model == PAGE 
 
@@ -96,7 +93,7 @@ function run_scc_mcs(model::model_choice;
 
         # Set the base and marginal models
         base, marginal = get_marginal_page_models(scenario_choice = USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
-        set_models!(mcs, [base, marginal])
+        models = [base, marginal]
     end
 
     # Check that the perturbation years are valid before running the simulation
@@ -126,19 +123,18 @@ function run_scc_mcs(model::model_choice;
     Mimi.set_payload!(mcs, payload)
 
     # Generate trials 
-    fn = save_trials ? joinpath(output_dir, "trials.csv") : nothing 
-    generate_trials!(mcs, trials; filename = fn)
+    trials_filepath = save_trials ? joinpath(output_dir, "trials.csv") : nothing 
 
     # Run the simulation
-    run_sim(mcs; 
-        trials = trials, 
-        models_to_run = 1,      # Run only the base model automatically in the MCS; we run the marginal model "manually" in a loop over all perturbation years in the post_trial function.
+    sim_results = run(mcs, models, trials;
+        trials_output_filename = trials_filepath, 
         ntimesteps = nyears,    
         scenario_func = scenario_func, 
         scenario_args = scenario_args,
         post_trial_func = post_trial_func,
-        output_dir = joinpath(output_dir, "saved_variables")
+        results_output_dir = joinpath(output_dir, "saved_variables")
     )
+    SCC_values, SCC_values_domestic = Mimi.payload(sim_results)[end-1:end]
 
     # generic interpolation if user requested SCC values for years in between model_years
     if _need_to_interpolate

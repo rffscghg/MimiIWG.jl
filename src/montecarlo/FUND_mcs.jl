@@ -113,7 +113,7 @@ function get_fund_mcs()
     return mcs
 end
 
-function fund_scenario_func(mcs::Simulation, tup::Tuple)
+function fund_scenario_func(mcs::SimulationInstance, tup::Tuple)
     # Access the models
     base, marginal = mcs.models 
 
@@ -128,7 +128,7 @@ function fund_scenario_func(mcs::Simulation, tup::Tuple)
     Mimi.build(marginal)
 end
 
-function fund_post_trial_func(mcs::Simulation, trialnum::Int, ntimesteps::Int, tup::Tuple)
+function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps::Int, tup::Tuple)
     # Access the models
     base, marginal = mcs.models 
     damages1 = base[:impactaggregation, :loss]
