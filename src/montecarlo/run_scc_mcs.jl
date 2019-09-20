@@ -1,13 +1,12 @@
-
 """
-run_scc_mcs(model::model_choice; 
-    trials = 10000, 
-    perturbation_years = _default_perturbation_years,
-    discount_rates = _default_discount_rates, 
-    domestic = false,
-    output_dir = nothing, 
-    save_trials = false,
-    tables = true)
+    run_scc_mcs(model::model_choice; 
+        trials = 10000, 
+        perturbation_years = _default_perturbation_years,
+        discount_rates = _default_discount_rates, 
+        domestic = false,
+        output_dir = nothing, 
+        save_trials = false,
+        tables = true)
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
