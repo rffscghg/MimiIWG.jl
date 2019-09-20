@@ -15,7 +15,13 @@ MimiPAGE2009 = "e25d4f70-4200-11e9-37f3-3b45f1cef54f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
-[compat]
-julia = "1"
+[compat]  
+Mimi = "0.9.4"
 MimiFUND = "=3.8.4"
-Mimi = "0.9.3"
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
