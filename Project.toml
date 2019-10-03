@@ -1,27 +1,27 @@
 name = "MimiIWG"
 uuid = "b1d80750-afbf-11e9-0666-4f25b2ea2b65"
-version = "0.1.1-DEV"
+version = "0.1.2-DEV"
 
 [deps]
-Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
-ExcelReaders = "c04bee98-12a5-510c-87df-2a230cb6e075"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
-Mimi = "e4e893b0-ee5e-52ea-8111-44b3bdec128c"
-MimiDICE2010 = "4f2c5d70-42a7-11e9-1de8-c370bd984083"
-MimiFUND = "b3ba11de-429f-11e9-29f7-cb478ab96e7c"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+ExcelReaders = "c04bee98-12a5-510c-87df-2a230cb6e075"
 MimiPAGE2009 = "e25d4f70-4200-11e9-37f3-3b45f1cef54f"
-Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-
-[compat]  
-Mimi = "0.9.4"
-MimiFUND = "=3.8.4"
-julia = "1"
+Mimi = "e4e893b0-ee5e-52ea-8111-44b3bdec128c"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+MimiFUND = "b3ba11de-429f-11e9-29f7-cb478ab96e7c"
+MimiDICE2010 = "4f2c5d70-42a7-11e9-1de8-c370bd984083"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+julia = "1"
+Mimi = "0.9.4"
+MimiFUND = "=3.8.4"
 
 [targets]
 test = ["Test"]
