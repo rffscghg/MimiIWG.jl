@@ -152,13 +152,35 @@ function load_dice_iwg_params()
     return params
 end
 
+function get_dice_marginal_model(scen::scenario_choice; gas::Symbol, year::Int)
+
+    base = get_dice_model(scen)
+    mm = create_marginal_model(base)
+
+    if gas == :CO2
+        add_dice_marginal_emissions!(mm.marginal, year)
+
+    elseif gas in [:CH4, :N2O]
+        f_delta = [_get_additional_forcing(scen, gas, year)..., zeros(11)...]
+
+        m2 = mm.marginal
+    
+        add_comp!(m2, Mimi.adder, :additional_forcing, before = :radiativeforcing)
+        connect_param!(m2, :additional_forcing => :input, :IWGScenarioChoice => :forcoth)
+        set_param!(m2, :additional_forcing, :add, f_delta)
+        connect_param!(m2, :radiativeforcing => :forcoth, :additional_forcing => :output)
+    
+    else
+        error("Unknown gas :$gas.")
+    end
+
+    return mm
+end
+
 """
-    Returns marginal damages each year from an additional emissions pulse in the specified year. 
-    User must specify an IWG scenario `scenario_choice`.
-    If no `year` is specified, will run for an emissions pulse in $_default_year.
-    If no `discount` is specified, will return undiscounted marginal damages.
-"""
-function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64) 
+    Returns marginal damages each year from an additional ton of the specified `gas` in the specified year. 
+ """
+function get_dice_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64) 
 
     # Check the emissions year
     _is_mid_year = false
@@ -170,22 +192,14 @@ function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, d
         year = dice_years[Int(floor((year - dice_years[1]) / dice_ts) + 1)]    # first calculate for the DICE year below the specified year
     end
 
-    base = get_dice_model(scenario_choice)
-    marginal = Model(base)
-    add_dice_marginal_emissions!(marginal, year)
-
-    run(base)
-    run(marginal)
-
-    base_C = base[:neteconomy, :C]
-    marginal_C = marginal[:neteconomy, :C]
-
-    diff = (base_C - marginal_C) * 10^3 * 12/44     # consumption is in trillions, pulse was Gt so *10^12/10^9
+    mm = get_dice_marginal_model(scenario_choice, gas=gas, year=year)
+    run(mm)
+    diff = -1. * mm[:neteconomy, :C] * _dice_normalization_factor(gas)
 
     if _is_mid_year     # need to calculate md for next year in time index as well, then interpolate for desired year
         lower_diff = diff
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_diff = get_dice_marginaldamages(scenario_choice, next_year, 0.)
+        upper_diff = get_dice_marginaldamages(scenario_choice, gas, next_year, 0.)
         diff = [_interpolate([lower_diff[i], upper_diff[i]], [year, next_year], [mid_year])[1] for i in 1:length(lower_diff)]
     end 
 
@@ -242,12 +256,10 @@ function perturb_dice_marginal_emissions!(marginal::Model, year::Int; comp_name=
 end
 
 """
-    Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the IWG-DICE model.
-    User must specify an IWG scenario `scenario_choice`.
-    If no `year` is specified, will return SCC for $_default_year.
-    If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
+    Returns the Social Cost of the specified `gas` for a given `year` and `discount` rate 
+    from one deterministic run of the IWG-DICE model for the specified scenario.
 """
-function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic::Bool = false, horizon::Int = _default_horizon)
+function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; domestic::Bool = false, horizon::Int = _default_horizon)
 
     # Check if the emissions year is valid, and whether or not we need to interpolate
     _is_mid_year = false
@@ -259,7 +271,7 @@ function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount:
         year = dice_years[Int(floor((year - dice_years[1]) / dice_ts) + 1)]    # first calculate for the DICE year below the specified year
     end
 
-    md = get_dice_marginaldamages(scenario_choice, year, 0.)   # Get undiscounted marginal damages
+    md = get_dice_marginaldamages(scenario_choice, gas, year, 0.)   # Get undiscounted marginal damages
     annual_years = dice_years[1]:horizon
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
@@ -272,7 +284,7 @@ function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount:
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_scc = compute_dice_scc(scenario_choice, next_year, discount, domestic = false, horizon = horizon)
+        upper_scc = compute_dice_scc(scenario_choice, gas, next_year, discount, domestic = false, horizon = horizon)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 
