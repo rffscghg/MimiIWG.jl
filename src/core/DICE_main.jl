@@ -153,27 +153,9 @@ function load_dice_iwg_params()
 end
 
 function get_dice_marginal_model(scen::scenario_choice; gas::Symbol, year::Int)
-
     base = get_dice_model(scen)
     mm = create_marginal_model(base)
-
-    if gas == :CO2
-        add_dice_marginal_emissions!(mm.marginal, year)
-
-    elseif gas in [:CH4, :N2O]
-        f_delta = [_get_additional_forcing(scen, gas, year)..., zeros(11)...]
-
-        m2 = mm.marginal
-    
-        add_comp!(m2, Mimi.adder, :additional_forcing, before = :radiativeforcing)
-        connect_param!(m2, :additional_forcing => :input, :IWGScenarioChoice => :forcoth)
-        set_param!(m2, :additional_forcing, :add, f_delta)
-        connect_param!(m2, :radiativeforcing => :forcoth, :additional_forcing => :output)
-    
-    else
-        error("Unknown gas :$gas.")
-    end
-
+    add_dice_marginal_emissions!(mm.marginal, gas, year)
     return mm
 end
 
@@ -216,26 +198,45 @@ function get_dice_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
 end
 
 """
-    Adds a marginal emissions component to a DICE model. 
+    Adds a marginal emissions component to a DICE model for the specified `gas`.
     If a year is specified, 1 GtC is added to emissions in that year.
 """
-function add_dice_marginal_emissions!(m::Model, year=nothing)
-    add_comp!(m, Mimi.adder, :marginalemission, before=:co2cycle)
-    time = Mimi.dimension(m, :time)
-    addem = zeros(length(time))
+function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
 
-    if year != nothing 
-        year_idx = findfirst(isequal(year), dice_years)
-        if year_idx === nothing 
-            error("year $year provided to add_dice_marginal_emissions! not in dice time dimension")
+    if gas == :CO2
+        add_comp!(m, Mimi.adder, :co2_pulse, before=:co2cycle)
+        time = Mimi.dimension(m, :time)
+        addem = zeros(length(time))
+
+        if year != nothing 
+            year_idx = findfirst(isequal(year), dice_years)
+            if year_idx === nothing 
+                error("year $year provided to add_dice_marginal_emissions! not in dice time dimension")
+            end 
+            addem[year_idx] = 1.0
         end 
-        addem[year_idx] = 1.0
-    end 
 
-    set_param!(m, :marginalemission, :add, addem)
-    connect_param!(m, :marginalemission => :input, :IWGScenarioChoice => :E)    # connect to the external parameter (exogenous emissions)
-    connect_param!(m, :co2cycle => :E, :marginalemission => :output)
+        set_param!(m, :co2_pulse, :add, addem)
+        connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the external parameter (exogenous emissions)
+        connect_param!(m, :co2cycle => :E, :co2_pulse => :output)
 
+    elseif gas in [:CH4, :N2O]
+
+        if year === nothing
+            f_delta = zeros(length(dice_years))
+        else
+            scenario_num = Mimi.external_param(m, :scenario_num).value
+            f_delta = [_get_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+        end
+    
+        add_comp!(m, Mimi.adder, :additional_forcing, before = :radiativeforcing)
+        connect_param!(m, :additional_forcing => :input, :IWGScenarioChoice => :forcoth)
+        set_param!(m, :additional_forcing, :add, f_delta)
+        connect_param!(m, :radiativeforcing => :forcoth, :additional_forcing => :output)
+
+    else
+        error("Unknown gas :$gas")
+    end
     nothing
 end 
 
@@ -243,15 +244,25 @@ end
     Perturbs the marginal emissions in the given index year for a DICE model.
     Marginal emissions component must already exist in the model.
 """
-function perturb_dice_marginal_emissions!(marginal::Model, year::Int; comp_name=:marginalemission)
+function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::Int)
 
-    year_idx = findfirst(isequal(year), dice_years)
-    ci = marginal.mi.components[comp_name]
-    pulse = Mimi.get_param_value(ci, :add)
+    if gas == :CO2
+        year_idx = findfirst(isequal(year), dice_years)
+        ci = marginal.mi.components[:co2_pulse]
+        pulse = Mimi.get_param_value(ci, :add)
 
-    pulse.data[:] .= 0.0    # pulse is a timestep array, need to access the data array to reset to zero because pulse[:] .= 0 doesn't work even though it doesn't error
-    pulse.data[year_idx] = 1.0
+        pulse.data[:] .= 0.0    # pulse is a timestep array, need to access the data array to reset to zero because pulse[:] .= 0 doesn't work even though it doesn't error
+        pulse.data[year_idx] = 1.0
 
+    elseif gas in [:CH4, :N2O]
+        ci = marginal.mi.components[:additional_forcing]
+        pulse = Mimi.get_param_value(ci, :add)
+        scenario_num = Mimi.external_param(marginal.md, :scenario_num).value
+        pulse.data[:] = [_get_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+
+    else
+        error("Unknown gas :$gas.")
+    end
     nothing
 end
 
