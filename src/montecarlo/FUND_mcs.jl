@@ -134,7 +134,7 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     damages1 = base[:impactaggregation, :loss]
 
     # Unpack the payload object 
-    discount_rates, model_years, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    discount_rates, model_years, gas, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
 
     final = length(model_years)
 
@@ -145,7 +145,7 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
         run(marginal; ntimesteps=ntimesteps)
 
         damages2 = marginal[:impactaggregation, :loss] ./ marginal[:socioeconomic, :income] .* base[:socioeconomic, :income]
-        marginaldamages = (damages2 .- damages1) / 10000000.
+        marginaldamages = (damages2 .- damages1) * _fund_normalization_factor(gas)
         global_marginaldamages = sum(marginaldamages, dims = 2)    # sum across regions
 
         function _compute_scc(pyear, marginaldamages, rates)
@@ -154,7 +154,7 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             
             for (i, rate) in enumerate(rates)
                 discount_factor = [(1/(1 + rate)) ^ (t - p_idx) for t in p_idx:final]
-                scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor) * 12.0 / 44.0
+                scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor)
             end
             return scc 
         end

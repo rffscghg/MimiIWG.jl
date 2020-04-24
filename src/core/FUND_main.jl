@@ -87,8 +87,6 @@ function load_fund_scenario_params(scenario_choice)
     return scenario_params
 end
 
-import MimiFUND: getindexfromyear
-
 # Function from original MimiFUND code, modified for IWG CH4 and N2O
 function add_fund_marginal_emissions!(m, emissionyear = nothing; gas = :CO2, yearstorun = 1050)
 
@@ -96,7 +94,7 @@ function add_fund_marginal_emissions!(m, emissionyear = nothing; gas = :CO2, yea
     add_comp!(m, Mimi.adder, :marginalemission, before = :climateco2cycle, first = 1951)
     addem = zeros(yearstorun)
     if emissionyear != nothing 
-        addem[getindexfromyear(emissionyear)-1:getindexfromyear(emissionyear) + 8] .= 1.0
+        addem[MimiFUND.getindexfromyear(emissionyear)-1:MimiFUND.getindexfromyear(emissionyear) + 8] .= 1.0
     end
     set_param!(m, :marginalemission, :add, addem)
 

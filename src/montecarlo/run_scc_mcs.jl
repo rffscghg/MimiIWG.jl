@@ -85,7 +85,7 @@ function run_scc_mcs(model::model_choice;
         # Get base and marginal models
         base = get_fund_model(USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
         marginal = get_fund_model(USG1)
-        MimiFUND.add_marginal_emissions!(marginal)   # adds the marginal emissions component, doesn't set the emission pulse till within MCS
+        add_fund_marginal_emissions!(marginal, gas=gas)   # adds the marginal emissions component, doesn't set the emission pulse till within MCS
         models = [base, marginal]
 
     elseif model == PAGE 
