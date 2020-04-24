@@ -81,6 +81,18 @@ const fund_scenario_specific_params = [
     "acei"
 ]
 
+function _fund_normalization_factor(gas::Symbol)
+    if gas == :CO2
+        return 1e-7 * 12/44     # Convert from /MtC for ten years to /tons CO2/year
+    elseif gas == :CH4
+        return 1e-7             # Convert from /MtCH4 for ten years to /tons CH4/year
+    elseif gas == :N2O
+        return 1e-7 * 28/44     # Convert from /MtN for ten years to /tons of N2O/year
+    else
+        error("Unknown gas :$gas.")
+    end
+end
+
 #------------------------------------------------------------------------------
 # 3. PAGE specific constants 
 #------------------------------------------------------------------------------
