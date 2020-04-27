@@ -12,6 +12,10 @@ scn2o = MimiIWG.compute_scc(DICE, USG1, gas=:CO2, year=2005, discount=0.025)
 scch4 = MimiIWG.compute_scc(FUND, USG1, gas=:CH4, year=2020, discount=0.025)
 scn2o = MimiIWG.compute_scc(FUND, USG1, gas=:N2O, year=2020, discount=0.025)
 
+# PAGE
+scch4 = MimiIWG.compute_scc(PAGE, USG1, gas=:CH4, year=2020, discount=0.025)
+scn2o = MimiIWG.compute_scc(PAGE, USG1, gas=:N2O, year=2020, discount=0.025)
+
 #------------------------------------------------------------------------------
 # Full Monte Carlo simulations for SC-CH4 and SC-N2O for each model
 #------------------------------------------------------------------------------

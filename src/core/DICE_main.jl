@@ -226,7 +226,7 @@ function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
             f_delta = zeros(length(dice_years))
         else
             scenario_num = Mimi.external_param(m, :scenario_num).value
-            f_delta = [_get_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+            f_delta = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
         end
     
         add_comp!(m, Mimi.adder, :additional_forcing, before = :radiativeforcing)

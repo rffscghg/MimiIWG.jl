@@ -37,7 +37,7 @@ function _get_marginal_gas_model(scenario_num::Int, gas::Symbol, year::Int)
     return mm
 end
 
-function _get_additional_forcing(scenario_num::Int, gas::Symbol, year::Int)
+function _get_dice_additional_forcing(scenario_num::Int, gas::Symbol, year::Int)
 
     mm = _get_marginal_gas_model(scenario_num, gas, year)
     run(mm)

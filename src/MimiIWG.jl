@@ -41,8 +41,7 @@ include("core/main.jl")
 
 # Code for other GHG SC
 include("core/DICE_other_ghg.jl")
-# include("core/FUND_other_ghg.jl")
-# include("core/PAGE_other_ghg.jl")
+include("core/PAGE_other_ghg.jl")
 
 # Monte carlo support
 include("montecarlo/DICE_mcs.jl")
