@@ -179,7 +179,7 @@ function run_scc_mcs(model::model_choice;
     if tables
         make_percentile_tables(output_dir, discount_rates, perturbation_years)
         make_stderror_tables(output_dir, discount_rates, perturbation_years)
-        0.03 in discount_rates && make_summary_table(output_dir, discount_rates, perturbation_years)
+        make_summary_table(output_dir, discount_rates, perturbation_years)
     end
 
     nothing

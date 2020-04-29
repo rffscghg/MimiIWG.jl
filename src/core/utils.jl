@@ -89,9 +89,7 @@ function make_stderror_tables(output_dir, discount_rates, perturbation_years)
 end
 
 # helper function for computing a summary table. Reports average values for all discount rates and years, and high impact value (95th pct) for 3%.
-function make_summary_table(output_dir, discount_rates, perturbation_years, high_impact_rate=0.03)
-
-    high_impact_rate in discount_rates ? nothing : error("high_impact_rate must be one of the provided discount rates.")
+function make_summary_table(output_dir, discount_rates, perturbation_years)
 
     scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
     tables = "$output_dir/Tables"   # folder to save the table to
@@ -99,8 +97,8 @@ function make_summary_table(output_dir, discount_rates, perturbation_years, high
 
     results = readdir(scc_dir)      # all saved SCC output files
 
-    data = Array{Any, 2}(undef, length(perturbation_years)+1, length(discount_rates)+2)
-    data[1, :] = ["Year", ["$(r*100)% Average" for r in discount_rates]..., "High Impact (95th Pct at $(high_impact_rate*100)%)"]
+    data = Array{Any, 2}(undef, length(perturbation_years)+1, 2*length(discount_rates)+1)
+    data[1, :] = ["Year", ["$(r*100)% Average" for r in discount_rates]..., ["High Impact (95th Pct at $(r*100)%)" for r in discount_rates]...]
     data[2:end, 1] = perturbation_years
 
     for (j, dr) in enumerate(discount_rates)
@@ -109,9 +107,7 @@ function make_summary_table(output_dir, discount_rates, perturbation_years, high
             vals = vcat(vals, readdlm(joinpath(scc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
         end
         data[2:end, j+1] = mean(vals, dims=1)[:]
-        if dr==high_impact_rate
-            data[2:end, end] = [quantile(vals[2:end, y], .95) for y in 1:length(perturbation_years)]
-        end
+        data[2:end, j+1+length(discount_rates)] = [quantile(vals[2:end, y], .95) for y in 1:length(perturbation_years)]
     end
 
     table = joinpath(tables, "Summary Table.csv")
