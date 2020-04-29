@@ -206,7 +206,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     base, marginal = mcs.models 
 
     # Unpack the payload object 
-    discount_rates, discount_factors, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    discount_rates, discount_factors, gas, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
 
     DF = discount_factors[rate_num]
     td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
@@ -219,15 +219,16 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     for (j, pyear) in enumerate(perturbation_years)
         idx = getpageindexfromyear(pyear)
 
-        perturb_marginal_page_emissions!(base, marginal, pyear)
+        perturb_marginal_page_emissions!(base, marginal, gas, pyear)
         run(marginal)
 
-        td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]             
-        scc = ((td_marginal / UDFT_base[idx]) - (td_base / UDFT_base[idx])) / 100000 * page_inflator
+        td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]   
+        pulse_size = gas == :CO2 ? 100_000 : 1          
+        scc = ((td_marginal / UDFT_base[idx]) - (td_base / UDFT_base[idx])) / pulse_size * page_inflator
 
         if SCC_values_domestic !== nothing 
             td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
-            scc_domestic = ((td_marginal_domestic / UDFT_base[idx]) - (td_base_domestic / UDFT_base[idx])) / 100000 * page_inflator
+            scc_domestic = ((td_marginal_domestic / UDFT_base[idx]) - (td_base_domestic / UDFT_base[idx])) / pulse_size * page_inflator
             SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
         end
         SCC_values[trialnum, j, scenario_num, rate_num] = scc   

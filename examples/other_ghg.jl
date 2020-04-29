@@ -28,3 +28,7 @@ MimiIWG.run_scc_mcs(DICE, gas=:N2O, trials=10_000, perturbation_years=[2020], ou
 # FUND
 MimiIWG.run_scc_mcs(FUND, gas=:CH4, trials=10_000, perturbation_years=[2020], output_dir = "output")
 MimiIWG.run_scc_mcs(FUND, gas=:N2O, trials=10_000, perturbation_years=[2020], output_dir = "output")
+
+# PAGE
+MimiIWG.run_scc_mcs(PAGE, gas=:CH4, trials=10_000, perturbation_years=[2020],  output_dir = "output")
+MimiIWG.run_scc_mcs(PAGE, gas=:N2O, trials=10_000, perturbation_years=[2020],  output_dir = "output")

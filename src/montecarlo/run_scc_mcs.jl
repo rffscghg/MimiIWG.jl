@@ -104,7 +104,7 @@ function run_scc_mcs(model::model_choice;
         post_trial_func = page_post_trial_func
 
         # Set the base and marginal models
-        base, marginal = get_marginal_page_models(scenario_choice = USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
+        base, marginal = get_marginal_page_models(scenario_choice = USG1, gas = gas) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
         models = [base, marginal]
     end
 

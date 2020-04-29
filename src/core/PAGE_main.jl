@@ -359,7 +359,7 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
     else
         scenario_num = base[:IWGScenarioChoice, :scenario_num]
         forcing_shock = _get_page_forcing_shock(scenario_num, gas, emissionyear)
-        update_param!(marginal, :add, forcing_shock)
+        update_param!(marginal.mi.md, :add, forcing_shock)
     end
 
     return nothing

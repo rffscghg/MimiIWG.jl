@@ -19,10 +19,22 @@ _page_n2o_shocks[2050] = readxl(_page_f, "Sheet1!AK18:AO27")
 
 
 function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
+    if scenario_num == 1
+        col_num = 1
+    elseif scenario_num == 2
+        col_num = 4     # MERGE data is in the 4th column of Marten et al input file
+    elseif scenario_num == 3
+        col_num = 2     # MESSAGE is in the second column
+    elseif scenario_num == 4
+        col_num = 3     # MiniCAM is in the third column
+    elseif scenario_num == 5
+        col_num = 5
+    end
+        
     if gas == :CH4
-        return convert(Vector{Float64}, _page_ch4_shocks[year][:, scenario_num])
+        return convert(Vector{Float64}, _page_ch4_shocks[year][:, col_num])
     elseif gas == :N2O
-        return convert(Vector{Float64}, _page_n2o_shocks[year][:, scenario_num])
+        return convert(Vector{Float64}, _page_n2o_shocks[year][:, col_num])
     else
         error("Unknown gas :$gas.")
     end
