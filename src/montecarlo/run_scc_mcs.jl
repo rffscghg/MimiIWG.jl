@@ -37,7 +37,7 @@ function run_scc_mcs(model::model_choice;
 
     # Check the gas
     if gas === nothing
-        @warn("No `gas` specified in `compute_scc`; will return the SC-CO2.")
+        @warn("No `gas` specified in `run_scc_mcs`; will return the SC-CO2.")
         gas = :CO2
     elseif ! (gas in [:CO2, :CH4, :N2O])
         error("Unknown gas :$gas. Available gases are :CO2, :CH4, and :N2O.")
@@ -168,7 +168,7 @@ function run_scc_mcs(model::model_choice;
     end
     
     # Save the SCC values
-    scc_dir = joinpath(output_dir, "SCC/")
+    scc_dir = joinpath(output_dir, "SC-$gas/")
     write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
     if domestic 
         model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
@@ -177,9 +177,9 @@ function run_scc_mcs(model::model_choice;
 
     # Build the stats tables
     if tables
-        make_percentile_tables(output_dir, discount_rates, perturbation_years)
-        make_stderror_tables(output_dir, discount_rates, perturbation_years)
-        make_summary_table(output_dir, discount_rates, perturbation_years)
+        make_percentile_tables(output_dir, gas, discount_rates, perturbation_years)
+        make_stderror_tables(output_dir, gas, discount_rates, perturbation_years)
+        make_summary_table(output_dir, gas, discount_rates, perturbation_years)
     end
 
     nothing

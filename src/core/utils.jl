@@ -40,8 +40,8 @@ function write_scc_values(values, output_dir, perturbation_years, discount_rates
 end
 
 # helper function for computing percentile tables at the end of a monte carlo simulation
-function make_percentile_tables(output_dir, discount_rates, perturbation_years)
-    scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
+function make_percentile_tables(output_dir, gas, discount_rates, perturbation_years)
+    scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
     tables = "$output_dir/Tables/Percentiles"   # folder to save TSD tables to
     mkpath(tables)
 
@@ -50,7 +50,7 @@ function make_percentile_tables(output_dir, discount_rates, perturbation_years)
     pcts = [.01, .05, .1, .25, .5, :avg, .75, .90, .95, .99]
 
     for dr in discount_rates, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SCC Percentiles - $(dr*100)%.csv")
+        table = joinpath(tables, "$year SC-$gas Percentiles - $(dr*100)%.csv")
         open(table, "w") do f 
             write(f, "Scenario,1st,5th,10th,25th,50th,Avg,75th,90th,95th,99th\n")
             for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
@@ -66,15 +66,15 @@ function make_percentile_tables(output_dir, discount_rates, perturbation_years)
 end
 
 # helper funcion for computing std error tables at the end of a monte carlo simulation
-function make_stderror_tables(output_dir, discount_rates, perturbation_years)
-    scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
+function make_stderror_tables(output_dir, gas, discount_rates, perturbation_years)
+    scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
     tables = "$output_dir/Tables/Std Errors"   # folder to save the tables to
     mkpath(tables)
 
     results = readdir(scc_dir)      # all saved SCC output files
 
     for dr in discount_rates, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SCC Std Errors - $(dr*100)%.csv")
+        table = joinpath(tables, "$year SC-$gas Std Errors - $(dr*100)%.csv")
         open(table, "w") do f 
             write(f, "Scenario,Mean,SE\n")
             for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
@@ -89,9 +89,9 @@ function make_stderror_tables(output_dir, discount_rates, perturbation_years)
 end
 
 # helper function for computing a summary table. Reports average values for all discount rates and years, and high impact value (95th pct) for 3%.
-function make_summary_table(output_dir, discount_rates, perturbation_years)
+function make_summary_table(output_dir, gas, discount_rates, perturbation_years)
 
-    scc_dir = "$output_dir/SCC"     # folder with output from the MCS runs
+    scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
     tables = "$output_dir/Tables"   # folder to save the table to
     mkpath(tables)
 

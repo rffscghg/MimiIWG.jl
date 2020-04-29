@@ -258,7 +258,7 @@ function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::In
         ci = marginal.mi.components[:additional_forcing]
         pulse = Mimi.get_param_value(ci, :add)
         scenario_num = Mimi.external_param(marginal.md, :scenario_num).value
-        pulse.data[:] = [_get_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+        pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
 
     else
         error("Unknown gas :$gas.")
