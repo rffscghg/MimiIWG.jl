@@ -1,39 +1,51 @@
 """
     run_scc_mcs(model::model_choice; 
-        trials = 10000, 
-        perturbation_years = _default_perturbation_years,
-        discount_rates = _default_discount_rates, 
-        domestic = false,
-        output_dir = nothing, 
-        save_trials = false,
-        tables = true)
+        gas::Union{Symbol, Nothing} = nothing,
+        trials::Int = 10000,
+        perturbation_years::Vector{Int} = _default_perturbation_years,
+        discount_rates::Vector{Float64} = _default_discount_rates, 
+        domestic::Bool = false,
+        output_dir::String = nothing, 
+        save_trials::Bool = false,
+        tables::Bool = true)
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
 5 socioeconomic scenarios, and for all specified `perturbation_years` and `discount_rates`. If `domestic` 
 equals `true`, then SCC values will also be calculated using only domestic damages. 
 
+`gas` may be one of :CO2, :CH4, or :N2O. If none is specified, it will default to :CO2.
+
 `model_choice` must be one of the following enums: DICE, FUND, or PAGE.
 
-Output files will be saved in the `output_dir`. If no `output_dir` is specified, one with the following 
-name will be created: "output/MODEL yyyy-mm-dd HH-MM-SS SCC MC\$trials".
+Output files will be saved in the `output_dir`. If none is provided, it will default to "./output/". 
+A new sub directory will be created each time this function is called, with the following name: "yyyy-mm-dd HH-MM-SS MODEL SC-\$gas MC\$trials".
+
 If `tables` equals `true`, then a set of summary statistics tables will also be saved in the output folder.
 If `save_trials` equals `true`, then a file with all of the sampled input trial data will also be saved in
 the output folder.
 """
 function run_scc_mcs(model::model_choice; 
-    trials = 10000,
-    perturbation_years = _default_perturbation_years,
-    discount_rates = _default_discount_rates, 
-    domestic = false,
-    output_dir = nothing, 
-    save_trials = false,
-    tables = true)
+    gas::Union{Symbol, Nothing} = nothing,
+    trials::Int = 10000,
+    perturbation_years::Vector{Int} = _default_perturbation_years,
+    discount_rates::Vector{Float64} = _default_discount_rates, 
+    domestic::Bool = false,
+    output_dir::Union{String, Nothing} = nothing, 
+    save_trials::Bool = false,
+    tables::Bool = true)
+
+    # Check the gas
+    if gas === nothing
+        @warn("No `gas` specified in `run_scc_mcs`; will return the SC-CO2.")
+        gas = :CO2
+    elseif ! (gas in [:CO2, :CH4, :N2O])
+        error("Unknown gas :$gas. Available gases are :CO2, :CH4, and :N2O.")
+    end
 
     # Set up output directory for trials and saved values
-    if output_dir === nothing
-        output_dir = joinpath("output/", "$(string(model)) $(Dates.format(now(), "yyyy-mm-dd HH-MM-SS")) SCC MC$trials")
-    end
+    root_dir = (output_dir === nothing ? "output/" : output_dir)
+    output_dir = joinpath(root_dir, "$(Dates.format(now(), "yyyy-mm-dd HH-MM-SS")) $(string(model)) SC-$gas MC$trials")
 
     # Get specific simulation arguments for the provided model choice
     if model == DICE 
@@ -52,7 +64,7 @@ function run_scc_mcs(model::model_choice;
 
         base = get_dice_model(USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
         marginal = get_dice_model(USG1)
-        add_dice_marginal_emissions!(marginal)  # adds the marginal emissions component, but with no year specified, no pulse is added yet
+        add_dice_marginal_emissions!(marginal, gas)  # adds the marginal emissions component, but with no year specified, no pulse is added yet
         models = [base, marginal]
 
         domestic ? @warn("DICE is a global model. Domestic SCC values will be calculated as 10% of the global values.") : nothing
@@ -73,7 +85,7 @@ function run_scc_mcs(model::model_choice;
         # Get base and marginal models
         base = get_fund_model(USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
         marginal = get_fund_model(USG1)
-        MimiFUND.add_marginal_emissions!(marginal)   # adds the marginal emissions component, doesn't set the emission pulse till within MCS
+        add_fund_marginal_emissions!(marginal, gas=gas)   # adds the marginal emissions component, doesn't set the emission pulse till within MCS
         models = [base, marginal]
 
     elseif model == PAGE 
@@ -92,7 +104,7 @@ function run_scc_mcs(model::model_choice;
         post_trial_func = page_post_trial_func
 
         # Set the base and marginal models
-        base, marginal = get_marginal_page_models(scenario_choice = USG1) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
+        base, marginal = get_marginal_page_models(scenario_choice = USG1, gas = gas) # Need to set a scenario so the model can be built, but the scenarios will change in the simulation
         models = [base, marginal]
     end
 
@@ -119,7 +131,7 @@ function run_scc_mcs(model::model_choice;
     end
 
     # Set the payload object
-    push!(payload, [perturbation_years, SCC_values, SCC_values_domestic]...)
+    push!(payload, [gas, perturbation_years, SCC_values, SCC_values_domestic]...)
     Mimi.set_payload!(mcs, payload)
 
     # Generate trials 
@@ -156,7 +168,7 @@ function run_scc_mcs(model::model_choice;
     end
     
     # Save the SCC values
-    scc_dir = joinpath(output_dir, "SCC/")
+    scc_dir = joinpath(output_dir, "SC-$gas/")
     write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
     if domestic 
         model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
@@ -165,9 +177,9 @@ function run_scc_mcs(model::model_choice;
 
     # Build the stats tables
     if tables
-        make_percentile_tables(output_dir, discount_rates, perturbation_years)
-        make_stderror_tables(output_dir, discount_rates, perturbation_years)
-        make_summary_table(output_dir, discount_rates, perturbation_years)
+        make_percentile_tables(output_dir, gas, discount_rates, perturbation_years)
+        make_stderror_tables(output_dir, gas, discount_rates, perturbation_years)
+        make_summary_table(output_dir, gas, discount_rates, perturbation_years)
     end
 
     nothing

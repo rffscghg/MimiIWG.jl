@@ -87,14 +87,44 @@ function load_fund_scenario_params(scenario_choice)
     return scenario_params
 end
 
+# Function from original MimiFUND code, modified for IWG CH4 and N2O
+function add_fund_marginal_emissions!(m, emissionyear = nothing; gas = :CO2, yearstorun = 1050)
+
+    # Add additional emissions to m
+    add_comp!(m, Mimi.adder, :marginalemission, before = :climateco2cycle, first = 1951)
+    addem = zeros(yearstorun)
+    if emissionyear != nothing 
+        addem[MimiFUND.getindexfromyear(emissionyear)-1:MimiFUND.getindexfromyear(emissionyear) + 8] .= 1.0
+    end
+    set_param!(m, :marginalemission, :add, addem)
+
+    # Reconnect the appropriate emissions in m
+    if gas == :CO2
+        connect_param!(m, :marginalemission, :input, :emissions, :mco2)
+        connect_param!(m, :climateco2cycle, :mco2, :marginalemission, :output, repeat([missing], yearstorun + 1))
+    elseif gas == :CH4
+        connect_param!(m, :marginalemission, :input, :IWGScenarioChoice, :globch4)
+        connect_param!(m, :climatech4cycle, :globch4, :marginalemission, :output, repeat([missing], yearstorun + 1))
+    elseif gas == :N2O
+        connect_param!(m, :marginalemission, :input, :IWGScenarioChoice, :globn2o)
+        connect_param!(m, :climaten2ocycle, :globn2o, :marginalemission, :output, repeat([missing], yearstorun + 1))
+    elseif gas == :SF6
+        connect_param!(m, :marginalemission, :input, :emissions, :globsf6)
+        connect_param!(m, :climatesf6cycle, :globsf6, :marginalemission, :output, repeat([missing], yearstorun + 1))
+    else
+        error("Unknown gas: $gas")
+    end
+end
+
 """
-    Returns marginal damages each year from an additional emissions pulse in the specified year. 
+    Returns marginal damages each year from an additional emissions pulse of the specified `gas` in the specified `year`. 
     User must specify an IWG scenario `scenario_choice`.
+    If no `gas` is sepcified, will run for an emissions pulse of CO2.
     If no `year` is specified, will run for an emissions pulse in $_default_year.
     If no `discount` is specified, will return undiscounted marginal damages.
     The `income_normalized` parameter indicates whether the damages from the marginal run should be scaled by the ratio of incomes between the base and marginal runs. 
 """
-function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true)
+function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true)
 
     # Check the emissions year
     if ! (year in fund_years)
@@ -103,7 +133,7 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, d
 
     base = get_fund_model(scenario_choice)
     marginal = Model(base)
-    MimiFUND.add_marginal_emissions!(marginal, year)     # Function from original fund code
+    add_fund_marginal_emissions!(marginal, year, gas = gas)
 
     run(base)
     run(marginal)
@@ -116,9 +146,9 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, d
     end
 
     if regional
-        diff = (damages2 .- damages1) ./ 10000000. * 12.0/44.0 * fund_inflator
+        diff = (damages2 .- damages1) * _fund_normalization_factor(gas) * fund_inflator
     else
-        diff = sum((damages2 .- damages1), dims = 2) / 10000000. * 12.0/44.0 * fund_inflator   # /10 for 10 year pulse; /10^6 for Mt pulse
+        diff = sum((damages2 .- damages1), dims = 2) * _fund_normalization_factor(gas) * fund_inflator   
     end
 
     nyears = length(fund_years)
@@ -134,12 +164,13 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, year::Int, d
 end
 
 """
-    Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the IWG-FUND model.
+    Returns the Social Cost of `gas` for a given `year` and `discount` rate from one deterministic run of the IWG-FUND model.
     User must specify an IWG scenario `scenario_choice`.
-    If no `year` is specified, will return SCC for $_default_year.
-    If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
+    If no `gas` is specified, will retrun the SC-CO2.
+    If no `year` is specified, will return SC for $_default_year.
+    If no `discount` is specified, will return SC for a discount rate of $(_default_discount * 100)%.
 """
-function compute_fund_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic::Bool = false, income_normalized::Bool = true)
+function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; domestic::Bool = false, income_normalized::Bool = true)
 
     # Check the emissions year
     if !(year in fund_years)
@@ -147,9 +178,9 @@ function compute_fund_scc(scenario_choice::scenario_choice, year::Int, discount:
     end
 
     if domestic
-        md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized = income_normalized, regional = true)[:, 1]
+        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized = income_normalized, regional = true)[:, 1]
     else
-        md = get_fund_marginaldamages(scenario_choice, year, discount, income_normalized = income_normalized, regional = false)
+        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized = income_normalized, regional = false)
     end
         
     scc = sum(md[MimiFUND.getindexfromyear(year):end])    # Sum from the perturbation year to the end (avoid the NaN in the first timestep)

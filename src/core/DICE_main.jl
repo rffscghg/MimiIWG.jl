@@ -152,13 +152,17 @@ function load_dice_iwg_params()
     return params
 end
 
+function get_dice_marginal_model(scen::scenario_choice; gas::Symbol, year::Int)
+    base = get_dice_model(scen)
+    mm = create_marginal_model(base)
+    add_dice_marginal_emissions!(mm.marginal, gas, year)
+    return mm
+end
+
 """
-    Returns marginal damages each year from an additional emissions pulse in the specified year. 
-    User must specify an IWG scenario `scenario_choice`.
-    If no `year` is specified, will run for an emissions pulse in $_default_year.
-    If no `discount` is specified, will return undiscounted marginal damages.
-"""
-function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64) 
+    Returns marginal damages each year from an additional ton of the specified `gas` in the specified year. 
+ """
+function get_dice_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64) 
 
     # Check the emissions year
     _is_mid_year = false
@@ -170,22 +174,14 @@ function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, d
         year = dice_years[Int(floor((year - dice_years[1]) / dice_ts) + 1)]    # first calculate for the DICE year below the specified year
     end
 
-    base = get_dice_model(scenario_choice)
-    marginal = Model(base)
-    add_dice_marginal_emissions!(marginal, year)
-
-    run(base)
-    run(marginal)
-
-    base_C = base[:neteconomy, :C]
-    marginal_C = marginal[:neteconomy, :C]
-
-    diff = (base_C - marginal_C) * 10^3 * 12/44     # consumption is in trillions, pulse was Gt so *10^12/10^9
+    mm = get_dice_marginal_model(scenario_choice, gas=gas, year=year)
+    run(mm)
+    diff = -1. * mm[:neteconomy, :C] * _dice_normalization_factor(gas)
 
     if _is_mid_year     # need to calculate md for next year in time index as well, then interpolate for desired year
         lower_diff = diff
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_diff = get_dice_marginaldamages(scenario_choice, next_year, 0.)
+        upper_diff = get_dice_marginaldamages(scenario_choice, gas, next_year, 0.)
         diff = [_interpolate([lower_diff[i], upper_diff[i]], [year, next_year], [mid_year])[1] for i in 1:length(lower_diff)]
     end 
 
@@ -202,26 +198,45 @@ function get_dice_marginaldamages(scenario_choice::scenario_choice, year::Int, d
 end
 
 """
-    Adds a marginal emissions component to a DICE model. 
+    Adds a marginal emissions component to a DICE model for the specified `gas`.
     If a year is specified, 1 GtC is added to emissions in that year.
 """
-function add_dice_marginal_emissions!(m::Model, year=nothing)
-    add_comp!(m, Mimi.adder, :marginalemission, before=:co2cycle)
-    time = Mimi.dimension(m, :time)
-    addem = zeros(length(time))
+function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
 
-    if year != nothing 
-        year_idx = findfirst(isequal(year), dice_years)
-        if year_idx === nothing 
-            error("year $year provided to add_dice_marginal_emissions! not in dice time dimension")
+    if gas == :CO2
+        add_comp!(m, Mimi.adder, :co2_pulse, before=:co2cycle)
+        time = Mimi.dimension(m, :time)
+        addem = zeros(length(time))
+
+        if year != nothing 
+            year_idx = findfirst(isequal(year), dice_years)
+            if year_idx === nothing 
+                error("year $year provided to add_dice_marginal_emissions! not in dice time dimension")
+            end 
+            addem[year_idx] = 1.0
         end 
-        addem[year_idx] = 1.0
-    end 
 
-    set_param!(m, :marginalemission, :add, addem)
-    connect_param!(m, :marginalemission => :input, :IWGScenarioChoice => :E)    # connect to the external parameter (exogenous emissions)
-    connect_param!(m, :co2cycle => :E, :marginalemission => :output)
+        set_param!(m, :co2_pulse, :add, addem)
+        connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the external parameter (exogenous emissions)
+        connect_param!(m, :co2cycle => :E, :co2_pulse => :output)
 
+    elseif gas in [:CH4, :N2O]
+
+        if year === nothing
+            f_delta = zeros(length(dice_years))
+        else
+            scenario_num = Mimi.external_param(m, :scenario_num).value
+            f_delta = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+        end
+    
+        add_comp!(m, Mimi.adder, :additional_forcing, before = :radiativeforcing)
+        connect_param!(m, :additional_forcing => :input, :IWGScenarioChoice => :forcoth)
+        set_param!(m, :additional_forcing, :add, f_delta)
+        connect_param!(m, :radiativeforcing => :forcoth, :additional_forcing => :output)
+
+    else
+        error("Unknown gas :$gas")
+    end
     nothing
 end 
 
@@ -229,25 +244,33 @@ end
     Perturbs the marginal emissions in the given index year for a DICE model.
     Marginal emissions component must already exist in the model.
 """
-function perturb_dice_marginal_emissions!(marginal::Model, year::Int; comp_name=:marginalemission)
+function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::Int)
 
-    year_idx = findfirst(isequal(year), dice_years)
-    ci = marginal.mi.components[comp_name]
-    pulse = Mimi.get_param_value(ci, :add)
+    if gas == :CO2
+        year_idx = findfirst(isequal(year), dice_years)
+        ci = marginal.mi.components[:co2_pulse]
+        pulse = Mimi.get_param_value(ci, :add)
 
-    pulse.data[:] .= 0.0    # pulse is a timestep array, need to access the data array to reset to zero because pulse[:] .= 0 doesn't work even though it doesn't error
-    pulse.data[year_idx] = 1.0
+        pulse.data[:] .= 0.0    # pulse is a timestep array, need to access the data array to reset to zero because pulse[:] .= 0 doesn't work even though it doesn't error
+        pulse.data[year_idx] = 1.0
 
+    elseif gas in [:CH4, :N2O]
+        ci = marginal.mi.components[:additional_forcing]
+        pulse = Mimi.get_param_value(ci, :add)
+        scenario_num = Mimi.external_param(marginal.md, :scenario_num).value
+        pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+
+    else
+        error("Unknown gas :$gas.")
+    end
     nothing
 end
 
 """
-    Returns the Social Cost of Carbon for a given `year` and `discount` rate from one deterministic run of the IWG-DICE model.
-    User must specify an IWG scenario `scenario_choice`.
-    If no `year` is specified, will return SCC for $_default_year.
-    If no `discount` is specified, will return SCC for a discount rate of $(_default_discount * 100)%.
+    Returns the Social Cost of the specified `gas` for a given `year` and `discount` rate 
+    from one deterministic run of the IWG-DICE model for the specified scenario.
 """
-function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount::Float64; domestic::Bool = false, horizon::Int = _default_horizon)
+function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; domestic::Bool = false, horizon::Int = _default_horizon)
 
     # Check if the emissions year is valid, and whether or not we need to interpolate
     _is_mid_year = false
@@ -259,7 +282,7 @@ function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount:
         year = dice_years[Int(floor((year - dice_years[1]) / dice_ts) + 1)]    # first calculate for the DICE year below the specified year
     end
 
-    md = get_dice_marginaldamages(scenario_choice, year, 0.)   # Get undiscounted marginal damages
+    md = get_dice_marginaldamages(scenario_choice, gas, year, 0.)   # Get undiscounted marginal damages
     annual_years = dice_years[1]:horizon
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
@@ -272,7 +295,7 @@ function compute_dice_scc(scenario_choice::scenario_choice, year::Int, discount:
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_scc = compute_dice_scc(scenario_choice, next_year, discount, domestic = false, horizon = horizon)
+        upper_scc = compute_dice_scc(scenario_choice, gas, next_year, discount, domestic = false, horizon = horizon)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 

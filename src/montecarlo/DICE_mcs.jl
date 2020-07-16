@@ -1,14 +1,16 @@
 
+_dice_simdef = @defsim begin
+    # Use the Roe and Baker distribution defined in a file, read in in src/core/constatns.jl
+    t2xco2 = EmpiricalDistribution(RB_cs_values, RB_cs_probs)
+    # save(climatedynamics.t2xco2)
+end 
+
 """
-    Returns a Monte Carlo Simulation object with one random variable for climate sensitivity over the Roe Baker distrtibution used by the IWG for DICE.
+    Returns a Monte Carlo Simulation object with one random variable for climate sensitivity over the 
+    Roe Baker distrtibution used by the IWG for DICE.
 """
 function get_dice_mcs()
-    mcs = @defsim begin
-        t2xco2 = EmpiricalDistribution(RB_cs_values, RB_cs_probs)   # Use the Roe and Baker distribution defined in a file, read in in src/core/constatns.jl
-
-        # save(climatedynamics.t2xco2)
-    end 
-    return mcs 
+    return deepcopy(_dice_simdef) 
 end
 
 function dice_scenario_func(mcs::SimulationInstance, tup::Tuple)
@@ -28,23 +30,23 @@ function dice_post_trial_func(mcs::SimulationInstance, trial::Int, ntimesteps::I
     (name, rate) = tup
     (base, marginal) = mcs.models
 
-    rates, discount_factors, model_years, horizon, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    rates, discount_factors, model_years, horizon, gas, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
 
     last_idx = horizon - 2005 + 1
     annual_years = dice_years[1]:horizon
 
-    base_consump = base[:neteconomy, :C]    # interpolate to annual timesteps for SCC calculation
+    base_consump = base[:neteconomy, :C] 
 
     DF = discount_factors[rate]             # access the pre-computed discount factor for this rate
 
     for (idx, pyear) in enumerate(perturbation_years)
 
         # Call the marginal model with perturbations in each year
-        perturb_dice_marginal_emissions!(marginal, pyear)
+        perturb_dice_marginal_emissions!(marginal, gas, pyear)
         run(marginal)
 
         marg_consump = marginal[:neteconomy, :C]
-        md = (base_consump .- marg_consump)  * 10^3 * 12/44     # get marginal damages
+        md = (base_consump .- marg_consump)  * _dice_normalization_factor(gas)     # get marginal damages
         annual_md = _interpolate(md, dice_years, annual_years)  # get annual marginal damages
 
         first_idx = pyear - 2005 + 1

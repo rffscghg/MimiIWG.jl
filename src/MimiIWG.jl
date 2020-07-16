@@ -31,12 +31,17 @@ include("components/IWG_PAGE_ClimateTemperature.jl")
 include("components/IWG_PAGE_ScenarioChoice.jl")
 include("components/IWG_PAGE_GDP.jl")
 include("components/IWG_RoeBakerClimateSensitivity.jl")
+include("components/IWG_DICE_simple_gas_cycle.jl")
 
 # Main models and functions
 include("core/DICE_main.jl")
 include("core/FUND_main.jl")
 include("core/PAGE_main.jl")
 include("core/main.jl")
+
+# Code for other GHG SC
+include("core/DICE_other_ghg.jl")
+include("core/PAGE_other_ghg.jl")
 
 # Monte carlo support
 include("montecarlo/DICE_mcs.jl")
