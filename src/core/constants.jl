@@ -10,7 +10,7 @@ const _default_year = 2020      # default perturbation year for marginal damages
 const _default_discount = 0.03  # 3% constant discounting
 const _default_horizon = 2300   # Same as H (the variable name used by the IWG in DICE)
 const _default_discount_rates = [.025, .03, .05]            # used by MCS
-const _default_perturbation_years = 2010:5:2050             # years for which to calculate the SCC
+const _default_perturbation_years = collect(2010:5:2050)             # years for which to calculate the SCC
 
 # Roe and Baker climate sensitivity distribution file
 const RBdistribution_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls")
@@ -80,18 +80,6 @@ const fund_scenario_specific_params = [
     "aeei",
     "acei"
 ]
-
-function _fund_normalization_factor(gas::Symbol)
-    if gas == :CO2
-        return 1e-7 * 12/44     # Convert from /MtC for ten years to /tons CO2/year
-    elseif gas == :CH4
-        return 1e-7             # Convert from /MtCH4 for ten years to /tons CH4/year
-    elseif gas == :N2O
-        return 1e-7 * 28/44     # Convert from /MtN for ten years to /tons of N2O/year
-    else
-        error("Unknown gas :$gas.")
-    end
-end
 
 #------------------------------------------------------------------------------
 # 3. PAGE specific constants 

@@ -30,17 +30,17 @@
 
     imigrate = Variable(index=[regions,regions])
 
-    incdens = Parameter()
-    emcst = Parameter()
-    immcst = Parameter()
-    dvydl = Parameter()
-    wvel = Parameter()
-    wvbm = Parameter()
-    slrwvpopdens0 = Parameter()
-    wvpdl = Parameter()
-    wvsl = Parameter()
-    dvbm = Parameter()
-    slrwvypc0 = Parameter()
+    incdens     = Parameter(default = 0.000635) # Normalization income density
+    emcst       = Parameter(default = 3) # emigration loss benchmark value
+    immcst      = Parameter(default = 0.4) # immigration loss benchmark
+    dvydl       = Parameter(default = 1) # income density elasticity of dryland value
+    wvel        = Parameter(default = 1.16) # wetland value income elasticity
+    wvbm        = Parameter(default = 0.00588) # wetland value benchmark value
+    slrwvpopdens0 = Parameter(default = 27.5937717888728) # wetland value income normalization value
+    wvpdl       = Parameter(default = 0.47)
+    wvsl        = Parameter(default = -0.11)
+    dvbm        = Parameter(default = 0.004) # dryland value benchmark value
+    slrwvypc0   = Parameter(default = 25000)
 
     pc = Parameter(index=[regions])
     slrprtp = Parameter(index=[regions])
@@ -73,7 +73,7 @@
                     v.imigrate[r1, r2] = p.migrate[r2, r1] / immsumm
                 end
     
-                t0 = 1
+                t0 = TimestepIndex(1)
                 v.landloss[t0, r1] = 0.0
                 v.cumlandloss[t0, r1] = 0.0
                 v.cumwetlandloss[t0, r1] = 0.0

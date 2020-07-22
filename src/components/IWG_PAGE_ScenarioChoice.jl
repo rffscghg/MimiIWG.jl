@@ -18,7 +18,7 @@
     exf_excessforcing = Variable(index = [time], unit = "W/m2")
 
     # The number for which scenario to use 
-    scenario_num::Integer = Parameter()
+    scenario_num = Parameter{Integer}()
 
     # Parameters (each one holds all five scenarios)
     gdp_0_all = Parameter(index = [region, scenarios])

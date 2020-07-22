@@ -12,10 +12,10 @@ function get_dice_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     disconnect_param!(m, :radiativeforcing, :MAT_final) # need to disconnect this param (not used in IWG version) before replacing co2cycle
     
     # Replace the IWG modified components
-    replace_comp!(m, IWG_DICE_co2cycle, :co2cycle)
-    replace_comp!(m, IWG_DICE_radiativeforcing, :radiativeforcing)
-    replace_comp!(m, IWG_DICE_climatedynamics, :climatedynamics)
-    replace_comp!(m, IWG_DICE_neteconomy, :neteconomy)
+    replace!(m, :co2cycle => IWG_DICE_co2cycle)
+    replace!(m, :radiativeforcing => IWG_DICE_radiativeforcing)
+    replace!(m, :climatedynamics => IWG_DICE_climatedynamics)
+    replace!(m, :neteconomy => IWG_DICE_neteconomy)
 
     # Delete the emissions component; emissions are now exogenous
     delete!(m, :emissions)
@@ -155,7 +155,7 @@ end
 function get_dice_marginal_model(scen::scenario_choice; gas::Symbol, year::Int)
     base = get_dice_model(scen)
     mm = create_marginal_model(base)
-    add_dice_marginal_emissions!(mm.marginal, gas, year)
+    add_dice_marginal_emissions!(mm.modified, gas, year)
     return mm
 end
 
@@ -248,14 +248,13 @@ function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::In
 
     if gas == :CO2
         year_idx = findfirst(isequal(year), dice_years)
-        ci = marginal.mi.components[:co2_pulse]
+        ci = Mimi.compinstance(marginal, :co2_pulse)
         pulse = Mimi.get_param_value(ci, :add)
-
         pulse.data[:] .= 0.0    # pulse is a timestep array, need to access the data array to reset to zero because pulse[:] .= 0 doesn't work even though it doesn't error
         pulse.data[year_idx] = 1.0
 
     elseif gas in [:CH4, :N2O]
-        ci = marginal.mi.components[:additional_forcing]
+        ci = Mimi.compinstance(marginal, :additional_forcing)
         pulse = Mimi.get_param_value(ci, :add)
         scenario_num = Mimi.external_param(marginal.md, :scenario_num).value
         pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]

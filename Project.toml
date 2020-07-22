@@ -20,8 +20,10 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1"
-Mimi = "=0.9.4"
-MimiFUND = "=3.8.4"
+Mimi = "1.0"
+MimiFUND = "=3.8.5"
+MimiDICE2010 = "1.0"
+MimiPAGE2009 = "3.0"
 
 [targets]
 test = ["Test"]

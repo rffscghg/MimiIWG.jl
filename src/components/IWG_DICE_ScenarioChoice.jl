@@ -13,7 +13,7 @@
     k0      = Variable()                # initial capital stock
 
     # The number for which scenario to use 
-    scenario_num::Integer = Parameter()
+    scenario_num = Parameter{Integer}()
 
     # Parameters (each one holds all five scenarios)
     l_all       = Parameter(index = [time, scenarios])

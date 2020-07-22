@@ -191,8 +191,8 @@ function page_scenario_func(mcs::SimulationInstance, tup::Tuple)
 
     # Build the page versions for this scenario
     base, marginal = mcs.models
-    set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
-    set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
+    update_param!(base, :scenario_num, scenario_num)
+    update_param!(marginal, :scenario_num, scenario_num)
     update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
     update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
 

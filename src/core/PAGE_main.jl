@@ -10,8 +10,8 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     set_dimension!(m, :time, page_years)
 
     # Replace modified components
-    replace_comp!(m, IWG_PAGE_GDP, :GDP)
-    replace_comp!(m, IWG_PAGE_ClimateTemperature, :ClimateTemperature)
+    replace!(m, :GDP => IWG_PAGE_GDP)
+    replace!(m, :ClimateTemperature => IWG_PAGE_ClimateTemperature)
 
     # Load all of the IWG parameters from excel that aren't scenario specific
     iwg_params = load_page_iwg_params()  
@@ -22,7 +22,17 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     update_param!(m, :y_year, page_years, update_timesteps = true)
 
     # Update all parameter values (and their timesteps) from the iwg parameters
-    update_params!(m, iwg_params, update_timesteps = true)
+    for (k, v) in iwg_params
+        if Symbol(k) in keys(Mimi.external_params(m))
+            if size(v) == (10, 8) || size(v) == (10,)
+                update_param!(m, Symbol(k), v, update_timesteps=true)
+            else
+                update_param!(m, Symbol(k), v)
+            end
+        else
+            set_param!(m, Symbol(k), v)
+        end
+    end
 
     # Add the scenario choice component and load all the scenario parameter values
     add_comp!(m, IWG_PAGE_ScenarioChoice, :IWGScenarioChoice; before = :co2emissions)
@@ -265,14 +275,14 @@ end
     If no `discount` is specified, will return undiscounted marginal damages.
     Default returns global values; specify `regional=true` for regional values.
 """
-function get_page_marginaldamages(scenario_choice::scenario_choice, year::Int, discount::Float64; regional::Bool=false)
+function get_page_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool=false)
 
     # Check the emissions year
     if ! (year in page_years)
         error("$year not a valid year; must be in model's time index $page_years.")
     end
 
-    base, marginal = get_marginal_page_models(scenario_choice=scenario_choice, year=year, discount=discount)
+    base, marginal = get_marginal_page_models(scenario_choice=scenario_choice, gas=gas, year=year, discount=discount)
 
     if discount == 0
         base_impacts = base[:EquityWeighting, :wit_equityweightedimpact]

@@ -19,8 +19,8 @@ function dice_scenario_func(mcs::SimulationInstance, tup::Tuple)
     global rate_num = findfirst(isequal(rate), Mimi.payload(mcs)[1])
 
     base, marginal = mcs.models
-    set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
-    set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
+    update_param!(base, :scenario_num, scenario_num)
+    update_param!(marginal, :scenario_num, scenario_num)
 
     Mimi.build(base)
     Mimi.build(marginal)

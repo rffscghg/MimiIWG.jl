@@ -3,12 +3,11 @@
 Returns a Monte Carlo Simulation object over the uncertain parameters used by the IWG for the FUND model.
 """
 function get_fund_mcs()
-
-    mcs = @defsim begin
+    fund_iwg_mcs = @defsim begin
 
         # Additional IWG distributional parameter
         roebakercsparameter = Truncated(Normal(0.62, 0.18), -0.2, 0.88)   
-
+    
         # The rest of the distributional parameters are the same as original FUND
         aceiadd = ["USA" => Normal(0.0,0.025), "CAN" => Normal(0.0,0.025), "WEU" => Normal(0.0,0.025), "JPK" => Normal(0.0,0.0375), "ANZ" => Normal(0.0,0.0375), "EEU" => Normal(0.0,0.025), "FSU" => Normal(0.0,0.025), "MDE" => Normal(0.0,0.0875), "CAM" => Normal(0.0,0.05625), "LAM" => Normal(0.0,0.05625), "SAS" => Normal(0.0,0.0875), "SEA" => Normal(0.0,0.0875), "CHI" => Normal(0.0,0.0375), "MAF" => Normal(0.0,0.11875), "SSA" => Normal(0.0,0.11875), "SIS" => Normal(0.0,0.05625)]
         aeeiadd = ["USA" => Normal(0.0,0.0625), "CAN" => Normal(0.0,0.0625), "WEU" => Normal(0.0,0.0625), "JPK" => Normal(0.0,0.0625), "ANZ" => Normal(0.0,0.0625), "EEU" => Normal(0.0,0.1), "FSU" => Normal(0.0,0.1), "MDE" => Normal(0.0,0.15), "CAM" => Normal(0.0,0.15), "LAM" => Normal(0.0,0.15), "SAS" => Normal(0.0,0.15), "SEA" => Normal(0.0,0.15), "CHI" => Normal(0.0,0.175), "MAF" => Normal(0.0,0.15), "SSA" => Normal(0.0,0.15), "SIS" => Normal(0.0,0.15)]
@@ -34,7 +33,6 @@ function get_fund_mcs()
         chmqbm = ["USA" => Truncated(Normal(0.0471,0.8815), 0.0, Inf), "CAN" => Truncated(Normal(0.0471,0.8815), 0.0, Inf), "WEU" => Truncated(Normal(0.0467,0.3469), 0.0, Inf), "JPK" => Truncated(Normal(0.0559,0.9223), 0.0, Inf), "ANZ" => Truncated(Normal(0.047,0.7509), 0.0, Inf), "EEU" => Truncated(Normal(0.047,0.3914), 0.0, Inf), "FSU" => Truncated(Normal(0.0471,0.8815), 0.0, Inf), "MDE" => Truncated(Normal(0.0452,0.3933), 0.0, Inf), "CAM" => Truncated(Normal(0.0471,0.7296), 0.0, Inf), "LAM" => Truncated(Normal(0.047,0.4823), 0.0, Inf), "SAS" => Truncated(Normal(0.047,0.6874), 0.0, Inf), "SEA" => Truncated(Normal(0.0411,0.381), 0.0, Inf), "CHI" => Truncated(Normal(0.0474,0.8485), 0.0, Inf), "MAF" => Truncated(Normal(0.0471,0.4648), 0.0, Inf), "SSA" => Truncated(Normal(0.044,0.2798), 0.0, Inf), "SIS" => Truncated(Normal(0.0324,0.407), 0.0, Inf)]
         chplbm = ["USA" => Truncated(Normal(34.9374,42.9155), 0.0, Inf), "CAN" => Truncated(Normal(27.328,42.9155), 0.0, Inf), "WEU" => Truncated(Normal(25.757,17.8447), 0.0, Inf), "JPK" => Truncated(Normal(8.2986,17.7713), 0.0, Inf), "ANZ" => Truncated(Normal(18.8372,36.7267), 0.0, Inf), "EEU" => Truncated(Normal(29.6249,18.8672), 0.0, Inf), "FSU" => Truncated(Normal(36.4415,42.9155), 0.0, Inf), "MDE" => Truncated(Normal(50.5493,20.6547), 0.0, Inf), "CAM" => Truncated(Normal(44.7697,34.4286), 0.0, Inf), "LAM" => Truncated(Normal(33.7621,23.0347), 0.0, Inf), "SAS" => Truncated(Normal(74.5092,36.2131), 0.0, Inf), "SEA" => Truncated(Normal(-18.7223,8.1867), -Inf, 0.0), "CHI" => Truncated(Normal(82.0355,29.0776), 0.0, Inf), "MAF" => Truncated(Normal(50.4842,23.0206), 0.0, Inf), "SSA" => Truncated(Normal(43.4397,13.5145), 0.0, Inf), "SIS" => Truncated(Normal(16.9938,8.0489), 0.0, Inf)]
         chpqbm = ["USA" => Truncated(Normal(1.7285,35.2319), 0.0, Inf), "CAN" => Truncated(Normal(1.7285,35.2319), 0.0, Inf), "WEU" => Truncated(Normal(1.7966,14.6498), 0.0, Inf), "JPK" => Truncated(Normal(0.7493,14.5895), 0.0, Inf), "ANZ" => Truncated(Normal(1.7286,30.1512), 0.0, Inf), "EEU" => Truncated(Normal(1.7531,15.4893), 0.0, Inf), "FSU" => Truncated(Normal(1.7285,35.2319), 0.0, Inf), "MDE" => Truncated(Normal(1.7011,16.9568), 0.0, Inf), "CAM" => Truncated(Normal(1.662,28.2646), 0.0, Inf), "LAM" => Truncated(Normal(1.7535,18.9106), 0.0, Inf), "SAS" => Truncated(Normal(1.7378,29.7296), 0.0, Inf), "SEA" => Truncated(Normal(-0.6683,6.721), -Inf, 0.0), "CHI" => Truncated(Normal(1.2095,23.8716), 0.0, Inf), "MAF" => Truncated(Normal(1.7096,18.8991), 0.0, Inf), "SSA" => Truncated(Normal(1.6578,11.0949), 0.0, Inf), "SIS" => Truncated(Normal(0.4223,6.6079), 0.0, Inf)]
-        climatesensitivity = Truncated(Gamma(6.47815626,0.547629469), 1.0, Inf)
         cvlin = Truncated(Normal(0.025901,0.009574), 0.0, Inf)
         dfch = ["USA" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "CAN" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "WEU" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "JPK" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "ANZ" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "EEU" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "FSU" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "MDE" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "CAM" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "LAM" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "SAS" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "SEA" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "CHI" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "MAF" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "SSA" => Truncated(Normal(0.3534,0.0614), 0.0, Inf), "SIS" => Truncated(Normal(0.3534,0.0614), 0.0, Inf)]
         dfnl = Truncated(Normal(1.0,0.5), 0.0, Inf)
@@ -108,9 +106,8 @@ function get_fund_mcs()
         wvel = Truncated(Normal(1.16,0.46), 0.0, Inf)
         wvpdl = Truncated(Normal(0.47,0.12), 0.0, 1.0)
         wvsl = Truncated(Normal(-0.11,0.05), -1.0, 0.0)
-
     end 
-    return mcs
+    return fund_iwg_mcs
 end
 
 function fund_scenario_func(mcs::SimulationInstance, tup::Tuple)
@@ -121,8 +118,8 @@ function fund_scenario_func(mcs::SimulationInstance, tup::Tuple)
     (scenario_choice,) = tup
     global scenario_num = Int(scenario_choice)
 
-    set_param!(base, :IWGScenarioChoice, :scenario_num, scenario_num)
-    set_param!(marginal, :IWGScenarioChoice, :scenario_num, scenario_num)
+    update_param!(base, :scenario_num, scenario_num)
+    update_param!(marginal, :scenario_num, scenario_num)
 
     Mimi.build(base)
     Mimi.build(marginal)
@@ -141,11 +138,11 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     # Loop through perturbation years for scc calculations, and only re-run the marginal model
     for (j, pyear) in enumerate(perturbation_years)
 
-        MimiFUND.perturb_marginal_emissions!(marginal, pyear)
+        MimiFUND.perturb_marginal_emissions!(marginal, pyear, gas=gas)
         run(marginal; ntimesteps=ntimesteps)
 
         damages2 = marginal[:impactaggregation, :loss] ./ marginal[:socioeconomic, :income] .* base[:socioeconomic, :income]
-        marginaldamages = (damages2 .- damages1) * _fund_normalization_factor(gas)
+        marginaldamages = (damages2 .- damages1) * 1e-7
         global_marginaldamages = sum(marginaldamages, dims = 2)    # sum across regions
 
         function _compute_scc(pyear, marginaldamages, rates)
