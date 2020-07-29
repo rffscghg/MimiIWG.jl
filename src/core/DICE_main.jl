@@ -256,7 +256,7 @@ function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::In
     elseif gas in [:CH4, :N2O]
         ci = Mimi.compinstance(marginal, :additional_forcing)
         pulse = Mimi.get_param_value(ci, :add)
-        scenario_num = Mimi.external_param(marginal.md, :scenario_num).value
+        scenario_num = marginal[:IWGScenarioChoice, :scenario_num]
         pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
 
     else
