@@ -23,15 +23,15 @@ function _get_marginal_gas_model(scenario_num::Int, gas::Symbol, year::Int)
 
     mm = create_marginal_model(m)
 
-    m2 = mm.marginal
+    m2 = mm.modified
     if gas == :CH4
         pulse_E = E_CH4A_all[:, scenario_num]
         pulse_E[year_index] = pulse_E[year_index] + 1.
-        set_param!(m2, :gas, :E_CH4A, pulse_E)
+        update_param!(m2, :E_CH4A, pulse_E)
     else
         pulse_E = E_N2OA_all[:, scenario_num]
         pulse_E[year_index] = pulse_E[year_index] + 1.
-        set_param!(m2, :gas, :E_N2OA, pulse_E)
+        update_param!(m2, :E_N2OA, pulse_E)
     end
 
     return mm
