@@ -143,8 +143,7 @@ function run_scc_mcs(model::model_choice;
         ntimesteps = nyears,    
         scenario_func = scenario_func, 
         scenario_args = scenario_args,
-        post_trial_func = post_trial_func,
-        results_output_dir = joinpath(output_dir, "saved_variables")
+        post_trial_func = post_trial_func
     )
     SCC_values, SCC_values_domestic = Mimi.payload(sim_results)[end-1:end]
 

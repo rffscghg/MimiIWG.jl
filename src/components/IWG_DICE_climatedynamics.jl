@@ -21,7 +21,7 @@
 
         # TA_eq added by EPA "to avoid over- and under-shoots to eq T when CS is very low
         if is_first(t)
-            v.TA_eq[1] = 0.083
+            v.TA_eq[t] = 0.083
         else
             v.TA_eq[t] = p.FORC[t] * p.t2xco2 / p.fco22x
         end

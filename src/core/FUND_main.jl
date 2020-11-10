@@ -8,7 +8,7 @@ function get_fund_model(scenario_choice::Union{scenario_choice, Nothing} = nothi
     m = getfund()
 
     # Replace the Impact Sea Level Rise component
-    replace_comp!(m, IWG_FUND_impactsealevelrise, :impactsealevelrise)
+    replace!(m, :impactsealevelrise => IWG_FUND_impactsealevelrise)
 
     # Add Roe Baker Climate Sensitivity parameter and make connection from Climate Dynamics component
     add_comp!(m, IWG_RoeBakerClimateSensitivity, :roebakerclimatesensitivity; before = :climatedynamics)
@@ -88,29 +88,31 @@ function load_fund_scenario_params(scenario_choice)
 end
 
 # Function from original MimiFUND code, modified for IWG CH4 and N2O
-function add_fund_marginal_emissions!(m, emissionyear = nothing; gas = :CO2, yearstorun = 1050)
+function add_fund_marginal_emissions!(m, year = nothing; gas = :CO2, pulse_size = 1e7)
 
     # Add additional emissions to m
-    add_comp!(m, Mimi.adder, :marginalemission, before = :climateco2cycle, first = 1951)
-    addem = zeros(yearstorun)
-    if emissionyear != nothing 
-        addem[MimiFUND.getindexfromyear(emissionyear)-1:MimiFUND.getindexfromyear(emissionyear) + 8] .= 1.0
+    add_comp!(m, MimiFUND.emissionspulse, before = :climateco2cycle)
+    nyears = length(Mimi.time_labels(m))
+    addem = zeros(nyears) 
+    if year !== nothing 
+        # pulse is spread over ten years, and emissions components is in Mt so divide by 1e7, and convert from CO2 to C if gas==:CO2 because emissions component is in MtC
+        addem[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 9] .= pulse_size / 1e7 * MimiFUND._gas_normalization(gas)
     end
-    set_param!(m, :marginalemission, :add, addem)
+    set_param!(m, :emissionspulse, :add, addem)
 
     # Reconnect the appropriate emissions in m
     if gas == :CO2
-        connect_param!(m, :marginalemission, :input, :emissions, :mco2)
-        connect_param!(m, :climateco2cycle, :mco2, :marginalemission, :output, repeat([missing], yearstorun + 1))
+        connect_param!(m, :emissionspulse, :input, :emissions, :mco2)
+        connect_param!(m, :climateco2cycle, :mco2, :emissionspulse, :output)
     elseif gas == :CH4
-        connect_param!(m, :marginalemission, :input, :IWGScenarioChoice, :globch4)
-        connect_param!(m, :climatech4cycle, :globch4, :marginalemission, :output, repeat([missing], yearstorun + 1))
+        connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globch4)
+        connect_param!(m, :climatech4cycle, :globch4, :emissionspulse, :output)
     elseif gas == :N2O
-        connect_param!(m, :marginalemission, :input, :IWGScenarioChoice, :globn2o)
-        connect_param!(m, :climaten2ocycle, :globn2o, :marginalemission, :output, repeat([missing], yearstorun + 1))
+        connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globn2o)
+        connect_param!(m, :climaten2ocycle, :globn2o, :emissionspulse, :output)
     elseif gas == :SF6
-        connect_param!(m, :marginalemission, :input, :emissions, :globsf6)
-        connect_param!(m, :climatesf6cycle, :globsf6, :marginalemission, :output, repeat([missing], yearstorun + 1))
+        connect_param!(m, :emissionspulse, :input, :emissions, :globsf6)
+        connect_param!(m, :climatesf6cycle, :globsf6, :emissionspulse, :output)
     else
         error("Unknown gas: $gas")
     end
@@ -146,9 +148,9 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
     end
 
     if regional
-        diff = (damages2 .- damages1) * _fund_normalization_factor(gas) * fund_inflator
+        diff = (damages2 .- damages1) * 1e-7 * fund_inflator
     else
-        diff = sum((damages2 .- damages1), dims = 2) * _fund_normalization_factor(gas) * fund_inflator   
+        diff = sum((damages2 .- damages1), dims = 2) * 1e-7 * fund_inflator   
     end
 
     nyears = length(fund_years)

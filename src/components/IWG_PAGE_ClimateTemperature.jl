@@ -11,7 +11,7 @@
 
     # Climate sensitivity calculations
     # tcr_transientresponse = Parameter(unit="degreeC")
-    frt_warminghalflife = Parameter(unit="year")
+    frt_warminghalflife = Parameter(unit="year", default=35.00)
 
     # sens_climatesensitivity = Variable(unit="degreeC")
     sens_climatesensitivity = Parameter(unit="degreeC")
@@ -27,10 +27,10 @@
     rt_realizedtemperature = Variable(index=[time, region], unit="degreeC") # unadjusted temperature
 
     # Adjusted temperature calculations
-    pole_polardifference = Parameter(unit="degreeC") # near 1 degC, the temperature increase difference between equator and pole
+    pole_polardifference = Parameter(unit="degreeC", default=1.50) # near 1 degC, the temperature increase difference between equator and pole
     lat_latitude = Parameter(index=[region], unit="degreeLatitude")
-    lat_g_meanlatitude = Parameter(unit="degreeLatitude") # Area-weighted average latitude
-    rlo_ratiolandocean = Parameter(unit="unitless") # near 1.4, the ratio between mean land and ocean temperature increases
+    lat_g_meanlatitude = Parameter(unit="degreeLatitude", default=30.21989459076828) # Area-weighted average latitude
+    rlo_ratiolandocean = Parameter(unit="unitless", default=1.40) # near 1.4, the ratio between mean land and ocean temperature increases
 
     rtl_0_realizedtemperature = Parameter(index=[region], unit="degreeC")
     rtl_realizedtemperature = Variable(index=[time, region], unit="degreeC")

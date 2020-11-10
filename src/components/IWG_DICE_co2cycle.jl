@@ -40,7 +40,7 @@
 
         # Define function for MAT
         if is_first(t)
-            v.MAT[1] = p.mat0
+            v.MAT[t] = p.mat0
             # and also calculate MAT[2] below
         end
         if !is_last(t)

@@ -14,7 +14,7 @@
     acei        = Variable(index = [time, regions])
 
     # The number for which scenario to use 
-    scenario_num::Integer = Parameter()
+    scenario_num = Parameter{Integer}()
 
     # Parameters (each one holds all five scenarios)
     globch4_all     = Parameter(index = [time, scenarios])
