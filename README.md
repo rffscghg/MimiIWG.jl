@@ -34,11 +34,11 @@ julia> using MimiIWG
 The main available functions are:
 - `MimiIWG.get_model(MODEL_NAME, SCENARIO_CHOICE)`
 
-- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0)`
+- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0)`
 
-- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, year=2020, discount=0.03)`
+- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0.03)`
 
-- `MimiIWG.run_scc_mcs(MODEL_NAME; trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
+- `MimiIWG.run_scc_mcs(MODEL_NAME; gas=:CO2, trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
 
 The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
