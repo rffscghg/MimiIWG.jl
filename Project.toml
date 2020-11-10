@@ -1,6 +1,6 @@
 name = "MimiIWG"
 uuid = "b1d80750-afbf-11e9-0666-4f25b2ea2b65"
-version = "0.1.2-DEV"
+version = "1.0.1-DEV"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -20,10 +20,10 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1"
+MimiPAGE2009 = "3.0"
 Mimi = "1.0"
 MimiFUND = "=3.8.5"
 MimiDICE2010 = "1.0"
-MimiPAGE2009 = "3.0"
 
 [targets]
 test = ["Test"]
