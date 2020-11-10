@@ -53,6 +53,7 @@ To run the same suite of Monte Carlo simulations that the IWG used for estimatin
 The first argument to `MimiIWG.run_scc_mcs` must be the name of one of the three models, `DICE`, `FUND`, or `PAGE`. After that, there are several keyword arguments to choose from. The following list describes these arguments and their default values if the user does not specifiy them.
 ```
 MimiIWG.run_scc_mcs(MODEL,
+    gas = :CO2,     # specify the greenhouse gas. :CH4 and :N2O also available
     trials = 10000,  # the size of the Monte Carlo sample
     perturbation_years = 2010:5:2050,  # List of years for which to calculate the SCC
     discount_rates = [0.025, 0.03, 0.05],  # List of discount rates for which to calculate the SCC
