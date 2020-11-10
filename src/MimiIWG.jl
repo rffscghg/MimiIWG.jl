@@ -3,7 +3,7 @@ module MimiIWG
 
 using Mimi
 using MimiDICE2010
-using MimiFUND          # pinned to version 3.8.2 in package registration Compat.toml
+using MimiFUND          # pinned to version 3.8 in package registration Compat.toml
 using MimiPAGE2009      
 using ExcelReaders
 using StatsBase
