@@ -100,18 +100,18 @@ function load_page_scenario_params(scenario_choice::scenario_choice)
 
     # Specify the scenario parameter file path
     fn = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 ($(page_scenario_convert[scenario_choice]), for 2013 SCC technical update - Input files).xlsx")
-    f = openxl(fn)
+    xf = readxlsx(fn)
 
-    p["pop0_initpopulation"] = dropdims(convert(Array{Float64}, readxl(f, "Base data!E24:E31")), dims=2)    # Population base year
-    p["popgrw_populationgrowth"]= convert(Array{Float64}, readxl(f, "Base data!C47:L54")')                  # Population growth rate
-    p["gdp_0"] = dropdims(convert(Array{Float64}, readxl(f, "Base data!D24:D31")), dims=2)                  # GDP base year
-    p["grw_gdpgrowthrate"] = convert(Array{Float64}, readxl(f, "Base data!C36:L43")')                       # GDP growth rate
+    p["pop0_initpopulation"] = dropdims(convert(Array{Float64}, xf["Base data"]["E24:E31"]), dims=2)    # Population base year
+    p["popgrw_populationgrowth"]= convert(Array{Float64}, xf["Base data"]["C47:L54"]')                  # Population growth rate
+    p["gdp_0"] = dropdims(convert(Array{Float64}, xf["Base data"]["D24:D31"]), dims=2)                  # GDP base year
+    p["grw_gdpgrowthrate"] = convert(Array{Float64}, xf["Base data"]["C36:L43"]')                       # GDP growth rate
     p["GDP_per_cap_focus_0_FocusRegionEU"] = p["gdp_0"][1] / p["pop0_initpopulation"][1]                    # EU initial income
-    p["e0_baselineCO2emissions"] = convert(Array{Float64}, readxl(f, "Base data!F24:F31"))[:, 1]            # initial CO2 emissions
+    p["e0_baselineCO2emissions"] = convert(Array{Float64}, xf["Base data"]["F24:F31"])[:, 1]            # initial CO2 emissions
     p["e0_globalCO2emissions"] = sum(p["e0_baselineCO2emissions"])                                          # sum to get global
-    p["f0_CO2baseforcing"] = readxl(f, "Base data!B21:B21")[1]                                              # CO2 base forcing
-    p["exf_excessforcing"] = convert(Array{Float64}, readxl(f, "Policy A!B50:K50")')[:, 1]                  # Excess forcing
-    p["er_CO2emissionsgrowth"] = convert(Array{Float64}, readxl(f, "Policy A!B5:K12")')                     # CO2 emissions growth
+    p["f0_CO2baseforcing"] = xf["Base data"]["B21:B21"][1]                                              # CO2 base forcing
+    p["exf_excessforcing"] = convert(Array{Float64}, xf["Policy A"]["B50:K50"]')[:, 1]                  # Excess forcing
+    p["er_CO2emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B5:K12"]')                     # CO2 emissions growth
 
     return p
 end
@@ -126,112 +126,112 @@ function load_page_iwg_params()
 
     # Specify the scenario parameter file path
     fn = joinpath(iwg_page_input_file)
-    f = openxl(fn)
+    xf = readxlsx(fn)
 
     #------------------------
     # 1. BASE DATA sheet
     #------------------------
 
     # Socioeconomics
-    p["lat_latitude"] = convert(Array{Float64}, readxl(f, "Base data!M24:M31"))[:, 1]
+    p["lat_latitude"] = convert(Array{Float64}, xf["Base data"]["M24:M31"])[:, 1]
     # the rest of the Socioeconomics parameters are scenario-specific
 
     # Initial emissions (all but CO2)
-    p["e0_baselineCH4emissions"] = convert(Array{Float64}, readxl(f, "Base data!G24:G31"))[:, 1]    # initial CH4 emissions
+    p["e0_baselineCH4emissions"] = convert(Array{Float64}, xf["Base data"]["G24:G31"])[:, 1]    # initial CH4 emissions
     p["AbatementCostsCH4_e0_baselineemissions"] = p["e0_baselineCH4emissions"]                      # same initial values, but different parameter name in the AbatementCosts component
     p["AbatementCostParametersCH4_e0_baselineemissions"] = p["e0_baselineCH4emissions"]             # same initial values, but different parameter name in the AbatementCostParameters component
     p["e_0globalCH4emissions"] = sum(p["e0_baselineCH4emissions"])                                  # sum to get global
-    p["e0_baselineN2Oemissions"] = convert(Array{Float64}, readxl(f, "Base data!H24:H31"))[:, 1]    # initial N2O emissions
+    p["e0_baselineN2Oemissions"] = convert(Array{Float64}, xf["Base data"]["H24:H31"])[:, 1]    # initial N2O emissions
     p["AbatementCostsN2O_e0_baselineemissions"] = p["e0_baselineN2Oemissions"]                      # same initial values, but different parameter name in the AbatementCosts component
     p["AbatementCostParametersN2O_e0_baselineemissions"] = p["e0_baselineN2Oemissions"]             # same initial values, but different parameter name in the AbatementCostParameters component
     p["e_0globalN2Oemissions"] = sum(p["e0_baselineN2Oemissions"])                                  # sum to get global
-    p["e0_baselineLGemissions"] = convert(Array{Float64}, readxl(f, "Base data!I24:I31"))[:, 1]     # initial Linear Gas emissions
+    p["e0_baselineLGemissions"] = convert(Array{Float64}, xf["Base data"]["I24:I31"])[:, 1]     # initial Linear Gas emissions
     p["AbatementCostsLin_e0_baselineemissions"] = p["e0_baselineLGemissions"]                       # same initial values, but different parameter name in the AbatementCosts component
     p["AbatementCostParametersLin_e0_baselineemissions"] = p["e0_baselineLGemissions"]              # same initial values, but different parameter name in the AbatementCostParameters component
     p["e_0globalLGemissions"] = sum(p["e0_baselineLGemissions"])                                    # sum to get global
-    p["se0_sulphateemissionsbase"] = convert(Array{Float64}, readxl(f, "Base data!J24:J31"))[:, 1]  # initial Sulphate emissions
-    p["nf_naturalsfx"] = convert(Array{Float64}, readxl(f, "Base data!K24:K31"))[:, 1]              # natural Sulphate emissions
+    p["se0_sulphateemissionsbase"] = convert(Array{Float64}, xf["Base data"]["J24:J31"])[:, 1]  # initial Sulphate emissions
+    p["nf_naturalsfx"] = convert(Array{Float64}, xf["Base data"]["K24:K31"])[:, 1]              # natural Sulphate emissions
 
-    p["rtl_0_realizedtemperature"] = convert(Array{Float64}, readxl(f, "Base data!L24:L31"))[:, 1]  # RTL0
+    p["rtl_0_realizedtemperature"] = convert(Array{Float64}, xf["Base data"]["L24:L31"])[:, 1]  # RTL0
 
     # Forcing slopes and bases (excludes CO2 base forcing)
-    p["fslope_CO2forcingslope"] = readxl(f, "Base data!B14:B14")[1]     # CO2 forcing slope
-    p["fslope_CH4forcingslope"] = readxl(f, "Base data!C14:C14")[1]     # CH4 forcing slope
-    p["fslope_N2Oforcingslope"] = readxl(f, "Base data!D14:D14")[1]     # CO2 forcing slope
-    p["fslope_LGforcingslope"] = readxl(f, "Base data!E14:E14")[1]      # LG forcing slope
-    p["f0_CH4baseforcing"] = readxl(f, "Base data!C21:C21")[1]          # CH4 base forcing
-    p["f0_N2Obaseforcing"] = readxl(f, "Base data!D21:D21")[1]          # CO2 base forcing
-    p["f0_LGforcingbase"] = readxl(f, "Base data!E21:E21")[1]           # LG base forcing
+    p["fslope_CO2forcingslope"] = xf["Base data"]["B14:B14"][1]     # CO2 forcing slope
+    p["fslope_CH4forcingslope"] = xf["Base data"]["C14:C14"][1]     # CH4 forcing slope
+    p["fslope_N2Oforcingslope"] = xf["Base data"]["D14:D14"][1]     # CO2 forcing slope
+    p["fslope_LGforcingslope"] = xf["Base data"]["E14:E14"][1]      # LG forcing slope
+    p["f0_CH4baseforcing"] = xf["Base data"]["C21:C21"][1]          # CH4 base forcing
+    p["f0_N2Obaseforcing"] = xf["Base data"]["D21:D21"][1]          # CO2 base forcing
+    p["f0_LGforcingbase"] = xf["Base data"]["E21:E21"][1]           # LG base forcing
 
     # stimulation, air fractions, and halflifes
-    p["stim_CH4emissionfeedback"] = readxl(f, "Base data!C15:C15")[1] 
-    p["air_CH4fractioninatm"] = readxl(f, "Base data!C17:C17")[1] 
-    p["res_CH4atmlifetime"] = readxl(f, "Base data!C18:C18")[1] 
-    p["stim_N2Oemissionfeedback"] = readxl(f, "Base data!D15:D15")[1] 
-    p["air_N2Ofractioninatm"] = readxl(f, "Base data!D17:D17")[1] 
-    p["res_N2Oatmlifetime"] = readxl(f, "Base data!D18:D18")[1] 
-    p["stim_LGemissionfeedback"] = readxl(f, "Base data!E15:E15")[1] 
-    p["air_LGfractioninatm"] = readxl(f, "Base data!E17:E17")[1] 
-    p["res_LGatmlifetime"] = readxl(f, "Base data!E18:E18")[1] 
+    p["stim_CH4emissionfeedback"] = xf["Base data"]["C15:C15"][1] 
+    p["air_CH4fractioninatm"] = xf["Base data"]["C17:C17"][1] 
+    p["res_CH4atmlifetime"] = xf["Base data"]["C18:C18"][1] 
+    p["stim_N2Oemissionfeedback"] = xf["Base data"]["D15:D15"][1] 
+    p["air_N2Ofractioninatm"] = xf["Base data"]["D17:D17"][1] 
+    p["res_N2Oatmlifetime"] = xf["Base data"]["D18:D18"][1] 
+    p["stim_LGemissionfeedback"] = xf["Base data"]["E15:E15"][1] 
+    p["air_LGfractioninatm"] = xf["Base data"]["E17:E17"][1] 
+    p["res_LGatmlifetime"] = xf["Base data"]["E18:E18"][1] 
 
     # concentrations
-    p["stay_fractionCO2emissionsinatm"] = readxl(f, "Base data!B16:B16")[1] / 100 # percent of CO2 emissions that stay in the air
-    p["c0_CO2concbaseyr"] = readxl(f, "Base data!B19:B19")[1]               # CO2 base year concentration
+    p["stay_fractionCO2emissionsinatm"] = xf["Base data"]["B16:B16"][1] / 100 # percent of CO2 emissions that stay in the air
+    p["c0_CO2concbaseyr"] = xf["Base data"]["B19:B19"][1]               # CO2 base year concentration
     p["c0_baseCO2conc"] = p["c0_CO2concbaseyr"]
-    p["ce_0_basecumCO2emissions"] = readxl(f, "Base data!B20:B20")[1]       # CO2 cumulative emissions
-    p["c0_CH4concbaseyr"] = readxl(f, "Base data!C19:C19")[1]                 # CH4 base year concentration
+    p["ce_0_basecumCO2emissions"] = xf["Base data"]["B20:B20"][1]       # CO2 cumulative emissions
+    p["c0_CH4concbaseyr"] = xf["Base data"]["C19:C19"][1]                 # CH4 base year concentration
     p["c0_baseCH4conc"] = p["c0_CH4concbaseyr"]
-    p["c0_N2Oconcbaseyr"] = readxl(f, "Base data!D19:D19")[1]                 # N2O base year concentration
+    p["c0_N2Oconcbaseyr"] = xf["Base data"]["D19:D19"][1]                 # N2O base year concentration
     p["c0_baseN2Oconc"] = p["c0_N2Oconcbaseyr"]
-    p["c0_LGconcbaseyr"] = readxl(f, "Base data!E19:E19")[1]                # LG base year concentration
+    p["c0_LGconcbaseyr"] = xf["Base data"]["E19:E19"][1]                # LG base year concentration
 
     # BAU emissions
-    p["AbatementCostParametersCO2_bau_businessasusualemissions"] = convert(Array{Float64}, readxl(f, "Base data!C68:L75")')
-    p["AbatementCostParametersCH4_bau_businessasusualemissions"] = convert(Array{Float64}, readxl(f, "Base data!C77:L84")')
-    p["AbatementCostParametersN2O_bau_businessasusualemissions"] = convert(Array{Float64}, readxl(f, "Base data!C86:L93")')
-    p["AbatementCostParametersLin_bau_businessasusualemissions"] = convert(Array{Float64}, readxl(f, "Base data!C95:L102")')
+    p["AbatementCostParametersCO2_bau_businessasusualemissions"] = convert(Array{Float64}, xf["Base data"]["C68:L75"]')
+    p["AbatementCostParametersCH4_bau_businessasusualemissions"] = convert(Array{Float64}, xf["Base data"]["C77:L84"]')
+    p["AbatementCostParametersN2O_bau_businessasusualemissions"] = convert(Array{Float64}, xf["Base data"]["C86:L93"]')
+    p["AbatementCostParametersLin_bau_businessasusualemissions"] = convert(Array{Float64}, xf["Base data"]["C95:L102"]')
 
     #elasticity of utility
-    p["emuc_utilityconvexity"] = readxl(f, "Base data!B10:B10")[1]
+    p["emuc_utilityconvexity"] = xf["Base data"]["B10:B10"][1]
 
     #pure rate of time preference
-    p["ptp_timepreference"] = readxl(f, "Base data!B8:B8")[1]
+    p["ptp_timepreference"] = xf["Base data"]["B8:B8"][1]
 
     #------------------------
     # 2. LIBRARY DATA sheet
     #------------------------
 
-    p["sens_climatesensitivity"] = readxl(f, "Library data!C18:C18")[1]  # Climate sensitivity
+    p["sens_climatesensitivity"] = xf["Library data"]["C18:C18"][1]  # Climate sensitivity
     
-    # p["cutbacks_at_neg_cost_grw"] = readxl(f, "Library data!C123:C123")[1]    # cutbacks at negative cost growth rate (??)
-    # p["max_cutbacks_grw"] = readxl(f, "Library data!C125:C125")[1]        # Maximum cutbacks growth rate
-    # p["most_neg_grw"] = readxl(f, "Library data!C127:C127")[1]           # Most negative cost growth rate
+    # p["cutbacks_at_neg_cost_grw"] = xf["Library data"]["C123:C123"][1]    # cutbacks at negative cost growth rate (??)
+    # p["max_cutbacks_grw"] = xf["Library data"]["C125:C125"][1]        # Maximum cutbacks growth rate
+    # p["most_neg_grw"] = xf["Library data"]["C127:C127"][1]           # Most negative cost growth rate
     
-    # p["automult_autonomoustechchange"] = readxl(f, "Library data!C134:C134")[1]        # Autonomous technical change
-    # p["auto"] = readxl(f, "Library data!C134:C134")[1]        # Autonomous technical change
+    # p["automult_autonomoustechchange"] = xf["Library data"]["C134:C134"][1]        # Autonomous technical change
+    # p["auto"] = xf["Library data"]["C134:C134"][1]        # Autonomous technical change
 
-    p["d_sulphateforcingbase"] = readxl(f, "Library data!C11:C11")[1]
-    p["ind_slopeSEforcing_indirect"] = readxl(f, "Library data!C12:C12")[1]
+    p["d_sulphateforcingbase"] = xf["Library data"]["C11:C11"][1]
+    p["ind_slopeSEforcing_indirect"] = xf["Library data"]["C12:C12"][1]
 
-    p["q0propmult_cutbacksatnegativecostinfinalyear"] = readxl(f, "Library data!C122:C122")[1]
-    p["qmax_minus_q0propmult_maxcutbacksatpositivecostinfinalyear"] = readxl(f, "Library data!C124:C124")[1]
-    p["c0mult_mostnegativecostinfinalyear"] = readxl(f, "Library data!C126:C126")[1]
+    p["q0propmult_cutbacksatnegativecostinfinalyear"] = xf["Library data"]["C122:C122"][1]
+    p["qmax_minus_q0propmult_maxcutbacksatpositivecostinfinalyear"] = xf["Library data"]["C124:C124"][1]
+    p["c0mult_mostnegativecostinfinalyear"] = xf["Library data"]["C126:C126"][1]
 
-    p["civvalue_civilizationvalue"] = readxl(f, "Library data!C44:C44")[1]
+    p["civvalue_civilizationvalue"] = xf["Library data"]["C44:C44"][1]
 
     #------------------------
     # 3. POLICY A sheet
     #------------------------
 
     # Emissions growth (all but CO2)
-    p["er_CH4emissionsgrowth"] = convert(Array{Float64}, readxl(f, "Policy A!B14:K21")')    # CH4 emissions growth
-    p["er_N2Oemissionsgrowth"] = convert(Array{Float64}, readxl(f, "Policy A!B23:K30")')    # N2O emissions growth
-    p["er_LGemissionsgrowth"] = convert(Array{Float64}, readxl(f, "Policy A!B32:K39")')    # Lin emissions growth
-    p["AbatementCostsCH4_er_emissionsgrowth"] = convert(Array{Float64}, readxl(f, "Policy A!B14:K21")')    # CH4 emissions growth
-    p["AbatementCostsN2O_er_emissionsgrowth"] = convert(Array{Float64}, readxl(f, "Policy A!B23:K30")')    # N2O emissions growth
-    p["AbatementCostsLin_er_emissionsgrowth"] = convert(Array{Float64}, readxl(f, "Policy A!B32:K39")')    # Lin emissions growth
+    p["er_CH4emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B14:K21"]')    # CH4 emissions growth
+    p["er_N2Oemissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B23:K30"]')    # N2O emissions growth
+    p["er_LGemissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B32:K39"]')    # Lin emissions growth
+    p["AbatementCostsCH4_er_emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B14:K21"]')    # CH4 emissions growth
+    p["AbatementCostsN2O_er_emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B23:K30"]')    # N2O emissions growth
+    p["AbatementCostsLin_er_emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B32:K39"]')    # Lin emissions growth
     
-    p["pse_sulphatevsbase"] = convert(Array{Float64}, readxl(f, "Policy A!B41:K48")')
+    p["pse_sulphatevsbase"] = convert(Array{Float64}, xf["Policy A"]["B41:K48"]')
 
     return p
 end
