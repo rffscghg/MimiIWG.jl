@@ -196,8 +196,8 @@ function page_scenario_func(mcs::SimulationInstance, tup::Tuple)
     update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
     update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
 
-    Mimi.build(base)
-    Mimi.build(marginal)
+    Mimi.build!(base)
+    Mimi.build!(marginal)
 end 
 
 function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps::Int, tup::Tuple)

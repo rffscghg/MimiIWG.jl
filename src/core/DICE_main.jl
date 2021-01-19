@@ -147,7 +147,8 @@ function load_dice_iwg_params()
     params[:a1]         = 0.00008162
     params[:a2]         = 0.00204626
     params[:b1]         = 0.00518162                # previously called 'slrcoeff'-- :b1 in SLR
-    params[:b2]         = 0.00305776                # previously called 'slrcoeffsq'-- :b2 in SLR 
+    params[:b2]         = 0.00305776                # previously called 'slrcoeffsq'-- :b2 in SLR
+    params[:t2xco2]     = 3.0
 
     return params
 end
