@@ -1,16 +1,17 @@
 
 module MimiIWG
 
+using Dates
+using DelimitedFiles
+using Distributions
+using ExcelReaders
+using Interpolations
 using Mimi
 using MimiDICE2010
 using MimiFUND          # pinned to version 3.8 in package registration Compat.toml
 using MimiPAGE2009      
-using ExcelReaders
 using StatsBase
-using Distributions
-using Interpolations
-using Dates
-using DelimitedFiles
+using XLSX: readxlsx
 
 export DICE, FUND, PAGE, # export the enumerated model_choice options
         USG1, USG2, USG3, USG4, USG5 # export the enumerated scenario_choice options 
