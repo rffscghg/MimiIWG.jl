@@ -334,7 +334,7 @@ function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Noth
 
     if year != nothing
         run(base)
-        Mimi.build(marginal)
+        Mimi.build!(marginal)
         perturb_marginal_page_emissions!(base, marginal, gas, year)
         run(marginal)
     end

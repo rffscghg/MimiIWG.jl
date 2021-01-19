@@ -121,8 +121,8 @@ function fund_scenario_func(mcs::SimulationInstance, tup::Tuple)
     update_param!(base, :scenario_num, scenario_num)
     update_param!(marginal, :scenario_num, scenario_num)
 
-    Mimi.build(base)
-    Mimi.build(marginal)
+    Mimi.build!(base)
+    Mimi.build!(marginal)
 end
 
 function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps::Int, tup::Tuple)
