@@ -20,14 +20,14 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1"
-Distributions = "0.24"
+Distributions = "0.23, 0.24"
 Interpolations = "0.13"
 ExcelReaders = "0.11"
 StatsBase = "0.33"
 XLSX = "0.7.3"
 MimiPAGE2009 = "3.0"
 Mimi = "1.0"
-MimiFUND = "=3.8.5"
+MimiFUND = "=3.8.6"
 MimiDICE2010 = "1.0"
 
 [targets]
