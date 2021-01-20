@@ -77,9 +77,9 @@ function load_fund_scenario_params(scenario_choice)
     scenario_file = joinpath(iwg_fund_datadir, "Parameter - EMF22 $(fund_scenario_convert[scenario_choice]).xlsm")
 
     scenario_params = Dict{Any, Any}()
-    f = openxl(scenario_file)
+    f = readxlsx(scenario_file)
     for p in ["ypcgrowth", "pgrowth", "AEEI", "ACEI", "ch4", "n2o"] 
-        scenario_params[lowercase(p)] = readxl(f, "$(p)!B2:Q1052")
+        scenario_params[lowercase(p)] = f[p]["B2:Q1052"]
     end
     scenario_params["globch4"] = sum(Array{Float64,2}(scenario_params["ch4"]), dims = 2)[:] # sum horizontally for global emissions
     scenario_params["globn2o"] = sum(Array{Float64,2}(scenario_params["n2o"]), dims = 2)[:]
