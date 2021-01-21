@@ -76,7 +76,7 @@ _atol = 1e-3
         for year in 2010:10:2050, dr in [0.025, 0.03, 0.05]
             mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:N2O, year=year, discount=dr)
             iwg_scc = scen_validation_values[idx]
-            @test mimi_scc ≈ iwg_scc atol = _atol
+            @test mimi_scc ≈ iwg_scc atol = 5.
             idx += 1
         end
     end
