@@ -1,17 +1,17 @@
 name = "MimiIWG"
 uuid = "b1d80750-afbf-11e9-0666-4f25b2ea2b65"
-version = "1.0.1-DEV"
+version = "1.0.1"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 ExcelReaders = "c04bee98-12a5-510c-87df-2a230cb6e075"
-XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 MimiPAGE2009 = "e25d4f70-4200-11e9-37f3-3b45f1cef54f"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Mimi = "e4e893b0-ee5e-52ea-8111-44b3bdec128c"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 MimiFUND = "b3ba11de-429f-11e9-29f7-cb478ab96e7c"
 MimiDICE2010 = "4f2c5d70-42a7-11e9-1de8-c370bd984083"
 
@@ -20,14 +20,14 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1"
-Distributions = "0.23, 0.24"
-Interpolations = "0.13"
-ExcelReaders = "0.11"
 StatsBase = "0.33"
 XLSX = "0.7.3"
 MimiPAGE2009 = "3.0"
+ExcelReaders = "0.11"
+Distributions = "0.23, 0.24"
 Mimi = "1.0"
 MimiFUND = "=3.8.6"
+Interpolations = "0.13"
 MimiDICE2010 = "1.0"
 
 [targets]
