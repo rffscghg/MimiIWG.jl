@@ -14,15 +14,14 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     replace!(m, :ClimateTemperature => IWG_PAGE_ClimateTemperature)
 
     # Load all of the IWG parameters from excel that aren't scenario specific
-    iwg_params = load_page_iwg_params()  
-    set_param!(m, :ClimateTemperature, :sens_climatesensitivity, iwg_params["sens_climatesensitivity"])
+    set_param!(m, :ClimateTemperature, :sens_climatesensitivity, _page_iwg_params["sens_climatesensitivity"])
 
     # Update y_year_0 and y_year parameters used by components
     update_param!(m, :y_year_0, 2000)
     update_param!(m, :y_year, page_years, update_timesteps = true)
 
     # Update all parameter values (and their timesteps) from the iwg parameters
-    for (k, v) in iwg_params
+    for (k, v) in _page_iwg_params
         if Symbol(k) in keys(Mimi.external_params(m))
             if size(v) == (10, 8) || size(v) == (10,)
                 update_param!(m, Symbol(k), v, update_timesteps=true)
@@ -55,18 +54,9 @@ set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, 
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
 """
 function set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
-    params_dict = Dict{String, Array}([k => [] for k in page_scenario_specific_params])
-
-    # add an array of each scenario's value to the dictionary
-    for scenario in scenarios
-        params = load_page_scenario_params(scenario)
-        for p in page_scenario_specific_params
-            push!(params_dict[p], params[p])
-        end
-    end
 
     # reshape each array of values into one array for each param, then set that value in the model
-    for (k, v) in params_dict
+    for (k, v) in _page_scenario_params_dict
         _size = size(v[1])
         param = zeros(_size..., 5)
         for i in 1:5
@@ -89,32 +79,6 @@ function set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenari
     end
 end
 
-"""
-    Returns a dictionary of the scenario-specific parameter values for the specified scenario.
-        (also possible TODO: should I just make data files for all of these instead of using Excel?)
-"""
-function load_page_scenario_params(scenario_choice::scenario_choice)
-
-    # Build a dictionary of values to return
-    p = Dict{Any, Any}()
-
-    # Specify the scenario parameter file path
-    fn = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 ($(page_scenario_convert[scenario_choice]), for 2013 SCC technical update - Input files).xlsx")
-    xf = readxlsx(fn)
-
-    p["pop0_initpopulation"] = dropdims(convert(Array{Float64}, xf["Base data"]["E24:E31"]), dims=2)    # Population base year
-    p["popgrw_populationgrowth"]= convert(Array{Float64}, xf["Base data"]["C47:L54"]')                  # Population growth rate
-    p["gdp_0"] = dropdims(convert(Array{Float64}, xf["Base data"]["D24:D31"]), dims=2)                  # GDP base year
-    p["grw_gdpgrowthrate"] = convert(Array{Float64}, xf["Base data"]["C36:L43"]')                       # GDP growth rate
-    p["GDP_per_cap_focus_0_FocusRegionEU"] = p["gdp_0"][1] / p["pop0_initpopulation"][1]                    # EU initial income
-    p["e0_baselineCO2emissions"] = convert(Array{Float64}, xf["Base data"]["F24:F31"])[:, 1]            # initial CO2 emissions
-    p["e0_globalCO2emissions"] = sum(p["e0_baselineCO2emissions"])                                          # sum to get global
-    p["f0_CO2baseforcing"] = xf["Base data"]["B21:B21"][1]                                              # CO2 base forcing
-    p["exf_excessforcing"] = convert(Array{Float64}, xf["Policy A"]["B50:K50"]')[:, 1]                  # Excess forcing
-    p["er_CO2emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B5:K12"]')                     # CO2 emissions growth
-
-    return p
-end
 
 """
     Returns a dicitonary of all of the necessary parameters that are the same for all IWG scenarios. (Does not include scenario-specific parameters.)
@@ -235,6 +199,9 @@ function load_page_iwg_params()
 
     return p
 end
+
+# Only load these parameters once, and `get_model` uses this dictionary
+_page_iwg_params = load_page_iwg_params()
 
 function getpageindexfromyear(year)
     i = findfirst(isequal(year), page_years)

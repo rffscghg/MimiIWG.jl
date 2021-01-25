@@ -81,6 +81,26 @@ const fund_scenario_specific_params = [
     "acei"
 ]
 
+# Load the dictionary of scenario-specific FUND parameters from their excel files once
+
+_fund_scenario_params_dict = Dict{String, Array}([k=>[] for k in fund_scenario_specific_params])
+
+for scen in collect(values(fund_scenario_convert))
+    scenario_file = joinpath(iwg_fund_datadir, "Parameter - EMF22 $scen.xlsm")
+
+    scenario_params = Dict{Any, Any}()
+    f = readxlsx(scenario_file)
+    for p in ["ypcgrowth", "pgrowth", "AEEI", "ACEI", "ch4", "n2o"] 
+        scenario_params[lowercase(p)] = f[p]["B2:Q1052"]
+    end
+    scenario_params["globch4"] = sum(Array{Float64,2}(scenario_params["ch4"]), dims = 2)[:] # sum horizontally for global emissions
+    scenario_params["globn2o"] = sum(Array{Float64,2}(scenario_params["n2o"]), dims = 2)[:]
+
+    for p in fund_scenario_specific_params
+        push!(_fund_scenario_params_dict[p], scenario_params[p])
+    end
+end
+
 #------------------------------------------------------------------------------
 # 3. PAGE specific constants 
 #------------------------------------------------------------------------------
@@ -113,3 +133,30 @@ const page_scenario_convert = Dict{scenario_choice, String}(    # convert from s
     USG4  => "MiniCAM",
     USG5  => "550 Avg"
 )
+
+# Load the dictionary of scenario-specific PAGE parameters from their excel files once
+
+_page_scenario_params_dict = Dict{String, Array}([k => [] for k in page_scenario_specific_params])
+
+for scen in collect(values(page_scenario_convert))
+    params = Dict{Any, Any}()
+
+    # Specify the scenario parameter file path
+    fn = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 ($scen, for 2013 SCC technical update - Input files).xlsx")
+    xf = readxlsx(fn)
+
+    params["pop0_initpopulation"] = dropdims(convert(Array{Float64}, xf["Base data"]["E24:E31"]), dims=2)    # Population base year
+    params["popgrw_populationgrowth"]= convert(Array{Float64}, xf["Base data"]["C47:L54"]')                  # Population growth rate
+    params["gdp_0"] = dropdims(convert(Array{Float64}, xf["Base data"]["D24:D31"]), dims=2)                  # GDP base year
+    params["grw_gdpgrowthrate"] = convert(Array{Float64}, xf["Base data"]["C36:L43"]')                       # GDP growth rate
+    params["GDP_per_cap_focus_0_FocusRegionEU"] = params["gdp_0"][1] / params["pop0_initpopulation"][1]      # EU initial income
+    params["e0_baselineCO2emissions"] = convert(Array{Float64}, xf["Base data"]["F24:F31"])[:, 1]            # initial CO2 emissions
+    params["e0_globalCO2emissions"] = sum(params["e0_baselineCO2emissions"])                                 # sum to get global
+    params["f0_CO2baseforcing"] = xf["Base data"]["B21:B21"][1]                                              # CO2 base forcing
+    params["exf_excessforcing"] = convert(Array{Float64}, xf["Policy A"]["B50:K50"]')[:, 1]                  # Excess forcing
+    params["er_CO2emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B5:K12"]')                     # CO2 emissions growth
+
+    for p in page_scenario_specific_params
+        push!(_page_scenario_params_dict[p], params[p])
+    end
+end
