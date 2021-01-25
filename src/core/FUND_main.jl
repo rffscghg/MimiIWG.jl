@@ -35,18 +35,9 @@ set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, 
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
 """
 function set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
-    params_dict = Dict{String, Array}([k=>[] for k in fund_scenario_specific_params])
-
-    # add an array of each scenario's value to the dictionary
-    for scenario in scenarios
-        params = load_fund_scenario_params(scenario)
-        for p in fund_scenario_specific_params
-            push!(params_dict[p], params[p])
-        end
-    end
 
     # reshape each array of values into one array for each param, then set that value in the model
-    for (k, v) in params_dict
+    for (k, v) in _fund_scenario_params_dict
         _size = size(v[1])
         param = zeros(_size..., 5)
         for i in 1:5
@@ -67,24 +58,6 @@ function set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenari
         connect_param!(m, :emissions => :acei, comp_name => :acei)
 
     end
-end
-
-"""
-    Returns a dictionary of FUND parameter values for the specified scenario.
-"""
-function load_fund_scenario_params(scenario_choice)
-
-    scenario_file = joinpath(iwg_fund_datadir, "Parameter - EMF22 $(fund_scenario_convert[scenario_choice]).xlsm")
-
-    scenario_params = Dict{Any, Any}()
-    f = readxlsx(scenario_file)
-    for p in ["ypcgrowth", "pgrowth", "AEEI", "ACEI", "ch4", "n2o"] 
-        scenario_params[lowercase(p)] = f[p]["B2:Q1052"]
-    end
-    scenario_params["globch4"] = sum(Array{Float64,2}(scenario_params["ch4"]), dims = 2)[:] # sum horizontally for global emissions
-    scenario_params["globn2o"] = sum(Array{Float64,2}(scenario_params["n2o"]), dims = 2)[:]
-
-    return scenario_params
 end
 
 # Function from original MimiFUND code, modified for IWG CH4 and N2O
