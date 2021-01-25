@@ -85,8 +85,8 @@ const fund_scenario_specific_params = [
 
 _fund_scenario_params_dict = Dict{String, Array}([k=>[] for k in fund_scenario_specific_params])
 
-for scen in collect(values(fund_scenario_convert))
-    scenario_file = joinpath(iwg_fund_datadir, "Parameter - EMF22 $scen.xlsm")
+for scen in scenarios
+    scenario_file = joinpath(iwg_fund_datadir, "Parameter - EMF22 $(fund_scenario_convert[scen]).xlsm")
 
     scenario_params = Dict{Any, Any}()
     f = readxlsx(scenario_file)
@@ -138,11 +138,11 @@ const page_scenario_convert = Dict{scenario_choice, String}(    # convert from s
 
 _page_scenario_params_dict = Dict{String, Array}([k => [] for k in page_scenario_specific_params])
 
-for scen in collect(values(page_scenario_convert))
+for scen in scenarios
     params = Dict{Any, Any}()
 
     # Specify the scenario parameter file path
-    fn = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 ($scen, for 2013 SCC technical update - Input files).xlsx")
+    fn = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 ($(page_scenario_convert[scen]), for 2013 SCC technical update - Input files).xlsx")
     xf = readxlsx(fn)
 
     params["pop0_initpopulation"] = dropdims(convert(Array{Float64}, xf["Base data"]["E24:E31"]), dims=2)    # Population base year
