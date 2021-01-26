@@ -135,7 +135,7 @@ function run_scc_mcs(model::model_choice;
 
     # Make an array to hold undiscounted marginal damages, if specified
     if save_md
-        model == PAGE ? @warn("`save_md = true` not yet implemented for PAGE") : nothing
+        model == PAGE ? @warn("`save_md = true` not yet implemented for PAGE. No marginal damages output will be saved.") : nothing
         md_values = Array{Float64, 4}(undef, length(perturbation_years), length(scenarios), length(model_years), trials)
     else
         md_values = nothing
@@ -160,7 +160,7 @@ function run_scc_mcs(model::model_choice;
 
     # Save the marginal damage matrices
     if save_md
-        md_dir = joinpath(output_dir, "undiscounted_marginal_damages/")
+        md_dir = joinpath(output_dir, "marginal_damages/")
         mkpath(md_dir)
         for (i, year) in enumerate(perturbation_years)
             for (j, scen) in enumerate(scenarios)
