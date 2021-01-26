@@ -232,5 +232,13 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
         end
         SCC_values[trialnum, j, scenario_num, rate_num] = scc   
+
+        if md_values !== nothing 
+            base_impacts = base[:EquityWeighting, :wit_equityweightedimpact]
+            marg_impacts = marginal[:EquityWeighting, :wit_equityweightedimpact]
+        
+            marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1)
+            md_values[j, scenario_num, :, trialnum] = sum(marg_damages, dims = 2) # sum along second dimension to get global values
+        end
     end 
 end

@@ -259,7 +259,7 @@ function get_page_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
         marg_impacts = marginal[:EquityWeighting, :widt_equityweightedimpact_discounted]
     end
 
-    marg_damages = (marg_impacts .- base_impacts) ./ 100000     # TODO: comment with specified units here
+    marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1)     # TODO: comment with specified units here
 
     if regional
         return marg_damages

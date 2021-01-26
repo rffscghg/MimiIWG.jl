@@ -24,8 +24,8 @@ A new sub directory will be created each time this function is called, with the 
 
 If `tables` equals `true`, then a set of summary statistics tables will also be saved in the output folder.
 If `save_trials` equals `true`, then a file with all of the sampled input trial data will also be saved in
-the output folder. If `save_md` equals `true`, then undiscounted marginal damages from each run of the simulation 
-will be saved in a subdirectory "marginal_damages".
+the output folder. If `save_md` equals `true`, then global undiscounted marginal damages from each run of 
+the simulation will be saved in a subdirectory "marginal_damages".
 """
 function run_scc_mcs(model::model_choice; 
     gas::Union{Symbol, Nothing} = nothing,
@@ -135,7 +135,9 @@ function run_scc_mcs(model::model_choice;
 
     # Make an array to hold undiscounted marginal damages, if specified
     if save_md
-        model == PAGE ? @warn("`save_md = true` not yet implemented for PAGE. No marginal damages output will be saved.") : nothing
+        if model == PAGE && discount_rates != [0.]
+            error("Cannot save undiscounted marginal damages for PAGE unless `discount_rates = [0.]`")
+        end
         md_values = Array{Float64, 4}(undef, length(perturbation_years), length(scenarios), length(model_years), trials)
     else
         md_values = nothing
