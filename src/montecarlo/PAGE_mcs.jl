@@ -206,7 +206,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     base, marginal = mcs.models 
 
     # Unpack the payload object 
-    discount_rates, discount_factors, gas, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    discount_rates, discount_factors, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
     DF = discount_factors[rate_num]
     td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]

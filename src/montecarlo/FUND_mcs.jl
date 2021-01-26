@@ -131,7 +131,7 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     damages1 = base[:impactaggregation, :loss]
 
     # Unpack the payload object 
-    discount_rates, model_years, gas, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    discount_rates, model_years, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
     final = length(model_years)
 
@@ -163,6 +163,10 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             domestic_marginaldamages = marginaldamages[:, 1]
             scc_domestic = _compute_scc(pyear, domestic_marginaldamages, discount_rates)
             SCC_values_domestic[trialnum, j, scenario_num, :] = scc_domestic * fund_inflator
+        end
+
+        if md_values !== nothing
+            md_values[j, scenario_num, :, trialnum] = map(x -> ismissing(x) ? 0 : x, global_marginaldamages[1:length(model_years)])
         end
     end
 end
