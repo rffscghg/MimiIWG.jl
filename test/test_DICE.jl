@@ -30,6 +30,7 @@ using XLSX: readxlsx
         _atol = 1e-8
 
         for scenario in MimiIWG.scenarios
+            @info("Testing DICE SC-CO2 $(MimiIWG.dice_scenario_convert[scenario])...")
             @testset "$(string(scenario))" begin 
                 for discount in [0.025, 0.03, 0.05]
                     validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]
@@ -53,6 +54,7 @@ using XLSX: readxlsx
         _atol = 1e-5
 
         for scenario in MimiIWG.scenarios
+            @info("Testing DICE SC-CH4 $(MimiIWG.dice_scenario_convert[scenario])...")
             @testset "$(string(scenario))" begin 
                 for discount in [0.025, 0.03, 0.05]
                     validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]
@@ -75,6 +77,7 @@ using XLSX: readxlsx
     _atol = 1e-5
 
     for scenario in MimiIWG.scenarios
+        @info("Testing DICE SC-N2O $(MimiIWG.dice_scenario_convert[scenario])...")
         @testset "$(string(scenario))" begin 
             for discount in [0.025, 0.03, 0.05]
                 validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]

@@ -33,7 +33,7 @@ _atol = 1e-3
     @testset "Deterministic SC-CO2 validation" begin
         
         for scen in MimiIWG.scenarios
-            @info("Testing FUND SC-CO2 $(MimiIWG.fund_scenario_convert[scen]) . . .")
+            @info("Testing FUND SC-CO2 $(MimiIWG.fund_scenario_convert[scen])...")
             file_idx = findfirst(x -> occursin("$(MimiIWG.fund_scenario_convert[scen]) - C", x), validation_files)
             scen_file = validation_files[file_idx]
             scen_validation_values = readdlm(joinpath(validation_dir, scen_file), ',')[3, 2:16]
@@ -52,7 +52,7 @@ _atol = 1e-3
     @testset "Deterministic SC-CH4 validation" begin
     
         for scen in MimiIWG.scenarios
-            @info("Testing FUND SC-CH4 $(MimiIWG.fund_scenario_convert[scen]) . . .")
+            @info("Testing FUND SC-CH4 $(MimiIWG.fund_scenario_convert[scen])...")
             file_idx = findfirst(x -> occursin("$(MimiIWG.fund_scenario_convert[scen]) - CH4", x), validation_files)
             scen_file = validation_files[file_idx]
             scen_validation_values = readdlm(joinpath(validation_dir, scen_file), ',')[3, 2:16]
@@ -71,7 +71,7 @@ _atol = 1e-3
     @testset "Deterministic SC-N2O validation" begin
     
     for scen in MimiIWG.scenarios
-        @info("Testing FUND SC-N2O $(MimiIWG.fund_scenario_convert[scen]) . . .")
+        @info("Testing FUND SC-N2O $(MimiIWG.fund_scenario_convert[scen])...")
         file_idx = findfirst(x -> occursin("$(MimiIWG.fund_scenario_convert[scen]) - N2O", x), validation_files)
         scen_file = validation_files[file_idx]
         scen_validation_values = readdlm(joinpath(validation_dir, scen_file), ',')[3, 2:16]
