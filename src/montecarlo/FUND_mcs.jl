@@ -166,7 +166,7 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
         end
 
         if md_values !== nothing
-            md_values[j, scenario_num, :, trialnum] = map(x -> ismissing(x) ? 0 : x, global_marginaldamages[1:length(model_years)])
+            md_values[j, scenario_num, :, trialnum] = map(x -> ismissing(x) ? 0 : x, global_marginaldamages[1:length(model_years)]) .* fund_inflator
         end
     end
 end

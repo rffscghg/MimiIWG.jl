@@ -237,7 +237,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             base_impacts = base[:EquityWeighting, :wit_equityweightedimpact]
             marg_impacts = marginal[:EquityWeighting, :wit_equityweightedimpact]
         
-            marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1)
+            marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1) .* page_inflator
             md_values[j, scenario_num, :, trialnum] = sum(marg_damages, dims = 2) # sum along second dimension to get global values
         end
     end 
