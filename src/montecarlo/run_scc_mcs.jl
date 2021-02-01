@@ -182,7 +182,6 @@ function run_scc_mcs(model::model_choice;
     if model == PAGE
         # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
         write_scc_values(discontinuity_mismatch, joinpath(scc_dir, "../discontinuity_mismatch/"), perturbation_years, discount_rates)
-        return discontinuity_mismatch
     end
 
     # Build the stats tables
