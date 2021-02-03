@@ -1,5 +1,7 @@
-using MimiIWG
 using DelimitedFiles
+using MimiIWG
+using Test
+using XLSX: readxlsx
 
 @testset "PAGE" begin
 
@@ -21,9 +23,9 @@ using DelimitedFiles
 
 end
 
-@testset "Deterministic SCC validation" begin 
+@testset "Deterministic SC-CO2 validation" begin 
 
-    validation_dir = joinpath(@__DIR__, "../data/validation/PAGE/deterministic")
+    validation_dir = joinpath(@__DIR__, "../data/validation/PAGE/deterministic CO2")
     files = readdir(validation_dir)
 
     _atol = 0.01    # one cent
@@ -50,4 +52,23 @@ end
 
 end 
 
+@testset "Deterministic SC-N2O validation" begin
+
+    validation_dir = joinpath(@__DIR__, "../data/validation/PAGE/deterministic N2O/")
+    _atol = 0.01    # one cent
+
+    for scen in MimiIWG.scenarios
+        if scen != USG2 # No file provided for MERGE yet
+            fn = joinpath(validation_dir, "PAGE09 v1.7 ($(MimiIWG.page_scenario_convert[scen])), N2O (Deterministic, Expected Value).xlsx")
+            xf = readxlsx(fn)
+            iwg_scc = xf["Base data"]["N4"] * MimiIWG.page_inflator # Values in the excel sheets are still in 2000$
+            mimi_scc = MimiIWG.compute_scc(PAGE, scen, gas=:N2O, year=2020, discount=0.03)
+            # println(iwg_scc, ",", mimi_scc)
+            @test iwg_scc ≈ mimi_scc atol = _atol
+        end
+    end
+
 end
+
+end
+
