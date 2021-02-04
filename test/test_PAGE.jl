@@ -58,14 +58,12 @@ end
     _atol = 0.01    # one cent
 
     for scen in MimiIWG.scenarios
-        if scen != USG2 # No file provided for MERGE yet
-            fn = joinpath(validation_dir, "PAGE09 v1.7 ($(MimiIWG.page_scenario_convert[scen])), N2O (Deterministic, Expected Value).xlsx")
-            xf = readxlsx(fn)
-            iwg_scc = xf["Base data"]["N4"] * MimiIWG.page_inflator # Values in the excel sheets are still in 2000$
-            mimi_scc = MimiIWG.compute_scc(PAGE, scen, gas=:N2O, year=2020, discount=0.03)
-            # println(iwg_scc, ",", mimi_scc)
-            @test iwg_scc ≈ mimi_scc atol = _atol
-        end
+        fn = joinpath(validation_dir, "PAGE09 v1.7 ($(MimiIWG.page_scenario_convert[scen])), N2O (Deterministic, Expected Value).xlsx")
+        xf = readxlsx(fn)
+        iwg_scc = xf["Base data"]["N4"] * MimiIWG.page_inflator # Values in the excel sheets are still in 2000$
+        mimi_scc = MimiIWG.compute_scc(PAGE, scen, gas=:N2O, year=2020, discount=0.03)
+        # println(iwg_scc, ",", mimi_scc)
+        @test iwg_scc ≈ mimi_scc atol = _atol
     end
 
 end
