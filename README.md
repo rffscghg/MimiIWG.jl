@@ -12,7 +12,7 @@ This package replicates the versions of these models used by the IWG in the Juli
 ### Getting set up
 
 It is highly recommended to use the Julia package management system to download this package code rather than cloning through github.
-To get started, you will need to download Julia version 1.1 [here](https://julialang.org/downloads/).
+To get started, you will need to download Julia version 1.5 [here](https://julialang.org/downloads/).
 
 Begin an interactive Julia session and enter the Package REPL by typing "]"
 ```
