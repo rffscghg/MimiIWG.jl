@@ -18,7 +18,11 @@ Begin an interactive Julia session and enter the Package REPL by typing "]"
 ```
 julia> ]
 ```
-Next you will need to add the [MimiRegistry](https://github.com/mimiframework/MimiRegistry), which is a custom Julia package regsitry of integrated assessment models that use Mimi.jl. Then you will be able to add the MimiIWG package. In the package REPL, do the following:
+Next you should run a command that updates your system with the latest information about available packages. It is particularly crucial that you run this command at this point if this is the first time you are using Julia on your system. To run this command, execute the following in the package REPL:
+```
+pkg> update
+```
+Next you will need to add the [MimiRegistry](https://github.com/mimiframework/MimiRegistry), which is a custom Julia package registry of integrated assessment models that use Mimi.jl. Then you will be able to add the MimiIWG package.jl. In the package REPL, execute the following command to add the Mimi registry:
 ```
 pkg> registry add https://github.com/mimiframework/MimiRegistry.git
 pkg> add MimiIWG
