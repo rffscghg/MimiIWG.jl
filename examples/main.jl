@@ -1,3 +1,7 @@
+# Runs Monte Carlo simulations for calculating the SC-CO2 using each of the three models across all 5 socioeconomic scenarios,
+# and for the default set of discount rates (2.5%, 3%, and 5%) and perturbation years (2010, 2020, 2030, 2040, and 2050).
+# Sets a random seed before each simulation so that results can be replicated.
+
 using MimiIWG
 using Random
 

@@ -48,11 +48,11 @@ The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
 The choices for `SCENARIO_CHOICE` are `USG1`, `USG2`, `USG3`, `USG4`, and `USG5`. For more information on these scenarios, see below.
 
-For example uses of the code, see "scripts/example.jl".
+For example uses of the code, see "examples/example.jl".
 
 ### Monte Carlo simulations
 
-To run the same suite of Monte Carlo simulations that the IWG used for estimating the Social Cost of Carbon, see "scripts/main.jl".
+To run the same suite of Monte Carlo simulations that the IWG used for estimating the Social Cost of Carbon, see "examples/main.jl".
 
 The first argument to `MimiIWG.run_scc_mcs` must be the name of one of the three models, `DICE`, `FUND`, or `PAGE`. After that, there are several keyword arguments to choose from. The following list describes these arguments and their default values if the user does not specifiy them.
 ```
