@@ -1,6 +1,6 @@
 # MimiIWG
 
-This package contains code replicating the models used by the US government's Interagency Work Group (IWG) on the Social Cost of Greenhouse Gases for its 2016 update. The IWG used three integrated assessment models for calculating the social cost of carbon:
+This package contains code replicating the models used by the US government's Interagency Work Group (IWG) on the Social Cost of Greenhouse Gases for its 2016 update. The IWG used three integrated assessment models for calculating the social cost of greenhouse gases:
 - DICE 2010 (originally written in Excel and GAMS; re-written in Matlab by the IWG)
 - FUND 3.8 (originally written in C#)
 - PAGE 2009 (originally written in Excel with the @RISK package)
