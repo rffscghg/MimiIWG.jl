@@ -1,11 +1,11 @@
 # MimiIWG
 
-This package contains code replicating the models used by the EPA's Interagency Work Group (IWG) on the Social Cost of Carbon. The IWG used three integrated assessment models for calculating the social cost of carbon:
+This package contains code replicating the models used by the US government's Interagency Work Group (IWG) on the Social Cost of Greenhouse Gases for its 2016 update. The IWG used three integrated assessment models for calculating the social cost of carbon:
 - DICE 2010 (originally written in Excel and GAMS; re-written in Matlab by the IWG)
 - FUND 3.8 (originally written in C#)
 - PAGE 2009 (originally written in Excel with the @RISK package)
 
-This package replicates the versions of these models used by the IWG in the Julia programming language, using the Julia package for Integrated Assesment Modeling, Mimi.jl. For more information on Mimi and its applications, visit the [Mimi Framework website](https://www.mimiframework.org/). For more information on Julia, documentation can be found [here](https://docs.julialang.org/en/v1/).
+This package replicates the versions of these models used by the IWG in the Julia programming language, using the Julia package for Integrated Assessment Modeling, Mimi.jl. For more information on Mimi and its applications, visit the [Mimi Framework website](https://www.mimiframework.org/). For more information on Julia, documentation can be found [here](https://docs.julialang.org/en/v1/). This package was developed as part of Resources for the Future's [Social Cost of Carbon Initiative](https://www.rff.org/topics/scc/).
 
 ## Project Overview
 
@@ -48,11 +48,11 @@ The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
 The choices for `SCENARIO_CHOICE` are `USG1`, `USG2`, `USG3`, `USG4`, and `USG5`. For more information on these scenarios, see below.
 
-For example uses of the code, see "examples/example.ipynb".
+For example uses of the code, see ["examples/example.ipynb"](https://github.com/rffscghg/MimiIWG.jl/blob/master/examples/example.ipynb).
 
 ### Monte Carlo simulations
 
-To run the same suite of Monte Carlo simulations that the IWG used for estimating the Social Cost of Carbon, see "examples/main.ipynb".
+To run the same suite of Monte Carlo simulations that the IWG used for estimating the Social Cost of Carbon, see ["examples/main.ipynb"](https://github.com/rffscghg/MimiIWG.jl/blob/master/examples/main.ipynb).
 
 The first argument to `MimiIWG.run_scc_mcs` must be the name of one of the three models, `DICE`, `FUND`, or `PAGE`. After that, there are several keyword arguments to choose from. The following list describes these arguments and their default values if the user does not specifiy them.
 ```
@@ -80,7 +80,7 @@ The IWG ran a standardized set of five socioeconomic scenarios as inputs to each
 - `USG4`: "MiniCAM Base"
 - `USG5`: "5th Scenario"
 
-The first four scenarios were based on an Energy Modeling Forum (EMF 22), and the 5th scenario was constructed to represent a future where CO2 concentration in the atmosphere stays below 550ppm. The original EMF scenarios only extended to the year 2100, so in order to run the models out to 2300, the IWG had to use the following assumptions to extend these scenarios:
+The first four scenarios were based on an Energy Modeling Forum (EMF 22), and the 5th scenario was constructed to represent a future where CO2 concentration in the atmosphere stays below 550ppm. The original EMF scenarios only extended to the year 2100, so in order to run the models out to 2300, the IWG employed the following assumptions to extend these scenarios:
 - Population growth rate declines linearly, reaching zero in the year 2200
 - GDP per capita growth rate declines linearly, reaching zero in the year 2300
 - The decline in the fossil and industrial carbon intensity (CO2/GDP) growth rate over 2090-2100 is maintained from 2100 through 2300
@@ -125,5 +125,5 @@ The package repository for the original version of MimiPAGE2009 is [here](https:
 The main changes made by the IWG to PAGE2009, reflected in this project code are:
 - The time index: the original version of PAGE 2009 is run on timesteps of [2009, 2010, 2020, 2030, 2040, 2050, 2075, 2100, 2150, 2200]. The IWG changed this time index to [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300].
 - The use of the five USG socioeconomic scenarios
-- In the original version of PAGE 2009, equilibrium climate sensitivity is calculated endogenously based on values for transient climate sensitivity. The IWG changed this, and instead sampled values for ECS directly from the Roe and Baker distribution. 
+- In the original version of PAGE 2009, equilibrium climate sensitivity is calculated endogenously based on values for transient climate sensitivity. For consistency with the other models, the IWG instead sampled values for equilibrium climate sensitivity from the Roe and Baker distribution. 
 - In the original Monte Carlo simulation for PAGE, values are sampled for the `ptp_timepreference parameter` parameter, but the IWG used constant discounting so this value is explicitly set for the different discount rates used and is not sampled during the Monte Carlo simulation in this package. The `emuc_utilityconvexity` parameter is also not sampled in this version, and is always set to zero, because the IWG only used constant pure rate of time preference discounting with no equity weighting.
