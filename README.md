@@ -9,6 +9,8 @@ This package replicates the versions of these models used by the IWG in the Juli
 
 ## Project Overview
 
+For an overview tutorial video on how to set up this software, click [here](https://www.youtube.com/watch?v=C2rqpHk3Rek&feature=youtu.be).
+
 ### Getting set up
 
 It is highly recommended to use the Julia package management system to download this package code rather than cloning through github.
