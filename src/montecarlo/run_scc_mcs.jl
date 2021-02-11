@@ -39,7 +39,7 @@ function run_scc_mcs(model::model_choice;
     if gas === nothing
         @warn("No `gas` specified in `run_scc_mcs`; will return the SC-CO2.")
         gas = :CO2
-    elseif ! (gas in [:CO2, :CH4, :N2O, :HFC23])
+    elseif ! (gas in [:CO2, :CH4, :N2O])
         error("Unknown gas :$gas. Available gases are :CO2, :CH4, and :N2O.")
     end
 
