@@ -19,6 +19,13 @@ _page_n2o_shocks[2040] = _page_xf["Sheet1"]["AD18:AH27"]
 _page_n2o_shocks[2050] = _page_xf["Sheet1"]["AK18:AO27"]
 _page_n2o_shocks[2060] = _page_xf["Sheet1"]["AR18:AV27"]
 
+_page_hfc23_shocks = Dict()
+_page_hfc23_shocks[2010] = _page_xf["Sheet1"]["I32:M41"]
+_page_hfc23_shocks[2020] = _page_xf["Sheet1"]["P32:T41"]
+_page_hfc23_shocks[2030] = _page_xf["Sheet1"]["W32:AA41"]
+_page_hfc23_shocks[2040] = _page_xf["Sheet1"]["AD32:AH41"]
+_page_hfc23_shocks[2050] = _page_xf["Sheet1"]["AK32:AO41"]
+_page_hfc23_shocks[2060] = _page_xf["Sheet1"]["AR32:AV41"]
 
 function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
     if scenario_num == 1
@@ -37,6 +44,8 @@ function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
         return convert(Vector{Float64}, _page_ch4_shocks[year][:, col_num])
     elseif gas == :N2O
         return convert(Vector{Float64}, _page_n2o_shocks[year][:, col_num])
+    elseif gas == :HFC23
+        return convert(Vector{Float64}, _page_hfc23_shocks[year][:, col_num])
     else
         error("Unknown gas :$gas.")
     end
