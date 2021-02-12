@@ -1,5 +1,3 @@
-## NCEE TESTING OF SC-HFC's 
-
 # MimiIWG
 
 This package contains code replicating the models used by the US government's Interagency Work Group (IWG) on the Social Cost of Greenhouse Gases for its 2016 update. The IWG used three integrated assessment models for calculating the social cost of greenhouse gases:
@@ -107,7 +105,7 @@ The package repository for the original version of MimiDICE2010 is [here](https:
 
 The main changes made by the IWG to DICE2010, reflected in this project code are:
 - The time index: the original DICE 2010 is run on ten year timesteps from 2005 to 2595. The IWG ran it only out to 2405, but only values up to 2300 are used for SCC. Socioeconomics values drop to zero after 2300, so values of all variables calculated after the 2295 timestep in this version are nonsensical.
-- In order to use the 5 USG socioeconomics scenarios for DICE, the IWG had to calculate the path of exogenous technical change and capital stock implied by the GDP and population levels for each scenario, since those are the actual parameters that are used as inputs in DICE.
+- In order to use the 5 USG socioeconomics scenarios for DICE, the IWG had to calculate the path of exogenous technical change and capital stock implied by the GDP and population levels for each scenario, since those are the actual parameters that are used as inputs in DICE. 
 - Since they sampled from the Roe and Baker distribution for values of equilibrium climate sensitivity, they had to add in an additional catch statement to the temperature calculation in DICE for extremely low (less than 0.5) values (this is reflected in the component definition in "src/components/IWG_DICE_climatedynamics.jl").
 - In the original version of DICE, emissions are calculated endogenously. This emissions component has been removed, and instead the exogenous pathways from the USG socioeconomics scenarios are used and fed into DICE's CO2 cycle component.
 - In the CO2 cycle component, an important difference is that the values of E in the original DICE represent GtCO2 per year, whereas the data used by the IWG are in units of GtCO2 per decade.
@@ -117,9 +115,9 @@ The main changes made by the IWG to DICE2010, reflected in this project code are
 The package repository for the original version of MimiFUND is [here](https://github.com/fund-model/MimiFUND.jl/tree/release-3.8). Note that the IWG uses an older version, version 3.8.
 
 The main changes made by the IWG to FUND3.8, reflected in this project code are:
-- The time index: while FUND can be run out to the year 3000, the IWG only used values out to 2300 for calculating the SCC. Unchanged from the original version, the start year is 1950.
+- The time index: while FUND can be run out to the year 3000, the IWG only used values out to 2300 for calculating the SCC. Unchanged from the original version, the start year is 1950. 
 - The use of the five USG socioeconomic scenarios
-- Sampling from the Roe and Baker climate sensitivity distribution
+- Sampling from the Roe and Baker climate sensitivity distribution 
 - There is a change in the ImpactSeaLevelRise component, where the calculation of the `drycost` variable includes an additional parameter `protlevel`. This is reflected in "src/components/IWG_FUND_impactsealevelrise.jl"/
 
 ### PAGE notes
@@ -129,5 +127,5 @@ The package repository for the original version of MimiPAGE2009 is [here](https:
 The main changes made by the IWG to PAGE2009, reflected in this project code are:
 - The time index: the original version of PAGE 2009 is run on timesteps of [2009, 2010, 2020, 2030, 2040, 2050, 2075, 2100, 2150, 2200]. The IWG changed this time index to [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300].
 - The use of the five USG socioeconomic scenarios
-- In the original version of PAGE 2009, equilibrium climate sensitivity is calculated endogenously based on values for transient climate sensitivity. For consistency with the other models, the IWG instead sampled values for equilibrium climate sensitivity from the Roe and Baker distribution.
+- In the original version of PAGE 2009, equilibrium climate sensitivity is calculated endogenously based on values for transient climate sensitivity. For consistency with the other models, the IWG instead sampled values for equilibrium climate sensitivity from the Roe and Baker distribution. 
 - In the original Monte Carlo simulation for PAGE, values are sampled for the `ptp_timepreference parameter` parameter, but the IWG used constant discounting so this value is explicitly set for the different discount rates used and is not sampled during the Monte Carlo simulation in this package. The `emuc_utilityconvexity` parameter is also not sampled in this version, and is always set to zero, because the IWG only used constant pure rate of time preference discounting with no equity weighting.
