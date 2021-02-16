@@ -112,6 +112,8 @@ const page_years = [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300]
 
 const page_inflator = 1.225784    # 2000 USD => 2007 USD
 
+const HFC_list = [:HFC23, :HFC32, :HFC125, :HFC134a, :HFC143a, :HFC152a, :HFC227ea, :HFC236fa, :HFC245fa, :HFC365mfc, :HFC4310mee]
+
 # list of parameters that are different between the IWG scenarios
 const page_scenario_specific_params = [
     "gdp_0",

@@ -12,7 +12,7 @@ using MimiFUND          # pinned to version 3.8 in package registration Compat.t
 using MimiPAGE2009      
 using StatsBase
 using XLSX: readxlsx
-using CSV
+using CSVFiles
 using DataFrames, Query
 using Statistics
 
