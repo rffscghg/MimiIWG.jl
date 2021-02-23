@@ -68,20 +68,20 @@ function _get_dice_additional_forcing(scenario_num::Int, gas::Symbol, year::Int)
         dice_years = collect(2005:10:2295)
         average_rf = DataFrame(year = dice_years, avg_rf = zeros(length(dice_years)))
 
-        # Select rfs for the 10 year period after each pulse
+        # Select rfs for the pulse year and 9-year period after each pulse (e.g., 2005 pulse is average of 2005-2014)
         for i in 1:length(pulse_years)
-            years_tmp = pulse_years[i]:pulse_years[i]+9 # can edit this as needed to select the appropriate years
+            years_tmp = pulse_years[i]:pulse_years[i]+9
             rfs_tmp = @from i in HFC_df begin
                 @where i.years_index in years_tmp
                 @select {i.rf}
                 @collect DataFrame
             end
-            
+
             # Take the average of the rfs for each 10-year period
             j = length(dice_years) - length(pulse_years) + i # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
-            average_rf.avg_rf[j] = mean(rfs_tmp.rf) # replace jth value (corresponding to the rf for the pulse year) with the mean for the following 10 years
+            average_rf.avg_rf[j] = mean(rfs_tmp.rf) # replace jth value (corresponding to the rf for the pulse year) with the mean for the pulse year and following 9 years
         end
-        
+
         return convert(Vector{Float64}, average_rf.avg_rf)
 
     else
