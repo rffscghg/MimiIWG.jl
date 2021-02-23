@@ -47,7 +47,7 @@ const dice_scenario_specific_params = [
 function _dice_normalization_factor(gas::Symbol)
     if gas == :CO2
         return 1e3 * 12/44  # Convert from trillion$/GtC/yr to $/tCO2/yr
-    elseif gas in [:CH4, :N2O]
+    elseif (gas in [:CH4, :N2O] || gas in HFC_list)
         return 1e6  # Convert from trillion$/MtX/yr to $/tX/yr
     else
         error("Unknown gas :$gas.")
