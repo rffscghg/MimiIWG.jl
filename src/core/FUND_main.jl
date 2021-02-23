@@ -60,36 +60,253 @@ function set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenari
     end
 end
 
-# Function from original MimiFUND code, modified for IWG CH4 and N2O
-function add_fund_marginal_emissions!(m, year = nothing; gas = :CO2, pulse_size = 1e7)
+# using CSVFiles
+# using DataFrames, Query
+# using Statistics
 
-    # Add additional emissions to m
-    add_comp!(m, MimiFUND.emissionspulse, before = :climateco2cycle)
-    nyears = length(Mimi.time_labels(m))
-    addem = zeros(nyears) 
-    if year !== nothing 
-        # pulse is spread over ten years, and emissions components is in Mt so divide by 1e7, and convert from CO2 to C if gas==:CO2 because emissions component is in MtC
-        addem[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 9] .= pulse_size / 1e7 * MimiFUND._gas_normalization(gas)
+### ATTEMPT 1: ADD NEW COMPONENT
+
+# Create and add marginal rf component for HFCs
+# function add_fund_HFC_marginal_forcings!(m, year, gas::Symbol)
+
+#     # Create new component
+#     @defcomp addHFCforcings begin
+#         add    = Parameter(index=[time]) # marginal forcing
+#         input  = Parameter(index=[time]) # original forcing 
+#         output = Variable(index=[time]) # original forcing + marginal hfc forcing
+    
+#         function run_timestep(p, v, d, t)
+#             v.output[t] = Mimi.@allow_missing(p.input[t]) + p.add[t]
+#         end
+#     end
+
+#     # Add component to m
+#     add_comp!(m, addHFCforcings, after = :climateforcing) # not sure if this will work, since you are modifying the original FUND code
+#     nyears = length(Mimi.time_labels(m))
+#     addem = zeros(nyears) 
+#     if year !== nothing 
+#         # pulse is spread over ten years, and emissions components is in Mt so divide by 1e7, and convert from CO2 to C if gas==:CO2 because emissions component is in MtC
+#         addem[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 9] .= pulse_size / 1e7 * MimiFUND._gas_normalization(gas)
+#     end
+#     set_param!(m, :emissionspulse, :add, addem)
+
+
+# end
+# not sure that this will work -- might be easier just to modify the climateforcing component instead of trying to add a new component
+
+### ATTEMPT 2: MODIFY CLIMATE FORCING COMPONENT
+
+# function add_fund_HFC_marginal_forcings!(m, year, gas::Symbol)
+#     nyears = length(Mimi.dimension(m, :time))
+
+#     ## Replace old climate forcing component with new IWG climate forcing component
+#     replace!(m, :climateforcing => IWG_FUND_ClimateForcing)
+#     set_param!(m, :IWG_FUND_ClimateForcing, :rfhfc, zeros(nyears))
+
+#     ## Look up correct value of marginal rf for selected gas and year
+#     # Load data -- move this to outside of the function??
+#     # hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
+#     hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
+#     hfc_rf_df = DataFrame(load(hfc_rf_data))
+
+#     HFC_df = @from i in hfc_rf_df begin
+#         @where i.ghg .== string(gas)
+#         @select {i.rf}
+#         @collect DataFrame
+#     end
+
+#     ci = Mimi.compinstance(m, :IWG_FUND_ClimateForcing)
+#     hfc_forcing = Mimi.get_param_value(ci, :rfhfc)
+    
+#     new_hfc_forcing = zeros(nyears)
+#     new_hfc_forcing[MimiFUND.getindexfromyear(year)] = HFC_df.rf[j] # j is the index number for the perturbation year iterator in fund_post_trial_func
+#     hfc_forcing[:] = new_hfc_forcing
+
+# end
+
+## don't need to iterate -- just add HFC forcings starting from pulse year to end year
+## error when run: ERROR: Cannot replace and reconnect; new component does not contain the necessary parameters. Not sure why, since the new component contains everything that the old one has
+
+### ATTEMPT 3: ADD NEW COMPONENT, USING MIMI ADDER
+
+# hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
+# # hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
+# hfc_rf_df = DataFrame(load(hfc_rf_data))
+
+# function add_fund_HFC_marginal_forcings!(m, year, gas::Symbol)    
+#     HFC_df = @from i in hfc_rf_df begin
+#         @where i.ghg .== string(gas)
+#         @select {i.rf}
+#         @collect DataFrame
+#     end
+    
+#     add_comp!(m, Mimi.adder, :marginal_hfc_forcings, after = :climateforcing)
+#     nyears = length(Mimi.time_labels(m))
+#     add_rf = zeros(nyears)
+
+#     if year !== nothing
+#         add_rf[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
+#     else 
+#         error("year $year provided to add_fund_HFC_marginal_forcings! not in fund time dimension")
+#     end
+
+#     set_param!(m, :marginal_hfc_forcings, :add, add_rf)
+#     connect_param!(m, :marginal_hfc_forcings => :input, :climateforcing => :radforc)
+#     connect_param!(m, :climatedynamics => :radforc, :climateforcing => :radforc)
+
+# end
+
+## ERROR: MissingException: Cannot get index; data is missing. You may have tried to access a value in 
+## timestep 1 that has not yet been computed.
+## try method 1 again, defining new component that allows for missing values
+
+## ATTEMPT 4: CREATE NEW COMPONENT THAT ALLOWS FOR MISSING VALUES (i.e. attempt 1)
+
+hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
+# hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
+hfc_rf_df = DataFrame(load(hfc_rf_data))
+
+# Create new component -- see MimiFUND new_marginaldamages.jl
+@defcomp marginal_hfc_forcings begin
+    add    = Parameter(index=[time]) # marginal forcing
+    input  = Parameter(index=[time]) # original forcing 
+    output = Variable(index=[time]) # original forcing + marginal hfc forcing
+
+    function run_timestep(p, v, d, t)
+        v.output[t] = Mimi.@allow_missing(p.input[t]) + p.add[t]
     end
-    set_param!(m, :emissionspulse, :add, addem)
+end
 
-    # Reconnect the appropriate emissions in m
-    if gas == :CO2
-        connect_param!(m, :emissionspulse, :input, :emissions, :mco2)
-        connect_param!(m, :climateco2cycle, :mco2, :emissionspulse, :output)
-    elseif gas == :CH4
-        connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globch4)
-        connect_param!(m, :climatech4cycle, :globch4, :emissionspulse, :output)
-    elseif gas == :N2O
-        connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globn2o)
-        connect_param!(m, :climaten2ocycle, :globn2o, :emissionspulse, :output)
-    elseif gas == :SF6
-        connect_param!(m, :emissionspulse, :input, :emissions, :globsf6)
-        connect_param!(m, :climatesf6cycle, :globsf6, :emissionspulse, :output)
+function perturb_fund_marginal_emissions!(m::Model, year; comp_name::Symbol = :emissionspulse, gas::Symbol = :CO2)
+    if ! (gas in HFC_list)
+        MimiFUND.perturb_marginal_emissions!(m, year, gas=gas)
+    elseif gas in HFC_list
+        ci = Mimi.compinstance(m, :marginal_hfc_forcings)
+        hfc_forcing = Mimi.get_param_value(ci, :add)
+
+        nyears = length(Mimi.time_labels(m))
+        # hfc_forcing.data = zeros(nyears)
+        new_forcing = zeros(nyears)
+
+        HFC_df = @from i in hfc_rf_df begin
+            @where i.ghg .== string(gas)
+            @select {i.rf}
+            @collect DataFrame
+        end
+        
+        # hfc_forcing.data[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
+        new_forcing[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
+        hfc_forcing[:] = new_forcing
     else
         error("Unknown gas: $gas")
     end
 end
+
+
+## For reference, from MimiFUND: MimiFUND.perturb_marginal_emissions!
+# """
+# Helper function to set the marginal emissions in the specified year.
+# """
+# function perturb_marginal_emissions!(m::Model, year; comp_name::Symbol = :emissionspulse, pulse_size::Float64 = 1e7, gas::Symbol = :CO2)
+
+#     ci = compinstance(m, comp_name)
+#     emissions = Mimi.get_param_value(ci, :add)
+
+#     nyears = length(Mimi.dimension(m, :time))
+#     new_em = zeros(nyears)
+#     new_em[getindexfromyear(year):getindexfromyear(year) + 9] .= pulse_size / 1e7 * (gas == :CO2 ? 12/44 : 1)
+#     emissions[:] = new_em
+
+# end
+
+# Function from original MimiFUND code, modified for IWG CH4 and N2O
+function add_fund_marginal_emissions!(m::Model, year = nothing; gas, pulse_size = 1e7) # pulse size is in metric tonnes
+
+    if ! (gas in HFC_list)
+        # Add additional emissions to m
+        add_comp!(m, MimiFUND.emissionspulse, before = :climateco2cycle)
+        nyears = length(Mimi.time_labels(m))
+        addem = zeros(nyears) 
+        if year !== nothing 
+            # pulse is spread over ten years, and emissions components is in Mt so divide by 1e7, and convert from CO2 to C if gas==:CO2 because emissions component is in MtC
+            addem[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 9] .= pulse_size / 1e7 * MimiFUND._gas_normalization(gas)
+        end
+        set_param!(m, :emissionspulse, :add, addem)
+
+        # Reconnect the appropriate emissions in m
+        if gas == :CO2
+            connect_param!(m, :emissionspulse, :input, :emissions, :mco2)
+            connect_param!(m, :climateco2cycle, :mco2, :emissionspulse, :output)
+        elseif gas == :CH4
+            connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globch4)
+            connect_param!(m, :climatech4cycle, :globch4, :emissionspulse, :output)
+        elseif gas == :N2O
+            connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globn2o)
+            connect_param!(m, :climaten2ocycle, :globn2o, :emissionspulse, :output)
+        elseif gas == :SF6
+            connect_param!(m, :emissionspulse, :input, :emissions, :globsf6)
+            connect_param!(m, :climatesf6cycle, :globsf6, :emissionspulse, :output)
+        else
+            error("Unknown gas: $gas")
+        end
+    elseif gas in HFC_list
+        # add_fund_HFC_marginal_forcings!(m, year, gas)
+
+        # Add marginal_hfc_forcings component to m
+        add_comp!(m, marginal_hfc_forcings, before = :climatedynamics)
+        # add_comp!(m, marginal_hfc_forcings, after = :climateforcing)
+        nyears = length(Mimi.time_labels(m))
+        add_rf = zeros(nyears) 
+
+        # Select values of rf for HFC specified
+        HFC_df = @from i in hfc_rf_df begin
+            @where i.ghg .== string(gas)
+            @select {i.rf}
+            @collect DataFrame
+        end
+
+        # Set values of add_rf to the first 300 marginal forcings
+        if year !== nothing 
+            add_rf[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
+        end
+
+        # Set :add parameter in new component equal to add_rf
+        set_param!(m, :marginal_hfc_forcings, :add, add_rf)
+
+        # Connect parameters to other parts of the model: input parameter equal to radforc from :climateforcing, and output parameter equal to radforc in :climatedynamics
+        connect_param!(m, :marginal_hfc_forcings, :input, :climateforcing, :radforc)
+        connect_param!(m, :climatedynamics, :radforc, :marginal_hfc_forcings, :output)
+    end
+end
+
+## Old -- incorporated this into add_fund_marginal_emissions
+# function add_fund_HFC_marginal_forcings!(m, year, gas::Symbol)
+
+#     # Add marginal_hfc_forcings component to m
+#     add_comp!(m, marginal_hfc_forcings, after = :climateforcing)
+#     nyears = length(Mimi.time_labels(m))
+#     add_rf = zeros(nyears) 
+
+#     # Select values of rf for HFC specified
+#     HFC_df = @from i in hfc_rf_df begin
+#         @where i.ghg .== string(gas)
+#         @select {i.rf}
+#         @collect DataFrame
+#     end
+
+#     # Set values of add_rf to the first 300 marginal forcings
+#     if year !== nothing 
+#         add_rf[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
+#     end
+    
+#     # Set :add parameter in new component equal to add_rf
+#     set_param!(m, :marginal_hfc_forcings, :add, add_rf)
+
+#     # Connect parameters to other parts of the model: input parameter equal to radforc from :climateforcing, and output parameter equal to radforc in :climatedynamics
+#     connect_param!(m, :marginal_hfc_forcings => :input, :climateforcing => :radforc)
+#     connect_param!(m, :climatedynamics => :radforc, :climateforcing => :radforc)
+
+# end
 
 """
     Returns marginal damages each year from an additional emissions pulse of the specified `gas` in the specified `year`. 

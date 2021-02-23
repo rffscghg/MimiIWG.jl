@@ -22,6 +22,7 @@ _page_n2o_shocks[2060] = _page_xf["Sheet1"]["AR18:AV27"]
 # Exogenous HFC marginal forcing pathways 
 
 _page_hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
+# _page_hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
 _page_hfc_rf = DataFrame(load(_page_hfc_rf_data))
 
 function _get_hfc_marginal_forcings(gas::Symbol, year::Int)
