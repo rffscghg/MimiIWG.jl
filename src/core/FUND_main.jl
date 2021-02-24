@@ -95,9 +95,20 @@ function perturb_fund_marginal_emissions!(m::Model, year; comp_name::Symbol = :e
             @select {i.rf}
             @collect DataFrame
         end
-        
-        # hfc_forcing.data[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
-        new_forcing[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
+    
+        # Process rfs such that rf for each year is cumulative sum of previous 10 years (corresponding to a 10-year pulse)
+        rf_cumsum = cumsum(HFC_df.rf)
+        rf_cumsum_10yr = zeros(length(rf_cumsum))
+        for i in 1:length(rf_cumsum)
+            if i <= 10
+               rf_cumsum_10yr[i] = rf_cumsum[i]
+            else
+                rf_cumsum_10yr[i] = rf_cumsum[i] - rf_cumsum[i-10]
+            end
+        end
+
+        # Set new marginal forcing vector equal to the "cumulative" rfs vector generated above
+        new_forcing[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = rf_cumsum_10yr
         hfc_forcing[:] = new_forcing
     else
         error("Unknown gas: $gas")
@@ -148,9 +159,20 @@ function add_fund_marginal_emissions!(m::Model, year = nothing; gas, pulse_size 
             @collect DataFrame
         end
 
-        # Set values of add_rf to the first 300 marginal forcings
+        # Process rfs such that rf for each year is cumulative sum of previous 10 years (corresponding to a 10-year pulse)
+        rf_cumsum = cumsum(HFC_df.rf)
+        rf_cumsum_10yr = zeros(length(rf_cumsum))
+        for i in 1:length(rf_cumsum)
+            if i <= 10
+               rf_cumsum_10yr[i] = rf_cumsum[i]
+            else
+                rf_cumsum_10yr[i] = rf_cumsum[i] - rf_cumsum[i-10]
+            end
+        end
+
+        # Set add_rf equal to the "cumulative" rfs vector generated above
         if year !== nothing 
-            add_rf[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = HFC_df.rf[1:300]
+            add_rf[MimiFUND.getindexfromyear(year):MimiFUND.getindexfromyear(year) + 299] = rf_cumsum_10yr
         end
 
         # Set :add parameter in new component equal to add_rf
