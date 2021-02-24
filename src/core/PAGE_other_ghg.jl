@@ -25,6 +25,30 @@ _page_hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_pert
 # _page_hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
 _page_hfc_rf = DataFrame(load(_page_hfc_rf_data))
 
+# Pulse years Dict
+
+# years_dict = Dict()
+# years_dict[2010] = [2009:2014] # this is going to error since 2009 isn't in the years range
+# years_dict[2020] = [2015:2019]
+# years_dict[2030] = [2020:2034]
+# years_dict[2040] = [2035:2044]
+# years_dict[2050] = [2045:2061]
+# years_dict[2075] = [2062:2086]
+# years_dict[2100] = [2087:2124]
+# years_dict[2150] = [2125:2174]
+# years_dict[2200] = [2175:2200]
+
+years_dict = Dict()
+years_dict[2020] = collect(2015:1:2024)
+years_dict[2030] = collect(2025:1:2034)
+years_dict[2040] = collect(2035:1:2044)
+years_dict[2050] = collect(2045:1:2054)
+years_dict[2060] = collect(2055:1:2069)
+years_dict[2080] = collect(2070:1:2089)
+years_dict[2100] = collect(2090:1:2149)
+years_dict[2200] = collect(2150:1:2249)
+years_dict[2300] = collect(2250:1:2300)
+
 function _get_hfc_marginal_forcings(gas::Symbol, year::Int)
     # Create subset of dataframe with all rfs for the chosen gas
     HFC_df = @from i in _page_hfc_rf begin
@@ -37,11 +61,13 @@ function _get_hfc_marginal_forcings(gas::Symbol, year::Int)
     insertcols!(HFC_df, 2, :years_index => years_index)
 
     pulse_years = append!(collect(year:10:2060), [2080, 2100, 2200, 2300])
+    
+    ## AVERAGING METHOD
     average_rf = DataFrame(year = page_years, avg_rf = zeros(length(page_years)))
-
-    # Select rfs for the 10 year period after each pulse
-    for i in 1:length(pulse_years)
-        years_tmp = pulse_years[i]:pulse_years[i]+9 # can edit this as needed to select the appropriate years
+    # Select rfs to take the average of
+    for x in 1:length(pulse_years)
+        years_tmp = years_dict[pulse_years[x]] # selects rfs according to PAGE periods
+        # years_tmp = pulse_years[x]:pulse_years[x]+9 # selects the pulse year rf and the 9 years after it
         rfs_tmp = @from i in HFC_df begin
             @where i.years_index in years_tmp
             @select {i.rf}
@@ -49,12 +75,27 @@ function _get_hfc_marginal_forcings(gas::Symbol, year::Int)
         end
         
         # Take the average of the rfs for each 10-year period
-        j = length(page_years) - length(pulse_years) + i # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
+        j = length(page_years) - length(pulse_years) + x # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
         average_rf.avg_rf[j] = mean(rfs_tmp.rf) # replace jth value (corresponding to the rf for the pulse year) with the mean for the following 10 years
     end
     
     return convert(Vector{Float64}, average_rf.avg_rf)
 
+    # ## USING DISCRETE PULSE YEAR RFS (NO AVERAGING)
+    # marginal_rfs = DataFrame(year = page_years, rf = zeros(length(page_years)))
+    
+    # for x in 1:length(pulse_years)
+    #     rfs_tmp = @from i in HFC_df begin
+    #         @where i.years_index .== pulse_years[x]
+    #         @select {i.rf}
+    #         @collect DataFrame
+    #     end
+    
+    #     j = length(page_years) - length(pulse_years) + x # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
+    #     marginal_rfs.rf[j] = rfs_tmp.rf[1]
+    # end
+    
+    # return convert(Vector{Float64}, marginal_rfs.rf)
 end
 
 function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
