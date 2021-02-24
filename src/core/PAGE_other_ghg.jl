@@ -62,40 +62,40 @@ function _get_hfc_marginal_forcings(gas::Symbol, year::Int)
 
     pulse_years = append!(collect(year:10:2060), [2080, 2100, 2200, 2300])
     
-    ## AVERAGING METHOD
-    average_rf = DataFrame(year = page_years, avg_rf = zeros(length(page_years)))
-    # Select rfs to take the average of
-    for x in 1:length(pulse_years)
-        years_tmp = years_dict[pulse_years[x]] # selects rfs according to PAGE periods
-        # years_tmp = pulse_years[x]:pulse_years[x]+9 # selects the pulse year rf and the 9 years after it
-        rfs_tmp = @from i in HFC_df begin
-            @where i.years_index in years_tmp
-            @select {i.rf}
-            @collect DataFrame
-        end
-        
-        # Take the average of the rfs for each 10-year period
-        j = length(page_years) - length(pulse_years) + x # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
-        average_rf.avg_rf[j] = mean(rfs_tmp.rf) # replace jth value (corresponding to the rf for the pulse year) with the mean for the following 10 years
-    end
-    
-    return convert(Vector{Float64}, average_rf.avg_rf)
-
-    # ## USING DISCRETE PULSE YEAR RFS (NO AVERAGING)
-    # marginal_rfs = DataFrame(year = page_years, rf = zeros(length(page_years)))
-    
+    # ## AVERAGING METHOD
+    # average_rf = DataFrame(year = page_years, avg_rf = zeros(length(page_years)))
+    # # Select rfs to take the average of
     # for x in 1:length(pulse_years)
+    #     years_tmp = years_dict[pulse_years[x]] # selects rfs according to PAGE periods
+    #     # years_tmp = pulse_years[x]:pulse_years[x]+9 # selects the pulse year rf and the 9 years after it
     #     rfs_tmp = @from i in HFC_df begin
-    #         @where i.years_index .== pulse_years[x]
+    #         @where i.years_index in years_tmp
     #         @select {i.rf}
     #         @collect DataFrame
     #     end
-    
+        
+    #     # Take the average of the rfs for each 10-year period
     #     j = length(page_years) - length(pulse_years) + x # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
-    #     marginal_rfs.rf[j] = rfs_tmp.rf[1]
+    #     average_rf.avg_rf[j] = mean(rfs_tmp.rf) # replace jth value (corresponding to the rf for the pulse year) with the mean for the following 10 years
     # end
     
-    # return convert(Vector{Float64}, marginal_rfs.rf)
+    # return convert(Vector{Float64}, average_rf.avg_rf)
+
+    ## USING DISCRETE PULSE YEAR RFS (NO AVERAGING)
+    marginal_rfs = DataFrame(year = page_years, rf = zeros(length(page_years)))
+    
+    for x in 1:length(pulse_years)
+        rfs_tmp = @from i in HFC_df begin
+            @where i.years_index .== pulse_years[x]
+            @select {i.rf}
+            @collect DataFrame
+        end
+    
+        j = length(page_years) - length(pulse_years) + x # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
+        marginal_rfs.rf[j] = rfs_tmp.rf[1]
+    end
+    
+    return convert(Vector{Float64}, marginal_rfs.rf)
 end
 
 function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
