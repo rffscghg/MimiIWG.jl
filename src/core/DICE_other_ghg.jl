@@ -66,23 +66,21 @@ function _get_dice_additional_forcing(scenario_num::Int, gas::Symbol, year::Int)
 
         pulse_years = collect(year:10:2304)
         dice_years = collect(2005:10:2295)
-        average_rf = DataFrame(year = dice_years, avg_rf = zeros(length(dice_years)))
 
-        # Select rfs for the pulse year and 9-year period after each pulse (e.g., 2005 pulse is average of 2005-2014)
-        for i in 1:length(pulse_years)
-            years_tmp = pulse_years[i]:pulse_years[i]+9
+        marginal_rfs = DataFrame(year = dice_years, rf = zeros(length(dice_years)))
+    
+        for x in 1:length(pulse_years)
             rfs_tmp = @from i in HFC_df begin
-                @where i.years_index in years_tmp
+                @where i.years_index .== pulse_years[x]
                 @select {i.rf}
                 @collect DataFrame
             end
-
-            # Take the average of the rfs for each 10-year period
-            j = length(dice_years) - length(pulse_years) + i # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
-            average_rf.avg_rf[j] = mean(rfs_tmp.rf) # replace jth value (corresponding to the rf for the pulse year) with the mean for the pulse year and following 9 years
+        
+            j = length(dice_years) - length(pulse_years) + x # create index j that only selects years starting from the pulse year (so that rfs for the years before the pulse year will remain as 0.0 in the table)
+            marginal_rfs.rf[j] = rfs_tmp.rf[1]
         end
-
-        return convert(Vector{Float64}, average_rf.avg_rf)
+        
+        return convert(Vector{Float64}, marginal_rfs.rf)
 
     else
         error("Unknown gas :$gas.")
