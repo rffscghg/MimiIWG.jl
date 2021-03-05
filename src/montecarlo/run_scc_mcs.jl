@@ -180,6 +180,9 @@ function run_scc_mcs(model::model_choice;
 
     # Save the information about which runs have a discrepency between base/marginal models of the discontinuity damages
     if model == PAGE
+        # access the computed saved values from the simulation instance; it's the third item in the payload object for PAGE
+        discontinuity_mismatch = Mimi.payload(sim_results)[3] 
+
         # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
         write_scc_values(discontinuity_mismatch, joinpath(scc_dir, "../discontinuity_mismatch/"), perturbation_years, discount_rates)
     end
