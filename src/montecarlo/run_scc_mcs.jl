@@ -98,7 +98,11 @@ function run_scc_mcs(model::model_choice;
         model_years = page_years
         nyears = length(page_years)
 
-        payload = Any[discount_rates, discount_factors]
+        # For each run, this array will store whether there is a discrepency between the base and marginal 
+        # models triggering the discontinuity damages in different timesteps
+        discontinuity_mismatch = Array{Bool, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
+
+        payload = Any[discount_rates, discount_factors, discontinuity_mismatch]
 
         scenario_func = page_scenario_func
         post_trial_func = page_post_trial_func
@@ -172,6 +176,15 @@ function run_scc_mcs(model::model_choice;
     if domestic 
         model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
         write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic=true)
+    end
+
+    # Save the information about which runs have a discrepency between base/marginal models of the discontinuity damages
+    if model == PAGE
+        # access the computed saved values from the simulation instance; it's the third item in the payload object for PAGE
+        discontinuity_mismatch = Mimi.payload(sim_results)[3] 
+
+        # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
+        write_scc_values(discontinuity_mismatch, joinpath(scc_dir, "../discontinuity_mismatch/"), perturbation_years, discount_rates)
     end
 
     # Build the stats tables
