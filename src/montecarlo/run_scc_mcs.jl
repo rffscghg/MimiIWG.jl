@@ -177,12 +177,9 @@ function run_scc_mcs(model::model_choice;
         discontinuity_mismatch = Mimi.payload(sim_results)[3] 
 
         if _need_to_interpolate
-            # discontinuity_mismatch = convert(Array{Float64, 4}, discontinuity_mismatch)
             new_discontinuity_mismatch = Array{Bool}(undef, trials, length(all_years), length(scenarios), length(discount_rates))
             for i in 1:trials, j in 1:length(scenarios), k in 1:length(discount_rates)
                 new_discontinuity_mismatch[i, :, j, k] = convert(Array{Bool}, _interpolate(discontinuity_mismatch[i, :, j, k], perturbation_years, all_years) .> 0)
-                # new_discontinuity_mismatch[i, :, j, k] = _interpolate(discontinuity_mismatch[i, :, j, k], perturbation_years, all_years)
-                # println(discontinuity_mismatch[i, :, j, k])
             end
             discontinuity_mismatch = new_discontinuity_mismatch
             perturbation_years = all_years 
