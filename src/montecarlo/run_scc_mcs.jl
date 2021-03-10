@@ -169,6 +169,10 @@ function run_scc_mcs(model::model_choice;
             SCC_values_domestic = new_domestic_values
         end
 
+        # reset perturbation years to all user requested years, unless model is PAGE, for which this is done below
+        if model != PAGE
+            perturbation_years = all_years
+        end
     end
     
     # Save the information about which runs have a discrepency between base/marginal models of the discontinuity damages
