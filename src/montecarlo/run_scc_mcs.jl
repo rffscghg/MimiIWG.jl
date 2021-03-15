@@ -24,6 +24,10 @@ A new sub directory will be created each time this function is called, with the 
 If `tables` equals `true`, then a set of summary statistics tables will also be saved in the output folder.
 If `save_trials` equals `true`, then a file with all of the sampled input trial data will also be saved in
 the output folder.
+
+If `drop_discontinuities` equals `true`, then outliers from the PAGE model (runs where discontinuity damages are triggered
+in different timesteps in the base and perturbed models) will not contribute to summary statistics. An additional folder
+"discontinuity_mismatch" contains files identifying in which runs the discrepencies occured.
 """
 function run_scc_mcs(model::model_choice; 
     gas::Union{Symbol, Nothing} = nothing,
@@ -33,7 +37,8 @@ function run_scc_mcs(model::model_choice;
     domestic::Bool = false,
     output_dir::Union{String, Nothing} = nothing, 
     save_trials::Bool = false,
-    tables::Bool = true)
+    tables::Bool = true,
+    drop_discontinuities::Bool = false)
 
     # Check the gas
     if gas === nothing
@@ -189,9 +194,12 @@ function run_scc_mcs(model::model_choice;
             perturbation_years = all_years 
         end
 
-        scc_dir = joinpath(output_dir, "SC-$gas/")
+        disc_dir = joinpath(output_dir, "discontinuity_mismatch/")
         # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
-        write_scc_values(discontinuity_mismatch, joinpath(scc_dir, "../discontinuity_mismatch/"), perturbation_years, discount_rates)
+        write_scc_values(discontinuity_mismatch, disc_dir, perturbation_years, discount_rates)
+
+        disc_sum = dropdims(sum(discontinuity_mismatch, dims=(1,3)), dims=(1,3)) # summary table of how many occured (rows are perturbation years, columns are discount rates)
+        writedlm(joinpath(disc_dir, "discontinuity_summary.csv"), disc_sum, ',') 
     end
 
     # Save the SCC values
@@ -204,9 +212,9 @@ function run_scc_mcs(model::model_choice;
 
     # Build the stats tables
     if tables
-        make_percentile_tables(output_dir, gas, discount_rates, perturbation_years)
-        make_stderror_tables(output_dir, gas, discount_rates, perturbation_years)
-        make_summary_table(output_dir, gas, discount_rates, perturbation_years)
+        make_percentile_tables(output_dir, gas, discount_rates, perturbation_years, drop_discontinuities)
+        make_stderror_tables(output_dir, gas, discount_rates, perturbation_years, drop_discontinuities)
+        make_summary_table(output_dir, gas, discount_rates, perturbation_years, drop_discontinuities)
     end
 
     nothing
