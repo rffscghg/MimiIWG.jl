@@ -219,7 +219,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     for (j, pyear) in enumerate(perturbation_years)
         idx = getpageindexfromyear(pyear)
 
-        marginal = perturb_marginal_page_emissions!(base, marginal, gas, pyear)
+        perturb_marginal_page_emissions!(base, marginal, gas, pyear)
         run(marginal)
 
         td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]   

@@ -302,7 +302,7 @@ function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Noth
     if year != nothing
         run(base)
         Mimi.build!(marginal)
-        marginal = perturb_marginal_page_emissions!(base, marginal, gas, year)
+        perturb_marginal_page_emissions!(base, marginal, gas, year)
         run(marginal)
     end
 
@@ -331,16 +331,13 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
         marginal_emissions_growth[i, :] = pulse
 
         # Marginal emissions model
-        md = marginal.mi.md 
-        update_param!(md, :marginal_emissions_growth, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
+        update_param!(marginal.mi, :marginal_emissions_growth, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
     else
         scenario_num = base[:IWGScenarioChoice, :scenario_num]
         forcing_shock = _get_page_forcing_shock(scenario_num, gas, emissionyear)
-        update_param!(marginal.mi.md, :add, forcing_shock)
+        update_param!(marginal.mi, :add, forcing_shock)
     end
 
-    # return a new model from the marginal model's model instance
-    return Model(marginal.mi)
 end  
 
 """
