@@ -339,6 +339,9 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
         update_param!(marginal.mi.md, :add, forcing_shock)
     end
 
+    # create a new model from the marginal model's model instance
+    marginal = Model(marginal.mi)
+
     return nothing
 end  
 
