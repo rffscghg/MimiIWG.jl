@@ -302,7 +302,7 @@ function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Noth
     if year != nothing
         run(base)
         Mimi.build!(marginal)
-        perturb_marginal_page_emissions!(base, marginal, gas, year)
+        marginal = perturb_marginal_page_emissions!(base, marginal, gas, year)
         run(marginal)
     end
 
@@ -339,10 +339,8 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
         update_param!(marginal.mi.md, :add, forcing_shock)
     end
 
-    # create a new model from the marginal model's model instance
-    marginal = Model(marginal.mi)
-
-    return nothing
+    # return a new model from the marginal model's model instance
+    return Model(marginal.mi)
 end  
 
 """
