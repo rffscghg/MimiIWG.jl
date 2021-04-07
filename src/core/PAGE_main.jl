@@ -331,7 +331,7 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
         marginal_emissions_growth[i, :] = pulse
 
         # Marginal emissions model
-        md = marginal.mi.md
+        md = marginal.mi.md 
         update_param!(md, :marginal_emissions_growth, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
     else
         scenario_num = base[:IWGScenarioChoice, :scenario_num]
@@ -339,6 +339,7 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
         update_param!(marginal.mi.md, :add, forcing_shock)
     end
 
+    return nothing
 end  
 
 """
