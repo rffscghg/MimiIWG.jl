@@ -18,13 +18,13 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 
     # Update y_year_0 and y_year parameters used by components
     update_param!(m, :y_year_0, 2000)
-    update_param!(m, :y_year, page_years, update_timesteps = true)
+    update_param!(m, :y_year, page_years)
 
     # Update all parameter values (and their timesteps) from the iwg parameters
     for (k, v) in _page_iwg_params
         if Symbol(k) in keys(Mimi.external_params(m))
             if size(v) == (10, 8) || size(v) == (10,)
-                update_param!(m, Symbol(k), v, update_timesteps=true)
+                update_param!(m, Symbol(k), v)
             else
                 update_param!(m, Symbol(k), v)
             end
