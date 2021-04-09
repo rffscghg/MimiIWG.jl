@@ -206,7 +206,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     base, marginal = mcs.models 
 
     # Unpack the payload object 
-    discount_rates, discount_factors, discontinuity_mismatch, gas, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    discount_rates, discount_factors, discontinuity_mismatch, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
     DF = discount_factors[rate_num]
     td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
@@ -235,5 +235,13 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
         end
         SCC_values[trialnum, j, scenario_num, rate_num] = scc   
+
+        if md_values !== nothing 
+            base_impacts = base[:EquityWeighting, :wit_equityweightedimpact]
+            marg_impacts = marginal[:EquityWeighting, :wit_equityweightedimpact]
+        
+            marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1) .* page_inflator
+            md_values[j, scenario_num, :, trialnum] = sum(marg_damages, dims = 2) # sum along second dimension to get global values
+        end
     end 
 end

@@ -1,6 +1,6 @@
 
 _dice_simdef = @defsim begin
-    # Use the Roe and Baker distribution defined in a file, read in in src/core/constatns.jl
+    # Use the Roe and Baker distribution defined in a file, read in in src/core/constants.jl
     t2xco2 = EmpiricalDistribution(RB_cs_values, RB_cs_probs)
     # save(climatedynamics.t2xco2)
 end 
@@ -30,7 +30,7 @@ function dice_post_trial_func(mcs::SimulationInstance, trial::Int, ntimesteps::I
     (name, rate) = tup
     (base, marginal) = mcs.models
 
-    rates, discount_factors, model_years, horizon, gas, perturbation_years, SCC_values, SCC_values_domestic = Mimi.payload(mcs)
+    rates, discount_factors, model_years, horizon, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
     last_idx = horizon - 2005 + 1
     annual_years = dice_years[1]:horizon
@@ -54,5 +54,8 @@ function dice_post_trial_func(mcs::SimulationInstance, trial::Int, ntimesteps::I
         scc = sum(annual_md[first_idx:last_idx] ./ DF[1:horizon - pyear + 1])
 
         SCC_values[trial, idx, scenario_num, rate_num] = scc 
+        if md_values !== nothing
+            md_values[idx, scenario_num, :, trial] = md
+        end
     end
 end
