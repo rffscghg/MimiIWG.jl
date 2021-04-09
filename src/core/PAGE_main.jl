@@ -19,10 +19,10 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 
     # Update y_year_0 and y_year parameters used by components
     update_param!(m, :y_year_0, 2000)
-    update_param!(m, :y_year, page_years, update_timesteps = true)
+    update_param!(m, :y_year, page_years)
 
     # Update all parameter values (and their timesteps) from the iwg parameters
-    update_params!(m, iwg_params, update_timesteps = true)
+    update_params!(m, iwg_params)
 
     # Add the scenario choice component and load all the scenario parameter values
     add_comp!(m, IWG_PAGE_ScenarioChoice, :IWGScenarioChoice; before = :co2emissions)

@@ -22,7 +22,7 @@ function get_dice_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 
     # Update all IWG parameter values that are not scenario-specific
     iwg_params = load_dice_iwg_params()
-    update_params!(m, iwg_params, update_timesteps=true)
+    update_params!(m, iwg_params)
 
     # Add the scenario choice component and load all the scenario parameter values
     add_comp!(m, IWG_DICE_ScenarioChoice, :IWGScenarioChoice; before = :grosseconomy)
