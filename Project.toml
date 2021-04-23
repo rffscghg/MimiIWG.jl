@@ -20,6 +20,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
+DataFrames = "1.0"
 CSVFiles = "1.0"
 Distributions = "0.23, 0.24"
 ExcelReaders = "0.11"
