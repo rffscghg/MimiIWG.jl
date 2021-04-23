@@ -21,6 +21,7 @@ XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
 DataFrames = "1.0"
+CSVFiles = "1.0"
 Distributions = "0.23, 0.24"
 ExcelReaders = "0.11"
 Interpolations = "0.13"
