@@ -1,6 +1,6 @@
 name = "MimiIWG"
 uuid = "b1d80750-afbf-11e9-0666-4f25b2ea2b65"
-version = "1.0.2-DEV"
+version = "1.0.3-DEV"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
@@ -19,13 +19,13 @@ MimiDICE2010 = "4f2c5d70-42a7-11e9-1de8-c370bd984083"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-julia = "1"
+julia = "1.4"
 StatsBase = "0.33"
 XLSX = "0.7.3"
 MimiPAGE2009 = "3.0"
 ExcelReaders = "0.11"
 Distributions = "0.23, 0.24"
-Mimi = "1.0"
+Mimi = "1.2.1"
 MimiFUND = "=3.8.6"
 Interpolations = "0.13"
 MimiDICE2010 = "1.0"
