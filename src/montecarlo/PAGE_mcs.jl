@@ -225,6 +225,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
         # Stores `true` if the base and marginal models trigger the discontinuity damages in different timesteps (0 otherwise)
         discontinuity_mismatch[trialnum, j, scenario_num, rate_num] = base[:Discontinuity, :occurdis_occurrencedummy] != marginal[:Discontinuity, :occurdis_occurrencedummy]
 
+
         td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]   
         pulse_size = gas == :CO2 ? 100_000 : 1          
         scc = ((td_marginal / UDFT_base[idx]) - (td_base / UDFT_base[idx])) / pulse_size * page_inflator
