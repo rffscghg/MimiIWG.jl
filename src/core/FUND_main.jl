@@ -74,7 +74,7 @@ hfc_rf_df = DataFrame(load(hfc_rf_data))
     output = Variable(index=[time]) # original forcing + marginal hfc forcing
 
     function run_timestep(p, v, d, t)
-    v.output[t] = Mimi.@allow_missing(p.input[t])  + p.add[t]
+    v.output[t] = Mimi.@allow_missing(p.input[t])   + p.add[t]
 end
 end
 
