@@ -290,7 +290,7 @@ function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Noth
         add_comp!(marginal, PAGE_marginal_CO2_emissions, :marginal_emissions; before = :co2emissions)
         connect_param!(marginal, :co2emissions => :er_CO2emissionsgrowth, :marginal_emissions => :er_CO2emissionsgrowth)
         connect_param!(marginal, :AbatementCostsCO2 => :er_emissionsgrowth, :marginal_emissions => :er_CO2emissionsgrowth)
-    elseif gas in [:CH4, :N2O]
+    elseif (gas in [:CH4, :N2O] || gas in HFC_list)
         add_comp!(marginal, Mimi.adder, :marginal_forcing; before = :TotalForcing)
         set_param!(marginal, :marginal_forcing, :add, zeros(10))
         connect_param!(marginal, :marginal_forcing => :input, :IWGScenarioChoice => :exf_excessforcing, ignoreunits=true)

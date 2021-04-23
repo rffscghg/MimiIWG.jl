@@ -42,8 +42,8 @@ function run_scc_mcs(model::model_choice;
     if gas === nothing
         @warn("No `gas` specified in `run_scc_mcs`; will return the SC-CO2.")
         gas = :CO2
-    elseif ! (gas in [:CO2, :CH4, :N2O])
-        error("Unknown gas :$gas. Available gases are :CO2, :CH4, and :N2O.")
+    elseif ! (gas in [:CO2, :CH4, :N2O] || gas in HFC_list)
+        error("Unknown gas :$gas. Available gases are :CO2, :CH4, :N2O, :HFC23, :HFC32, :HFC125, :HFC134a, :HFC143a, :HFC152a, :HFC227ea, :HFC236fa, :HFC245fa, :HFC365mfc, and :HFC4310mee.")
     end
 
     # Set up output directory for trials and saved values
@@ -101,7 +101,11 @@ function run_scc_mcs(model::model_choice;
         model_years = page_years
         nyears = length(page_years)
 
-        payload = Any[discount_rates, discount_factors]
+        # For each run, this array will store whether there is a discrepency between the base and marginal 
+        # models triggering the discontinuity damages in different timesteps
+        discontinuity_mismatch = Array{Bool, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
+
+        payload = Any[discount_rates, discount_factors, discontinuity_mismatch]
 
         scenario_func = page_scenario_func
         post_trial_func = page_post_trial_func
@@ -123,6 +127,12 @@ function run_scc_mcs(model::model_choice;
         _first_idx = findlast(y -> y <= minimum(all_years), model_years)
         _last_idx = findfirst(y -> y >= maximum(all_years), model_years)
         perturbation_years = model_years[_first_idx : _last_idx]  # figure out which years of the model's time index we need to use to cover all desired perturbation years
+    end
+
+    # For each run, this array will store whether there is a discrepency between the base and marginal models triggering the discontinuity damages in different timesteps
+    if model == PAGE
+        discontinuity_mismatch = Array{Bool, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
+        push!(payload, discontinuity_mismatch)
     end
 
     # Make an array to hold all calculated scc values
@@ -188,15 +198,46 @@ function run_scc_mcs(model::model_choice;
             SCC_values_domestic = new_domestic_values
         end
 
-        perturbation_years = all_years
+        # reset perturbation years to all user requested years, unless model is PAGE, for which this is done below
+        if model != PAGE
+            perturbation_years = all_years
+        end
     end
     
+    # Save the information about which runs have a discrepency between base/marginal models of the discontinuity damages
+    if model == PAGE
+        # access the computed saved values from the simulation instance; it's the third item in the payload object for PAGE
+        discontinuity_mismatch = Mimi.payload(sim_results)[3] 
+
+        if _need_to_interpolate
+            new_discontinuity_mismatch = Array{Bool}(undef, trials, length(all_years), length(scenarios), length(discount_rates))
+            for i in 1:trials, j in 1:length(scenarios), k in 1:length(discount_rates)
+                new_discontinuity_mismatch[i, :, j, k] = convert(Array{Bool}, _interpolate(discontinuity_mismatch[i, :, j, k], perturbation_years, all_years) .> 0)
+            end
+            discontinuity_mismatch = new_discontinuity_mismatch
+            perturbation_years = all_years 
+        end
+
+        scc_dir = joinpath(output_dir, "SC-$gas/")
+        # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
+        write_scc_values(discontinuity_mismatch, joinpath(scc_dir, "../discontinuity_mismatch/"), perturbation_years, discount_rates)
+    end
+
     # Save the SCC values
     scc_dir = joinpath(output_dir, "SC-$gas/")
     write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
     if domestic 
         model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
         write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic=true)
+    end
+
+    # Save the information about which runs have a discrepency between base/marginal models of the discontinuity damages
+    if model == PAGE
+        # access the computed saved values from the simulation instance; it's the third item in the payload object for PAGE
+        discontinuity_mismatch = Mimi.payload(sim_results)[3] 
+
+        # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
+        write_scc_values(discontinuity_mismatch, joinpath(scc_dir, "../discontinuity_mismatch/"), perturbation_years, discount_rates)
     end
 
     # Build the stats tables
