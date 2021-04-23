@@ -51,7 +51,7 @@ function _get_hfc_marginal_forcings(gas::Symbol, year::Int)
     pulse_years = append!(collect(year:10:2060), [2080, 2100, 2200, 2300]) ## note: written like this, i think that PAGE will only work for pulse years 2020:10:2060
     
     ## AVERAGING METHOD
-    average_rf = DataFrame(year = page_years, avg_rf = zeros(length(page_years)))
+    average_rf = DataFrame(year=page_years, avg_rf=zeros(length(page_years)))
     # Select rfs to take the average of
     for x in 1:length(pulse_years)
         years_tmp = years_dict[pulse_years[x]] # selects rfs according to PAGE periods
