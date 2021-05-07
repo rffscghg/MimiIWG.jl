@@ -7,6 +7,7 @@
         domestic::Bool = false,
         output_dir::String = nothing, 
         save_trials::Bool = false,
+        save_md::Bool = false,
         tables::Bool = true)
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
@@ -23,7 +24,8 @@ A new sub directory will be created each time this function is called, with the 
 
 If `tables` equals `true`, then a set of summary statistics tables will also be saved in the output folder.
 If `save_trials` equals `true`, then a file with all of the sampled input trial data will also be saved in
-the output folder.
+the output folder. If `save_md` equals `true`, then global undiscounted marginal damages from each run of 
+the simulation will be saved in a subdirectory "output/marginal_damages".
 """
 function run_scc_mcs(model::model_choice; 
     gas::Union{Symbol, Nothing} = nothing,
@@ -33,6 +35,7 @@ function run_scc_mcs(model::model_choice;
     domestic::Bool = false,
     output_dir::Union{String, Nothing} = nothing, 
     save_trials::Bool = false,
+    save_md::Bool = false,
     tables::Bool = true)
 
     # Check the gas
@@ -136,8 +139,18 @@ function run_scc_mcs(model::model_choice;
         SCC_values_domestic = nothing 
     end
 
+    # Make an array to hold undiscounted marginal damages, if specified
+    if save_md
+        if model == PAGE && discount_rates != [0.]
+            error("Cannot save undiscounted marginal damages for PAGE unless `discount_rates = [0.]`")
+        end
+        md_values = Array{Float64, 4}(undef, length(perturbation_years), length(scenarios), length(model_years), trials)
+    else
+        md_values = nothing
+    end
+
     # Set the payload object
-    push!(payload, [gas, perturbation_years, SCC_values, SCC_values_domestic]...)
+    push!(payload, [gas, perturbation_years, SCC_values, SCC_values_domestic, md_values]...)
     Mimi.set_payload!(mcs, payload)
 
     # Generate trials 
@@ -151,7 +164,19 @@ function run_scc_mcs(model::model_choice;
         scenario_args = scenario_args,
         post_trial_func = post_trial_func
     )
-    SCC_values, SCC_values_domestic = Mimi.payload(sim_results)[end-1:end]
+    SCC_values, SCC_values_domestic, md_values = Mimi.payload(sim_results)[end-2:end]
+
+    # Save the marginal damage matrices
+    if save_md
+        md_dir = joinpath(output_dir, "marginal_damages/")
+        mkpath(md_dir)
+        for (i, year) in enumerate(perturbation_years)
+            for (j, scen) in enumerate(scenarios)
+                fn = joinpath(md_dir, "$scen $year.csv")
+                writedlm(fn, hcat(model_years, md_values[i, j, :, :]), ',') # add model year labels as the first column in each file
+            end
+        end
+    end
 
     # generic interpolation if user requested SCC values for years in between model_years
     if _need_to_interpolate
