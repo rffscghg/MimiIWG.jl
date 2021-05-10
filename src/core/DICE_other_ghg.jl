@@ -4,7 +4,7 @@ other_GHG_input_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/CH4N20emis
 f = openxl(other_GHG_input_file)
 
 dice_annual_years = Vector{Int}(readxl(f, "CH4annual!A2:A301")[:])
-decades = dice_annual_years[1]:10:dice_annual_years[end]-9
+decades = dice_annual_years[1]:10:dice_annual_years[end] - 9
 E_CH4A_all = readxl(f, "CH4annual!B2:F301")
 E_N2OA_all = readxl(f, "N20annual!B2:F301")
 
@@ -66,11 +66,11 @@ function _get_dice_additional_forcing(scenario_num::Int, gas::Symbol, year::Int)
 
         pulse_years = collect(year:10:2304)
         dice_years = collect(2005:10:2295)
-        average_rf = DataFrame(year = dice_years, avg_rf = zeros(length(dice_years)))
+        average_rf = DataFrame(year=dice_years, avg_rf=zeros(length(dice_years)))
 
         # Select rfs for the pulse year and 9-year period after each pulse (e.g., 2005 pulse is average of 2005-2014)
         for i in 1:length(pulse_years)
-            years_tmp = pulse_years[i]:pulse_years[i]+9
+            years_tmp = pulse_years[i]:pulse_years[i] + 9
             rfs_tmp = @from i in HFC_df begin
                 @where i.years_index in years_tmp
                 @select {i.rf}

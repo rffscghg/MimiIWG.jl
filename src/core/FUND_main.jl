@@ -2,7 +2,7 @@
     Returns the IWG version of the FUND3.8 model without any scenario parameters set yet. 
     Need to call apply_scenario!(m, scenario_choice) before this model can be run.
 """
-function get_fund_model(scenario_choice::Union{scenario_choice, Nothing} = nothing)
+function get_fund_model(scenario_choice::Union{scenario_choice,Nothing}=nothing)
 
     # Get the default FUND model
     m = getfund()
@@ -11,11 +11,11 @@ function get_fund_model(scenario_choice::Union{scenario_choice, Nothing} = nothi
     replace!(m, :impactsealevelrise => IWG_FUND_impactsealevelrise)
 
     # Add Roe Baker Climate Sensitivity parameter and make connection from Climate Dynamics component
-    add_comp!(m, IWG_RoeBakerClimateSensitivity, :roebakerclimatesensitivity; before = :climatedynamics)
+    add_comp!(m, IWG_RoeBakerClimateSensitivity, :roebakerclimatesensitivity; before=:climatedynamics)
     connect_param!(m, :climatedynamics, :climatesensitivity, :roebakerclimatesensitivity, :climatesensitivity)
 
     # Add the scenario choice component and load all the scenario parameter values
-    add_comp!(m, IWG_FUND_ScenarioChoice, :IWGScenarioChoice; before = :population)
+    add_comp!(m, IWG_FUND_ScenarioChoice, :IWGScenarioChoice; before=:population)
     set_dimension!(m, :scenarios, length(scenarios))
     set_fund_all_scenario_params!(m)
         
@@ -34,7 +34,7 @@ set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, 
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
 """
-function set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
+function set_fund_all_scenario_params!(m::Model; comp_name::Symbol=:IWGScenarioChoice, connect::Bool=true)
 
     # reshape each array of values into one array for each param, then set that value in the model
     for (k, v) in _fund_scenario_params_dict
@@ -74,12 +74,12 @@ hfc_rf_df = DataFrame(load(hfc_rf_data))
     output = Variable(index=[time]) # original forcing + marginal hfc forcing
 
     function run_timestep(p, v, d, t)
-        v.output[t] = Mimi.@allow_missing(p.input[t]) + p.add[t]
-    end
+    v.output[t] = Mimi.@allow_missing(p.input[t])   + p.add[t]
+end
 end
 
 # Function to replace MimiFUND.perturb_marginal_emissions in fund_post_trial_func
-function perturb_fund_marginal_emissions!(m::Model, year; comp_name::Symbol = :emissionspulse, gas::Symbol = :CO2)
+function perturb_fund_marginal_emissions!(m::Model, year; comp_name::Symbol=:emissionspulse, gas::Symbol=:CO2)
     if ! (gas in HFC_list)
         MimiFUND.perturb_marginal_emissions!(m, year, gas=gas)
     elseif gas in HFC_list
@@ -103,7 +103,7 @@ function perturb_fund_marginal_emissions!(m::Model, year; comp_name::Symbol = :e
             if i <= 10
                rf_cumsum_10yr[i] = rf_cumsum[i]
             else
-                rf_cumsum_10yr[i] = rf_cumsum[i] - rf_cumsum[i-10]
+                rf_cumsum_10yr[i] = rf_cumsum[i] - rf_cumsum[i - 10]
             end
         end
 
@@ -116,11 +116,11 @@ function perturb_fund_marginal_emissions!(m::Model, year; comp_name::Symbol = :e
 end
 
 # Function from original MimiFUND code, modified for IWG CH4 and N2O + modified for HFCs
-function add_fund_marginal_emissions!(m::Model, year = nothing; gas, pulse_size = 1e7) # pulse size is in metric tonnes
+function add_fund_marginal_emissions!(m::Model, year=nothing; gas, pulse_size=1e7) # pulse size is in metric tonnes
 
     if ! (gas in HFC_list)
         # Add additional emissions to m
-        add_comp!(m, MimiFUND.emissionspulse, before = :climateco2cycle)
+        add_comp!(m, MimiFUND.emissionspulse, before=:climateco2cycle)
         nyears = length(Mimi.time_labels(m))
         addem = zeros(nyears) 
         if year !== nothing 
@@ -147,7 +147,7 @@ function add_fund_marginal_emissions!(m::Model, year = nothing; gas, pulse_size 
         end
     elseif gas in HFC_list
         # Add marginal_hfc_forcings component to m
-        add_comp!(m, marginal_hfc_forcings, before = :climatedynamics)
+        add_comp!(m, marginal_hfc_forcings, before=:climatedynamics)
         # add_comp!(m, marginal_hfc_forcings, after = :climateforcing)
         nyears = length(Mimi.time_labels(m))
         add_rf = zeros(nyears) 
@@ -166,7 +166,7 @@ function add_fund_marginal_emissions!(m::Model, year = nothing; gas, pulse_size 
             if i <= 10
                rf_cumsum_10yr[i] = rf_cumsum[i]
             else
-                rf_cumsum_10yr[i] = rf_cumsum[i] - rf_cumsum[i-10]
+                rf_cumsum_10yr[i] = rf_cumsum[i] - rf_cumsum[i - 10]
             end
         end
 
@@ -192,7 +192,7 @@ end
     If no `discount` is specified, will return undiscounted marginal damages.
     The `income_normalized` parameter indicates whether the damages from the marginal run should be scaled by the ratio of incomes between the base and marginal runs. 
 """
-function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true)
+function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool=false, income_normalized::Bool=true)
 
     # Check the emissions year
     if ! (year in fund_years)
@@ -201,7 +201,7 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
 
     base = get_fund_model(scenario_choice)
     marginal = Model(base)
-    add_fund_marginal_emissions!(marginal, year, gas = gas)
+    add_fund_marginal_emissions!(marginal, year, gas=gas)
 
     run(base)
     run(marginal)
@@ -216,14 +216,14 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
     if regional
         diff = (damages2 .- damages1) * 1e-7 * fund_inflator
     else
-        diff = sum((damages2 .- damages1), dims = 2) * 1e-7 * fund_inflator   
+        diff = sum((damages2 .- damages1), dims=2) * 1e-7 * fund_inflator   
     end
 
     nyears = length(fund_years)
     if discount != 0 
         DF = zeros(nyears)
         first = MimiFUND.getindexfromyear(year)
-        DF[first:end] = [1/(1+discount)^t for t in 0:(nyears-first)]
+        DF[first:end] = [1 / (1 + discount)^t for t in 0:(nyears - first)]
         return diff[1:nyears, :] .* DF
     else
         return diff[1:nyears, :]
@@ -238,7 +238,7 @@ end
     If no `year` is specified, will return SC for $_default_year.
     If no `discount` is specified, will return SC for a discount rate of $(_default_discount * 100)%.
 """
-function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; domestic::Bool = false, income_normalized::Bool = true)
+function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; domestic::Bool=false, income_normalized::Bool=true)
 
     # Check the emissions year
     if !(year in fund_years)
@@ -246,9 +246,9 @@ function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     end
 
     if domestic
-        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized = income_normalized, regional = true)[:, 1]
+        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized=income_normalized, regional=true)[:, 1]
     else
-        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized = income_normalized, regional = false)
+        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized=income_normalized, regional=false)
     end
         
     scc = sum(md[MimiFUND.getindexfromyear(year):end])    # Sum from the perturbation year to the end (avoid the NaN in the first timestep)

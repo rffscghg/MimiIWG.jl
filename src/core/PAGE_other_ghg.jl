@@ -19,7 +19,7 @@ _page_n2o_shocks[2040] = _page_xf["Sheet1"]["AD18:AH27"]
 _page_n2o_shocks[2050] = _page_xf["Sheet1"]["AK18:AO27"]
 _page_n2o_shocks[2060] = _page_xf["Sheet1"]["AR18:AV27"]
 
-# Exogenous HFC marginal forcing pathways 
+# Exogenous HFC marginal forcing pathways
 
 _page_hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
 # _page_hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
@@ -51,7 +51,7 @@ function _get_hfc_marginal_forcings(gas::Symbol, year::Int)
     pulse_years = append!(collect(year:10:2060), [2080, 2100, 2200, 2300]) ## note: written like this, i think that PAGE will only work for pulse years 2020:10:2060
     
     ## AVERAGING METHOD
-    average_rf = DataFrame(year = page_years, avg_rf = zeros(length(page_years)))
+    average_rf = DataFrame(year=page_years, avg_rf=zeros(length(page_years)))
     # Select rfs to take the average of
     for x in 1:length(pulse_years)
         years_tmp = years_dict[pulse_years[x]] # selects rfs according to PAGE periods
