@@ -21,7 +21,7 @@ function get_page_model(scenario_choice::Union{scenario_choice,Nothing}=nothing)
     
     dim = Mimi.Dimension(page_years)
     Mimi._propagate_time_dim!(m.md, dim)
-    Mimi._propagate_first_last!(m.md; first = page_years[1], last = page_years[end])
+    Mimi._propagate_first_last!(m.md; first=page_years[1], last=page_years[end])
 
     # Replace modified components
     replace!(m, :GDP => IWG_PAGE_GDP)
