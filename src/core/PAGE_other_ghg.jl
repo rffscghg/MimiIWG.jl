@@ -21,6 +21,7 @@ _page_n2o_shocks[2050] = _page_xf["Sheet1"]["AK18:AO27"]
 _page_n2o_shocks[2060] = _page_xf["Sheet1"]["AR18:AV27"]
 _page_n2o_shocks[2080] = _page_xf["Sheet1"]["AY18:BC27"]
 
+
 function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
     if scenario_num == 1
         col_num = 1
