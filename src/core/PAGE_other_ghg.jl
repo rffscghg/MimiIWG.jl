@@ -10,6 +10,7 @@ _page_ch4_shocks[2030] = _page_xf["Sheet1"]["W4:AA13"]
 _page_ch4_shocks[2040] = _page_xf["Sheet1"]["AD4:AH13"]
 _page_ch4_shocks[2050] = _page_xf["Sheet1"]["AK4:AO13"]
 _page_ch4_shocks[2060] = _page_xf["Sheet1"]["AR4:AV13"]
+_page_ch4_shocks[2080] = _page_xf["Sheet1"]["AY4:BC13"]
 
 _page_n2o_shocks = Dict()
 _page_n2o_shocks[2010] = _page_xf["Sheet1"]["I18:M27"]
@@ -18,6 +19,7 @@ _page_n2o_shocks[2030] = _page_xf["Sheet1"]["W18:AA27"]
 _page_n2o_shocks[2040] = _page_xf["Sheet1"]["AD18:AH27"]
 _page_n2o_shocks[2050] = _page_xf["Sheet1"]["AK18:AO27"]
 _page_n2o_shocks[2060] = _page_xf["Sheet1"]["AR18:AV27"]
+_page_n2o_shocks[2080] = _page_xf["Sheet1"]["AY18:BC27"]
 
 
 function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
