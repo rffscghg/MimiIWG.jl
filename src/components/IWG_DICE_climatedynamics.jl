@@ -20,28 +20,28 @@
     function run_timestep(p, v, d, t)
 
         # TA_eq added by EPA "to avoid over- and under-shoots to eq T when CS is very low
-        if is_first(t)
-            v.TA_eq[t] = 0.083
-        else
-            v.TA_eq[t] = p.FORC[t] * p.t2xco2 / p.fco22x
-        end
+    if is_first(t)
+        v.TA_eq[t] = 0.083
+    else
+        v.TA_eq[t] = p.FORC[t] * p.t2xco2 / p.fco22x
+    end
 
         # Define function for TATM
-        if is_first(t)
-            v.TATM[t] = p.tatm0
-        elseif p.t2xco2 < 0.5
+    if is_first(t)
+        v.TATM[t] = p.tatm0
+    elseif p.t2xco2 < 0.5
             v.TATM[t] = v.TA_eq[t]
         else
-            v.TATM[t] = v.TATM[t - 1] + p.c1 * ((p.FORC[t] - (p.fco22x/p.t2xco2) * v.TATM[t - 1]) - (p.c3 * (v.TATM[t - 1] - v.TOCEAN[t - 1])))
-        end
+            v.TATM[t] = v.TATM[t - 1] + p.c1 * ((p.FORC[t] - (p.fco22x / p.t2xco2) * v.TATM[t - 1]) - (p.c3 * (v.TATM[t - 1] - v.TOCEAN[t - 1])))
+    end
 
         # Define function for TOCEAN
-        if is_first(t)
-            v.TOCEAN[t] = p.tocean0
-        else
-            v.TOCEAN[t] = v.TOCEAN[t - 1] + p.c4 * (v.TATM[t - 1] - v.TOCEAN[t - 1])
-        end
-
+    if is_first(t)
+        v.TOCEAN[t] = p.tocean0
+    else
+        v.TOCEAN[t] = v.TOCEAN[t - 1] + p.c4 * (v.TATM[t - 1] - v.TOCEAN[t - 1])
     end
+
+end
 
 end
