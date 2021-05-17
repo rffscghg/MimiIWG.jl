@@ -11,10 +11,7 @@ using MimiDICE2010
 using MimiFUND          # pinned to version 3.8 in package registration Compat.toml
 using MimiPAGE2009      
 using StatsBase
-using XLSX:readxlsx
-using CSVFiles
-using DataFrames, Query
-using Statistics
+using XLSX: readxlsx
 
 export DICE, FUND, PAGE, # export the enumerated model_choice options
         USG1, USG2, USG3, USG4, USG5 # export the enumerated scenario_choice options 

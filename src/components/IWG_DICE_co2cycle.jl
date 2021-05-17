@@ -25,28 +25,28 @@
     function run_timestep(p, v, d, t)
 
         # Define function for MU
-    if is_first(t)
-        v.MU[t] = p.mu0
-    else
-        v.MU[t] = v.MAT[t - 1] * p.b12 + v.MU[t - 1] * p.b22 + v.ML[t - 1] * p.b32
-    end
+        if is_first(t)
+            v.MU[t] = p.mu0
+        else
+            v.MU[t] = v.MAT[t - 1] * p.b12 + v.MU[t - 1] * p.b22 + v.ML[t - 1] * p.b32
+        end
 
         # Define function for ML
-    if is_first(t)
-        v.ML[t] = p.ml0
-    else
-        v.ML[t] = v.ML[t - 1] * p.b33 + v.MU[t - 1] * p.b23
-    end
+        if is_first(t)
+            v.ML[t] = p.ml0
+        else
+            v.ML[t] = v.ML[t - 1] * p.b33 + v.MU[t - 1] * p.b23
+        end
 
         # Define function for MAT
-    if is_first(t)
-        v.MAT[t] = p.mat0
+        if is_first(t)
+            v.MAT[t] = p.mat0
             # and also calculate MAT[2] below
-    end
-    if !is_last(t)
-        v.MAT[t + 1] = v.MAT[t] * p.b11 + v.MU[t] * p.b21 + p.E[t]
-    end
+        end
+        if !is_last(t)
+            v.MAT[t + 1] = v.MAT[t] * p.b11 + v.MU[t] * p.b21 + p.E[t]
+        end
 
-end
+    end
 
 end

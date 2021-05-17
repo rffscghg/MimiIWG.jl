@@ -24,30 +24,30 @@
     function run_timestep(p, v, d, t)
 
         # Define function for YNET
-    v.YNET[t] = p.YGROSS[t] / (1 + p.DAMFRAC[t])
+        v.YNET[t] = p.YGROSS[t] / (1 + p.DAMFRAC[t])
 
         # Define function for ABATECOST
-    v.ABATECOST[t] = p.YGROSS[t] * p.cost1[t] * (p.MIU[t]^p.expcost2) * (p.partfract[t]^(1 - p.expcost2))
+        v.ABATECOST[t] = p.YGROSS[t] * p.cost1[t] * (p.MIU[t]^p.expcost2) * (p.partfract[t]^(1 - p.expcost2))
 
         # Define function for Y
-    v.Y[t] = v.YNET[t] - v.ABATECOST[t]
+        v.Y[t] = v.YNET[t] - v.ABATECOST[t]
 
         # Define function for I
-    v.I[t] = p.S[t] * v.Y[t]
+        v.I[t] = p.S[t] * v.Y[t]
 
         # Define function for C
-    v.C[t] = v.Y[t] - v.I[t]
+        v.C[t] = v.Y[t] - v.I[t]
 
         # Define function for CPC
-    v.CPC[t] = 1000 * v.C[t] / p.l[t]
+        v.CPC[t] = 1000 * v.C[t] / p.l[t]
 
         # Define function for CPRICE
-    if t.t == 26
-        v.CPRICE[t] = v.CPRICE[t - 1]
-    else
-        v.CPRICE[t] = p.pbacktime[t] * 1000 * p.MIU[t]^(p.expcost2 - 1)
-    end
+        if t.t==26
+            v.CPRICE[t] = v.CPRICE[t - 1]
+        else
+            v.CPRICE[t] = p.pbacktime[t] * 1000 * p.MIU[t] ^ (p.expcost2 - 1)
+        end
 
-end
+    end
 
 end
