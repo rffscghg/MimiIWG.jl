@@ -1,64 +1,64 @@
 @defcomp IWG_DICE_simple_gas_cycle begin
 
     # Output: forcing
-    F_CH4 = Variable(index = [decades])    # Path of CH4 forcing [W/m^2] - decadal time step
-    F_N2O = Variable(index = [decades])    # Path of N2O forcing [W/m^2] - decadal time step
+    F_CH4 = Variable(index=[decades])    # Path of CH4 forcing [W/m^2] - decadal time step
+    F_N2O = Variable(index=[decades])    # Path of N2O forcing [W/m^2] - decadal time step
 
     # Input: emissions
-    E_CH4A = Parameter(index = [time])  # Annual CH4 emissions
-    E_N2OA = Parameter(index = [time])  # Annual N2O emissions
+    E_CH4A = Parameter(index=[time])  # Annual CH4 emissions
+    E_N2OA = Parameter(index=[time])  # Annual N2O emissions
 
     # Atmospheric concentration dynamics coefficients
-    delta_ch4 = Parameter(default = 1/12)   # Annual rate of decay of CH4 (IPCC FAR)
-    gamma_ch4 = Parameter(default = 0.3597) # Mass to volume conversion factor [ppb CH4/Mt CH4]
-    alpha_ch4 = Parameter(default = 0.036)  # Radiative forcing parameter (TAR page 358)
-    delta_n2o = Parameter(default = 1/114)  # Rate of decay of N2O (IPCC FAR)
-    gamma_n2o = Parameter(default = 0.2079) # Mass to volume conversion factor [ppb N2O/Mt N]
-    alpha_n2o = Parameter(default = 0.12)   # Radiative forcing parameter    
-    ipcc_adj =  Parameter(default = 1.4)    # IPCC AR4 adjustment for tropospheric ozone effect (25%) and stratospheric water vapor effect (15%)
+    delta_ch4 = Parameter(default=1 / 12)   # Annual rate of decay of CH4 (IPCC FAR)
+    gamma_ch4 = Parameter(default=0.3597) # Mass to volume conversion factor [ppb CH4/Mt CH4]
+    alpha_ch4 = Parameter(default=0.036)  # Radiative forcing parameter (TAR page 358)
+    delta_n2o = Parameter(default=1 / 114)  # Rate of decay of N2O (IPCC FAR)
+    gamma_n2o = Parameter(default=0.2079) # Mass to volume conversion factor [ppb N2O/Mt N]
+    alpha_n2o = Parameter(default=0.12)   # Radiative forcing parameter    
+    ipcc_adj =  Parameter(default=1.4)    # IPCC AR4 adjustment for tropospheric ozone effect (25%) and stratospheric water vapor effect (15%)
 
-    M_pre = Parameter(default = 700)    # Pre-industrial CH4 concentrations [ppb](TAR page 358)
-    N_pre = Parameter(default = 270)    # Pre-industrial N2O concentrations [ppb](TAR page 358)
+    M_pre = Parameter(default=700)    # Pre-industrial CH4 concentrations [ppb](TAR page 358)
+    N_pre = Parameter(default=270)    # Pre-industrial N2O concentrations [ppb](TAR page 358)
     
-    M_AA_2005 = Parameter(default = 1774)  # 2005 concentration of CH4
-    N_AA_2005 = Parameter(default = 319)   # 2005 concentration of N2O
+    M_AA_2005 = Parameter(default=1774)  # 2005 concentration of CH4
+    N_AA_2005 = Parameter(default=319)   # 2005 concentration of N2O
 
     # Other intermediate variables to calculate
-    M_AA     = Variable(index = [time]) # Atmospheric CH4 concentration (annual)
-    F_CH4A   = Variable(index = [time]) # Contribution of atmospheric CH4 to radiative forcing (annual)
-    N_AA     = Variable(index = [time]) # Atmospheric N2O concentration (annual)
-    F_N2OA   = Variable(index = [time]) # Contribution of atmospheric N2O to radiative forcing (annual)
+    M_AA     = Variable(index=[time]) # Atmospheric CH4 concentration (annual)
+    F_CH4A   = Variable(index=[time]) # Contribution of atmospheric CH4 to radiative forcing (annual)
+    N_AA     = Variable(index=[time]) # Atmospheric N2O concentration (annual)
+    F_N2OA   = Variable(index=[time]) # Contribution of atmospheric N2O to radiative forcing (annual)
     pre_f    = Variable()    # pre-industrial interaction effect
 
     function run_timestep(p, v, d, t)
 
-        function f(M_A, N_A)
+    function f(M_A, N_A)
             # calculate the interaction effect on radiative forcing
-            return 0.47 * log(1 + 2.01 * 10 ^ -5 * (M_A * N_A) ^ 0.75 + 5.31 * 10^-15 * M_A * (M_A * N_A) ^ 1.52)
-        end
+        return 0.47 * log(1 + 2.01 * 10^-5 * (M_A * N_A)^0.75 + 5.31 * 10^-15 * M_A * (M_A * N_A)^1.52)
+    end
 
         # Calculate the annual atmospheric concentrations
-        if is_first(t)
-            v.M_AA[t] = p.M_AA_2005
-            v.N_AA[t] = p.N_AA_2005  
+    if is_first(t)
+        v.M_AA[t] = p.M_AA_2005
+        v.N_AA[t] = p.N_AA_2005  
 
-            v.pre_f = f(p.M_pre, p.N_pre)   # only need to calculate this once; used in each timestep below
-        else
-            v.M_AA[t] = (1 - p.delta_ch4) * v.M_AA[t - 1] + p.delta_ch4 * p.M_pre + p.gamma_ch4 * p.E_CH4A[t - 1]
-            v.N_AA[t] = (1 - p.delta_n2o) * v.N_AA[t - 1] + p.delta_n2o * p.N_pre + p.gamma_n2o * (28/44) * p.E_N2OA[t - 1]
-        end
+        v.pre_f = f(p.M_pre, p.N_pre)   # only need to calculate this once; used in each timestep below
+    else
+        v.M_AA[t] = (1 - p.delta_ch4) * v.M_AA[t - 1] + p.delta_ch4 * p.M_pre + p.gamma_ch4 * p.E_CH4A[t - 1]
+        v.N_AA[t] = (1 - p.delta_n2o) * v.N_AA[t - 1] + p.delta_n2o * p.N_pre + p.gamma_n2o * (28 / 44) * p.E_N2OA[t - 1]
+    end
 
         # Calculate the annual forcing
-        v.F_CH4A[t] = p.ipcc_adj * (p.alpha_ch4 * (sqrt(v.M_AA[t]) - sqrt(p.M_pre)) - (f(v.M_AA[t], p.N_pre) - v.pre_f))
-        v.F_N2OA[t] = p.alpha_n2o * (sqrt(v.N_AA[t]) - sqrt(p.N_pre)) - (f(p.M_pre, v.N_AA[t]) - v.pre_f)
+    v.F_CH4A[t] = p.ipcc_adj * (p.alpha_ch4 * (sqrt(v.M_AA[t]) - sqrt(p.M_pre)) - (f(v.M_AA[t], p.N_pre) - v.pre_f))
+    v.F_N2OA[t] = p.alpha_n2o * (sqrt(v.N_AA[t]) - sqrt(p.N_pre)) - (f(p.M_pre, v.N_AA[t]) - v.pre_f)
 
         # calculate the decadal forcing at the end
-        if is_last(t)
-            v.F_CH4[:] = mean(reshape(v.F_CH4A[:], 10, length(d.decades)), dims=1)
-            v.F_N2O[:] = mean(reshape(v.F_N2OA[:], 10, length(d.decades)), dims=1)
-        end
-
+    if is_last(t)
+        v.F_CH4[:] = mean(reshape(v.F_CH4A[:], 10, length(d.decades)), dims=1)
+        v.F_N2O[:] = mean(reshape(v.F_N2OA[:], 10, length(d.decades)), dims=1)
     end
+
+end
 end
 
 
