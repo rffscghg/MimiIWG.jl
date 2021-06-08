@@ -19,6 +19,11 @@ using DelimitedFiles
     MimiIWG.run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir, domestic=true)
     rm(tmp_dir, recursive=true)
 
+    # test the drop discontinuities flag set to `true`
+    tmp_dir = joinpath(@__DIR__, "tmp")
+    MimiIWG.run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir, domestic=true, drop_discontinuities = true)
+    rm(tmp_dir, recursive=true)
+
 end
 
 @testset "Deterministic SCC validation" begin 

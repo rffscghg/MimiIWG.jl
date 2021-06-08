@@ -206,7 +206,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     base, marginal = mcs.models 
 
     # Unpack the payload object 
-    discount_rates, discount_factors, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
+    discount_rates, discount_factors, discontinuity_mismatch, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
     DF = discount_factors[rate_num]
     td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
@@ -221,6 +221,9 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
 
         perturb_marginal_page_emissions!(base, marginal, gas, pyear)
         run(marginal)
+
+        # Stores `true` if the base and marginal models trigger the discontinuity damages in different timesteps (0 otherwise)
+        discontinuity_mismatch[trialnum, j, scenario_num, rate_num] = base[:Discontinuity, :occurdis_occurrencedummy] != marginal[:Discontinuity, :occurdis_occurrencedummy]
 
         td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]   
         pulse_size = gas == :CO2 ? 100_000 : 1          
