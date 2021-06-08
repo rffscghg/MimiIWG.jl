@@ -1,14 +1,15 @@
 """
     run_scc_mcs(model::model_choice; 
-        gas::Union{Symbol, Nothing} = nothing,
-        trials::Int = 10000,
-        perturbation_years::Vector{Int} = _default_perturbation_years,
-        discount_rates::Vector{Float64} = _default_discount_rates, 
-        domestic::Bool = false,
-        output_dir::String = nothing, 
-        save_trials::Bool = false,
-        save_md::Bool = false,
-        tables::Bool = true)
+                gas::Union{Symbol, Nothing} = nothing,
+                trials::Int = 10000,
+                perturbation_years::Vector{Int} = _default_perturbation_years,
+                discount_rates::Vector{Float64} = _default_discount_rates, 
+                domestic::Bool = false,
+                output_dir::Union{String, Nothing} = nothing, 
+                save_trials::Bool = false,
+                tables::Bool = true,
+                drop_discontinuities::Bool = false,
+                save_md::Bool = false)
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
