@@ -44,7 +44,7 @@ The main available functions are:
 
 - `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0.03)`
 
-- `MimiIWG.run_scc_mcs(MODEL_NAME; gas=:CO2, trials=10000, perturbation_years=2010:5:2050, discount_rates=[0.025, 0.03, 0.05])`
+- `MimiIWG.run_scc_mcs(MODEL_NAME; gas=:CO2, trials=10000, perturbation_years=collect(2010:5:2050), discount_rates=[0.025, 0.03, 0.05])`
 
 The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
@@ -61,7 +61,7 @@ The first argument to `MimiIWG.run_scc_mcs` must be the name of one of the three
 MimiIWG.run_scc_mcs(MODEL,
     gas = :CO2,     # specify the greenhouse gas. :CH4 and :N2O also available
     trials = 10000,  # the size of the Monte Carlo sample
-    perturbation_years = 2010:5:2050,  # List of years for which to calculate the SCC
+    perturbation_years = collect(2010:5:2050),  # List of years for which to calculate the SCC
     discount_rates = [0.025, 0.03, 0.05],  # List of discount rates for which to calculate the SCC
     domestic = false,  # Whether to calculate domestic SCC values, in addition to calculating the global values
     output_dir = nothing,  # Output directory. If unspecified, a directory with the following name will be created: "output/MODEL yyyy-mm-dd HH-MM-SS SC-$gas MC$trials"

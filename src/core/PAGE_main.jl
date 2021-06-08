@@ -4,10 +4,24 @@ Returns the IWG version of the PAGE 2009 model for the specified scenario.
 function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
     # Get original version of PAGE
-    m = MimiPAGE2009.getpage()
+    m = MimiPAGE2009.get_model()
 
-    # Reset the time index for the IWG:
-    set_dimension!(m, :time, page_years)
+    # Nowe we need to reset the time dimension from the default PAGE2009 years 
+    # to the IWG PAGE years, or  
+    #
+    # FROM: [2009, 2010, 2020, 2030, 2040, 2050, 2075, 2100, 2150, 2200]
+    # TO: [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300]
+    #
+    # however this reset is illeagl in current resetting time dimension protocol
+    # because it moves the start year forward.  The following is a backdoor way 
+    # to make this change but is unsafe in the way it handles parameter time labels
+    # so it SHOULD NOT be replicated or altered. In the future we should return 
+    # and change page_years to start in 2009 with a missing value and then 
+    # continue to 2300. [Lisa Rennels May 4 2021]
+    
+    dim = Mimi.Dimension(page_years)
+    Mimi._propagate_time_dim!(m.md, dim)
+    Mimi._propagate_first_last!(m.md; first = page_years[1], last = page_years[end])
 
     # Replace modified components
     replace!(m, :GDP => IWG_PAGE_GDP)
