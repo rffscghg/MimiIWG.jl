@@ -60,7 +60,8 @@ function set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenari
     end
 end
 
-# Function from original MimiFUND code, modified for IWG CH4 and N2O
+# Function from original MimiFUND code, modified for IWG CH4 and N2O and removing
+# :SF6 for now as we validate that gas
 function add_fund_marginal_emissions!(m, year = nothing; gas = :CO2, pulse_size = 1e7)
 
     # Add additional emissions to m
@@ -83,9 +84,6 @@ function add_fund_marginal_emissions!(m, year = nothing; gas = :CO2, pulse_size 
     elseif gas == :N2O
         connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globn2o)
         connect_param!(m, :climaten2ocycle, :globn2o, :emissionspulse, :output)
-    elseif gas == :SF6
-        connect_param!(m, :emissionspulse, :input, :emissions, :globsf6)
-        connect_param!(m, :climatesf6cycle, :globsf6, :emissionspulse, :output)
     else
         error("Unknown gas: $gas")
     end
