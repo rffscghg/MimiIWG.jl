@@ -1,6 +1,6 @@
 name = "MimiIWG"
 uuid = "b1d80750-afbf-11e9-0666-4f25b2ea2b65"
-version = "1.0.4-DEV"
+version = "1.0.4"
 
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
