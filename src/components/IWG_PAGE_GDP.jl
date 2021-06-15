@@ -1,5 +1,5 @@
 # Move cons_percap_consumption_0 calculation into first timestep because it can't be in init function because 
-#   gdp_0and pop_0 are no longer external parameters, they're connected to the IWG Scenario choice component
+#   gdp_0and pop_0 are no longer model parameters, they're connected to the IWG Scenario choice component
 @defcomp IWG_PAGE_GDP begin
     # GDP: Gross domestic product $M
     # GRW: GDP growth rate %/year
