@@ -116,12 +116,23 @@ SCC. Units of the returned SCC value are [2007\$ / metric ton of `gas`].
 `scenario_choice` must be one of the following enums: USG1, USG2, USG3, USG4, or USG5.
 `gas` can be one of :CO2, :CH4, or :N2O, and will default to :CO2 if nothing is specified.
 """
+
 function compute_scc(model::model_choice, scenario_choice::scenario_choice = nothing; 
     gas::Union{Symbol, Nothing} = nothing,
     year::Union{Int, Nothing} = nothing, 
     prtp::Union{Float64, Nothing} = nothing,
     eta::Float64 = 0.,
-    domestic::Bool = false)
+    domestic::Bool = false,
+    discount::Union{Float64, Nothing} = nothing
+    )
+
+    if !isnothing(discount)
+        @warn "The `discount` keyword is deprecated. Use `prtp` keyword for constant discounting instead. ",
+        "Now returning the results of calling `compute_scc` with `prtp = $discount`",
+        "and `eta = 0.` by default."
+
+        prtp = discount
+    end
 
     # Check the gas
     if gas === nothing
@@ -153,19 +164,5 @@ function compute_scc(model::model_choice, scenario_choice::scenario_choice = not
     else
         error()
     end
-
-end
-
-function compute_scc(model::model_choice, scenario_choice::scenario_choice = nothing; 
-    gas::Union{Symbol, Nothing} = nothing,
-    year::Union{Int, Nothing} = nothing, 
-    discount::Union{Float64, Nothing} = nothing,
-    domestic::Bool = false)
-         
-    @warn "The `discount` keyword is deprecated. Use `prtp` keyword for constant discounting instead. ",
-            "Now returning the results of calling `compute_scc` with `prtp = $discount`",
-            "and `eta = 0.` by default."
-
-    compute_scc(model, scenario_choice, gas = gas, year = year, prtp = discount, eta = 0., domestic = domestic)
 
 end

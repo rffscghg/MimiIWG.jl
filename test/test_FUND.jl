@@ -25,6 +25,11 @@ _atol = 1e-3
         tmp_dir = joinpath(@__DIR__, "tmp")
         MimiIWG.run_scc_mcs(FUND, gas=:CO2, trials=2, output_dir = tmp_dir, domestic=true)
         rm(tmp_dir, recursive=true)
+
+        # make sure old and new discounting keyword args work
+        scc_old = MimiIWG.compute_scc(FUND, USG1; gas=:CO2, year=2020, discount=0.025)
+        scc_new = MimiIWG.compute_scc(FUND, USG1; gas=:CO2, year=2020, prtp=0.025)
+        @test scc_old ≈ scc_new atol = 1e-12
     end
 
     # Test the deterministic (non Monte Carlo) results from a modal run of FUND against values from the EPA
