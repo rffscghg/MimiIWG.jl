@@ -58,6 +58,18 @@ end
         end
     end 
 
+    @testset "Deterministic Ramsey SCC" begin 
+        
+        scc1 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.01, eta = 1., gas = :CO2, year = 2020)
+        scc2 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.01, eta = 1.5, gas = :CO2, year = 2020)
+
+        scc3 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
+        scc4 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1.5, gas = :CO2, year = 2020)
+
+        @test scc1 > scc2 > scc3 > scc4
+
+    end
+
 end 
 
 end

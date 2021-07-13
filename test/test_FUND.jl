@@ -75,20 +75,32 @@ _atol = 1e-3
     # Nitrous oxide
     @testset "Deterministic SC-N2O validation" begin
     
-    for scen in MimiIWG.scenarios
-        @info("Testing FUND SC-N2O $(MimiIWG.fund_scenario_convert[scen])...")
-        file_idx = findfirst(x -> occursin("$(MimiIWG.fund_scenario_convert[scen]) - N2O", x), validation_files)
-        scen_file = validation_files[file_idx]
-        scen_validation_values = readdlm(joinpath(validation_dir, scen_file), ',')[3, 2:16]
-    
-        idx = 1
-        for year in 2010:10:2050, dr in [0.025, 0.03, 0.05]
-            mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:N2O, year=year, discount=dr)
-            iwg_scc = scen_validation_values[idx]
-            @test mimi_scc ≈ iwg_scc atol = 5.
-            idx += 1
+        for scen in MimiIWG.scenarios
+            @info("Testing FUND SC-N2O $(MimiIWG.fund_scenario_convert[scen])...")
+            file_idx = findfirst(x -> occursin("$(MimiIWG.fund_scenario_convert[scen]) - N2O", x), validation_files)
+            scen_file = validation_files[file_idx]
+            scen_validation_values = readdlm(joinpath(validation_dir, scen_file), ',')[3, 2:16]
+        
+            idx = 1
+            for year in 2010:10:2050, dr in [0.025, 0.03, 0.05]
+                mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:N2O, year=year, discount=dr)
+                iwg_scc = scen_validation_values[idx]
+                @test mimi_scc ≈ iwg_scc atol = 5.
+                idx += 1
+            end
         end
+    end
+
+    @testset "Deterministic Ramsey SCC" begin 
+        
+        scc1 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.01, eta = 1., gas = :CO2, year = 2020)
+        scc2 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.01, eta = 1.5, gas = :CO2, year = 2020)
+
+        scc3 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
+        scc4 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.03, eta = 1.5, gas = :CO2, year = 2020)
+
+        @test scc1 > scc2 > scc3 > scc4
+
     end
 end
 
-end

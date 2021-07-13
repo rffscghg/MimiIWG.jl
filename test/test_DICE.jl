@@ -71,30 +71,39 @@ using XLSX: readxlsx
                 end
             end
         end
-
     end 
 
     @testset "Deterministic SC-N2O validation" begin 
 
-    validation_file = joinpath(@__DIR__, "../data/validation/DICE/SCC_DICE2010_EPA_SCN2O_MC1.xlsx")
-    xf = readxlsx(validation_file)
+        validation_file = joinpath(@__DIR__, "../data/validation/DICE/SCC_DICE2010_EPA_SCN2O_MC1.xlsx")
+        xf = readxlsx(validation_file)
 
-    _atol = 1e-5
+        _atol = 1e-5
 
-    for scenario in MimiIWG.scenarios
-        @info("Testing DICE SC-N2O $(MimiIWG.dice_scenario_convert[scenario])...")
-        @testset "$(string(scenario))" begin 
-            for discount in [0.025, 0.03, 0.05]
-                validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]
-                for (i, year) in enumerate(2010:5:2050)
-                    iwg_scc = validation_data[i]
-                    mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:N2O, year=year, discount=discount)
-                    @test iwg_scc ≈ mimi_scc atol = _atol
+        for scenario in MimiIWG.scenarios
+            @info("Testing DICE SC-N2O $(MimiIWG.dice_scenario_convert[scenario])...")
+            @testset "$(string(scenario))" begin 
+                for discount in [0.025, 0.03, 0.05]
+                    validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]
+                    for (i, year) in enumerate(2010:5:2050)
+                        iwg_scc = validation_data[i]
+                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:N2O, year=year, discount=discount)
+                        @test iwg_scc ≈ mimi_scc atol = _atol
+                    end
                 end
             end
         end
     end
 
-end 
+    @testset "Deterministic Ramsey SCC" begin 
+        
+        scc1 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.01, eta = 1., gas = :CO2, year = 2020)
+        scc2 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.01, eta = 1.5, gas = :CO2, year = 2020)
 
-end
+        scc3 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
+        scc4 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1.5, gas = :CO2, year = 2020)
+
+        @test scc1 > scc2 > scc3 > scc4
+
+    end
+end 

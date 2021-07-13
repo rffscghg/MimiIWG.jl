@@ -293,10 +293,25 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     annual_years = dice_years[1]:horizon
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
+    # --------------------------------------------------------------------------
+    # old method - should be the same, with prtp = discount, and eta = 0.
+
+    # DF = zeros(length(annual_years)) 
+    # first = findfirst(isequal(year), annual_years)
+    # DF[first:end] = [1/(1+discount)^t for t in 0:(length(annual_years)-first)]
+    # scc = sum(annual_md .* DF)
+
+    # --------------------------------------------------------------------------
+    # new method to match FUND
+
     p_idx = findfirst(isequal(year), annual_years)
 
     cpc = m[:neteconomy, :CPC]
-    g_decades = [NaN, [(cpc[t]/cpc[t-1])^(1/10) - 1 for t in 2:length(cpc)]...]
+    # changing NaN to 0., NaN makes the scc error for years like 2005 such that
+    # p_idx = 1 ... 0. just assumes that cpc[1]/cpc[t-1] = 1. which matches the
+    # validation data ... but this should be double checked in the future 
+    # g_decades = [NaN, [(cpc[t]/cpc[t-1])^(1/10) - 1 for t in 2:length(cpc)]...]
+    g_decades = [0., [(cpc[t]/cpc[t-1])^(1/10) - 1 for t in 2:length(cpc)]...]
     g = reduce(vcat, map(x->fill(x, 10), g_decades))
 
     scc = scc_discrete(annual_md[p_idx:end], prtp, eta, g[p_idx:length(annual_md)])
