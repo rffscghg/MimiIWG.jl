@@ -304,10 +304,14 @@ end
 
 function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Nothing}=nothing, gas::Symbol=:CO2, year=nothing, discount=nothing)
 
+    # [LFR TODO] Why update only :ptp_timepreference here?  It seems get_marignal_xx_models
+    # is meant to be only constant discount rating and then we handle eta on the 
+    # back end ???
     base = get_page_model(scenario_choice)
-    if discount != nothing
+    if ! isnothing(discount)
         update_param!(base, :ptp_timepreference, discount * 100)
     end
+
     marginal = Model(base)
 
     if gas == :CO2

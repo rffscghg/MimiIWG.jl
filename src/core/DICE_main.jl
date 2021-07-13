@@ -307,11 +307,13 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     p_idx = findfirst(isequal(year), annual_years)
 
     cpc = m[:neteconomy, :CPC]
+
+    # [LFR TODO]
     # changing NaN to 0., NaN makes the scc error for years like 2005 such that
     # p_idx = 1 ... 0. just assumes that cpc[1]/cpc[t-1] = 1. which matches the
     # validation data ... but this should be double checked in the future 
-    # g_decades = [NaN, [(cpc[t]/cpc[t-1])^(1/10) - 1 for t in 2:length(cpc)]...]
-    g_decades = [0., [(cpc[t]/cpc[t-1])^(1/10) - 1 for t in 2:length(cpc)]...]
+    g1 = 0. # used to be NaN ... see comment above 
+    g_decades = [g1, [(cpc[t]/cpc[t-1])^(1/10) - 1 for t in 2:length(cpc)]...]
     g = reduce(vcat, map(x->fill(x, 10), g_decades))
 
     scc = scc_discrete(annual_md[p_idx:end], prtp, eta, g[p_idx:length(annual_md)])
