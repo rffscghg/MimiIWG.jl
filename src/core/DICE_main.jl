@@ -293,16 +293,6 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     annual_years = dice_years[1]:horizon
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
-    # --------------------------------------------------------------------------
-    # old method - should be the same, with prtp = discount, and eta = 0.
-
-    # DF = zeros(length(annual_years)) 
-    # first = findfirst(isequal(year), annual_years)
-    # DF[first:end] = [1/(1+discount)^t for t in 0:(length(annual_years)-first)]
-    # scc = sum(annual_md .* DF)
-
-    # --------------------------------------------------------------------------
-    # new method
 
     p_idx = findfirst(isequal(year), annual_years)
 
@@ -317,6 +307,8 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     g = reduce(vcat, map(x->fill(x, 10), g_decades))
 
     scc = scc_discrete(annual_md[p_idx:end], prtp, eta, g[p_idx:length(annual_md)])
+
+    # --------------------------------------------------------------------------
 
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
