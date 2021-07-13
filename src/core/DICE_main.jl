@@ -302,7 +302,7 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     # scc = sum(annual_md .* DF)
 
     # --------------------------------------------------------------------------
-    # new method to match FUND
+    # new method
 
     p_idx = findfirst(isequal(year), annual_years)
 

@@ -94,7 +94,6 @@ end
     User must specify an IWG scenario `scenario_choice`.
     If no `gas` is sepcified, will run for an emissions pulse of CO2.
     If no `year` is specified, will run for an emissions pulse in $_default_year.
-    If no `discount` is specified, will return undiscounted marginal damages.
     The `income_normalized` parameter indicates whether the damages from the marginal run should be scaled by the ratio of incomes between the base and marginal runs. 
 """
 function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true, return_m::Bool = false)

@@ -98,12 +98,14 @@ function get_marginaldamages(model::model_choice, scenario_choice::scenario_choi
 end
 
 """
-    compute_scc(model::model_choice, scenario_choice::scenario_choice; 
+    compute_scc(model::model_choice, scenario_choice::scenario_choice = nothing; 
         gas::Union{Symbol, Nothing} = nothing,
-        year::Union{Int, Nothing}=nothing, 
-        prtp::Union{Float64, Nothing}=nothing,
-        eta::Union{Float64, Nothing}=nothing,
-        domestic::Bool = false)
+        year::Union{Int, Nothing} = nothing, 
+        prtp::Union{Float64, Nothing} = nothing,
+        eta::Float64 = 0.,
+        domestic::Bool = false,
+        discount::Union{Float64, Nothing} = nothing
+        )
 
 Return the deterministic Social Cost of the specified `gas` from one run of the IWG version of 
 the Mimi model `model_choice` with socioeconomic scenario `scenario_choice` for the 
