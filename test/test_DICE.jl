@@ -41,7 +41,7 @@ using XLSX: readxlsx
                     validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]
                     for (i, year) in enumerate(2010:5:2050)
                         iwg_scc = validation_data[i]
-                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:CO2, year=year, discount=discount)
+                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:CO2, year=year, prtp=discount)
                         @test iwg_scc ≈ mimi_scc atol = _atol
                     end
                 end
@@ -65,7 +65,7 @@ using XLSX: readxlsx
                     validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]
                     for (i, year) in enumerate(2010:5:2050)
                         iwg_scc = validation_data[i]
-                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:CH4, year=year, discount=discount)
+                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:CH4, year=year, prtp=discount)
                         @test iwg_scc ≈ mimi_scc atol = _atol
                     end
                 end
@@ -87,7 +87,7 @@ using XLSX: readxlsx
                     validation_data = xf["$(MimiIWG.dice_scenario_convert[scenario])_$(discount)_2010-2050"]["A2:I2"]
                     for (i, year) in enumerate(2010:5:2050)
                         iwg_scc = validation_data[i]
-                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:N2O, year=year, discount=discount)
+                        mimi_scc = MimiIWG.compute_scc(DICE, scenario; gas=:N2O, year=year, prtp=discount)
                         @test iwg_scc ≈ mimi_scc atol = _atol
                     end
                 end

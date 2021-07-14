@@ -286,7 +286,7 @@ function get_page_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
     if regional
         md = marg_damages
     elseif domestic
-        md = marg_damages[:, 2]
+        md = marg_damages[:, 2] # US is the second region
     else # global
         md = sum(marg_damages, dims = 2)[:] # sum along second dimension to get global values and convert to Vector 
     end
@@ -311,14 +311,14 @@ end
 function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Nothing}=nothing, gas::Symbol=:CO2, year=nothing, discount=nothing)
 
     base = get_page_model(scenario_choice)
-    # eta (m[:EquityWeighting, :emuc_utilityconvexity]) is zero in all scenarios 
-    # prtp (:ptp_timepreference) defaults to 3%
+    
+    # NOTES:
+    # - eta (m[:EquityWeighting, :emuc_utilityconvexity]) is zero in all scenarios 
+    # - prtp (:ptp_timepreference) defaults to 3%
 
     if discount != nothing
         update_param!(base, :ptp_timepreference, discount * 100)
     end
-
-    # note that the m[:EquityWeighting, :emuc_utilityconvexity] is zero in default PAGE
 
     marginal = Model(base)
 
@@ -398,7 +398,6 @@ function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     end
 
     scc = _compute_page_scc(scenario_choice, gas, year, prtp, eta, domestic=domestic)
-    # scc = _compute_page_scc_old(scenario_choice, gas, year, prtp, domestic=domestic)
 
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc

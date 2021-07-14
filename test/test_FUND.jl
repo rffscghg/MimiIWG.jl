@@ -14,11 +14,11 @@ _atol = 1e-3
         m = MimiIWG.get_model(FUND, MimiIWG.scenarios[1])
         run(m)
 
-        md1 = MimiIWG.get_marginaldamages(FUND, MimiIWG.scenarios[1], gas=:CO2, year=2020, discount=0.)
-        md2 = MimiIWG.get_marginaldamages(FUND, MimiIWG.scenarios[1], gas=:CO2, year=2020, discount=0., regional = true)
+        md1 = MimiIWG.get_marginaldamages(FUND, MimiIWG.scenarios[1])
+        md2 = MimiIWG.get_marginaldamages(FUND, MimiIWG.scenarios[1], regional = true)
 
-        scc1 = MimiIWG.compute_scc(FUND, MimiIWG.scenarios[1], gas=:CO2, year=2020, discount=0.03)
-        scc2 = MimiIWG.compute_scc(FUND, MimiIWG.scenarios[1], gas=:CO2, year=2020, discount=0.03, domestic = true)
+        scc1 = MimiIWG.compute_scc(FUND, MimiIWG.scenarios[1])
+        scc2 = MimiIWG.compute_scc(FUND, MimiIWG.scenarios[1], domestic = true)
         @test scc2 < scc1  # test global SCC is larger than domestic SCC
 
         # Test monte carlo simulation runs without error
@@ -45,7 +45,7 @@ _atol = 1e-3
         
             idx = 1
             for year in 2010:10:2050, dr in [0.025, 0.03, 0.05]
-                mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:CO2, year=year, discount=dr)
+                mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:CO2, year=year, prtp=dr)
                 iwg_scc = scen_validation_values[idx]
                 @test mimi_scc ≈ iwg_scc atol = _atol
                 idx += 1
@@ -64,7 +64,7 @@ _atol = 1e-3
         
             idx = 1
             for year in 2010:10:2050, dr in [0.025, 0.03, 0.05]
-                mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:CH4, year=year, discount=dr)
+                mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:CH4, year=year, prtp=dr)
                 iwg_scc = scen_validation_values[idx]
                 @test mimi_scc ≈ iwg_scc atol = _atol
                 idx += 1
@@ -83,7 +83,7 @@ _atol = 1e-3
         
             idx = 1
             for year in 2010:10:2050, dr in [0.025, 0.03, 0.05]
-                mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:N2O, year=year, discount=dr)
+                mimi_scc = MimiIWG.compute_scc(FUND, scen, gas=:N2O, year=year, prtp=dr)
                 iwg_scc = scen_validation_values[idx]
                 @test mimi_scc ≈ iwg_scc atol = 5.
                 idx += 1

@@ -51,7 +51,7 @@ end
                 discount    = validation_data[line, 2]
                 iwg_scc     = validation_data[line, 3] * MimiIWG.page_inflator     # 2000$ => $2007
 
-                mimi_scc = MimiIWG.compute_scc(PAGE, scenario_convert_flip[scenario], year=year, discount=discount)
+                mimi_scc = MimiIWG.compute_scc(PAGE, scenario_convert_flip[scenario], year=year, prtp=discount)
                 # println(iwg_scc, ",", mimi_scc)
                 @test iwg_scc ≈ mimi_scc atol = _atol
             end

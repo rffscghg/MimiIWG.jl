@@ -293,22 +293,22 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     annual_years = dice_years[1]:horizon
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
-
     p_idx = findfirst(isequal(year), annual_years)
 
     cpc = m[:neteconomy, :CPC]
 
-    # [LFR TODO]
-    # changing NaN to 0., NaN makes the scc error for years like 2005 such that
-    # p_idx = 1 ... 0. just assumes that cpc[1]/cpc[t-1] = 1. which matches the
-    # validation data ... but this should be double checked in the future 
-    g1 = 0. # used to be NaN ... see comment above 
+    # g1 changed from NaN to repeat the first value in g_decades
+    #
+    # Keeping g1 as NaN causes errors when calculating the discount factors if
+    # year < 2015 so p_idx = 1. We end up with NaNs propagating through, because 
+    # we put 1. in the first discount factor spot, but end up with NaNs in the next 
+    # 9 spots.  We could also set g1 to 0. using slightly different assumptions.
+    
+    g1 = (cpc[2]/cpc[1])^(1/10) - 1 # could also go with 0. here? Or NaN but breaks year < 2015
     g_decades = [g1, [(cpc[t]/cpc[t-1])^(1/10) - 1 for t in 2:length(cpc)]...]
     g = reduce(vcat, map(x->fill(x, 10), g_decades))
 
     scc = scc_discrete(annual_md[p_idx:end], prtp, eta, g[p_idx:length(annual_md)])
-
-    # --------------------------------------------------------------------------
 
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
