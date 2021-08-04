@@ -127,7 +127,7 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
     if discount != 0 
         DF = zeros(nyears)
         first = MimiFUND.getindexfromyear(year)
-        DF[first:end] = [1/(1+prtp)^t for t in 0:(nyears-first)]
+        DF[first:end] = [1/(1+discount)^t for t in 0:(nyears-first)]
         md = diff[1:nyears, :] .* DF
     else
         md = diff[1:nyears, :]
@@ -155,19 +155,17 @@ function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
         error("$year is not a valid year; can only calculate SCC within the model's time index $fund_years.")
     end
 
-    if domestic
-        all_md, m = get_fund_marginaldamages(scenario_choice, gas, year, 0., income_normalized = income_normalized, regional = true, return_m = true)
-        md = all_md[:, 1]
-    else
-        md, m = get_fund_marginaldamages(scenario_choice, gas, year, 0., income_normalized = income_normalized, regional = false, return_m = true)
-    end
-        
     p_idx = MimiFUND.getindexfromyear(year)
     nyears = length(fund_years)
 
-    global_cpc = m[:socioeconomic, :globalconsumption] ./ sum(m[:socioeconomic, :population], dims=2)    #per capita global consumption
-    g = [global_cpc[t]/global_cpc[t-1] - 1 for t in p_idx:nyears]
+    md, m = get_fund_marginaldamages(scenario_choice, gas, year, 0., income_normalized = income_normalized, regional = true, return_m = true)
+    cpc = m[:socioeconomic, :consumption] ./ m[:socioeconomic, :population] # per capita consumption
 
-    return scc_discrete(md[p_idx:end], prtp, eta, g) 
+    if domestic  
+        cpc = cpc[:, 1] # US is the first region
+        md = md[:, 1]
+    end
+
+    return get_discrete_scc(md[p_idx:end, :], prtp, eta, cpc[p_idx:nyears, :], collect(fund_years[p_idx:end]))
     
 end

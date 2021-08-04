@@ -131,17 +131,42 @@ function make_summary_table(output_dir, gas, discount_rates, perturbation_years,
     nothing 
 end
 
-function discrete_df(prtp, eta, g)
-    r = prtp .+ eta .* g     # calculate annual discount rates
-    df = [1, [prod([(1 + r[i])^-1 for i in 2:t]) for t in 2:length(r)]...] # calculate the discount factor for each year using discrete time discounting
-    return df
+"""
+    get_discrete_scc(md::Array{Float64, N}, prtp::Float64, eta::Float64, 
+                    cpc::Array{Float64, N}, years::Vector;
+                    timestep_multipliers = nothing, normalization_region = nothing) where N
+
+Calculate the social cost of carbon  using the `eta` as the inequality
+aversion parameter and `prtp` as the pure rate of time preference.  `cpc` is a 
+matrix of per capita consumption levels with time in the rows and regions on the
+columns, mirroring the structure of the `md` marginal damages. The `years` gives
+the actual years pertaining to the rows and the optional the`timestep_multipliers`
+are the lengths by which to multiply timestep-level discounted damages and defaults 
+to all ones ie. that the entered marginal damages represent damages per period. 
+The optional `normalization_region` index can be used to provide a region for 
+normalization, or if left out the normalization will be done with the global average 
+cpc.
+"""
+
+function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64, 
+                            cpc::Array{T2, N}, years::Vector;
+                            timestep_multipliers = nothing, normalization_region = nothing) where {T1, T2, N}
+
+    if isnothing(timestep_multipliers)
+        timestep_multipliers = ones(size(md, 1))
+    end
+    df = get_discount_factors(prtp, eta, cpc, years; normalization_region = normalization_region)
+    npv_md = sum((md .* df), dims = 2) .* timestep_multipliers # calculate net present value of marginal damages in each year
+    scc = sum(npv_md)    # sum damages to the scc
+    
+    return scc 
 end
 
-# marginaldamages: stream of global marginal damages starting in the scc emission year
-# g: stream of annual global gdp/cap growth rates starting in the scc emission year 
-function scc_discrete(marginaldamages, prtp, eta, g; timestep=1)
-    discount_factor = discrete_df(prtp, eta, g)   
-    npv_md = discount_factor .* marginaldamages * timestep    # calculate net present value of marginal damages in each year
-    scc = sum(npv_md)    # sum damages to the scc
-    return scc
+function get_discount_factors(prtp::Float64, eta::Float64, cpc::Array{T, N}, years::Vector; normalization_region = nothing) where {T, N}
+    
+    cpc_0 = isnothing(normalization_region) ? mean(cpc[1, :]) : cpc[1, normalization_region]
+    t_mat = repeat(years, 1, size(cpc,2)) .- years[1]
+    df = ((cpc_0 ./ cpc) .^ eta) .* ((1 + prtp).^(-t_mat))
+     
+    return df
 end

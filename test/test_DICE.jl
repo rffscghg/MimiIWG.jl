@@ -10,12 +10,19 @@ using XLSX: readxlsx
         m = MimiIWG.get_model(DICE, MimiIWG.scenarios[1])
         run(m)
 
-        md = MimiIWG.get_marginaldamages(DICE, MimiIWG.scenarios[1])
-
+        md1 = MimiIWG.get_marginaldamages(DICE, MimiIWG.scenarios[1])
+        md2 = MimiIWG.get_marginaldamages(DICE, MimiIWG.scenarios[1], regional = true) # doesn't do anything
+        md3 = MimiIWG.get_marginaldamages(DICE, MimiIWG.scenarios[1], discount = 0.03)
+    
+        @test sum(md2, dims = 2) ≈ md1 atol = 1e-12 # sum regional to global
+        @test sum(md3) < sum(md1) # discount of 0. v discount of 0.03
+        
         scc1 = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1])
         scc2 = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1], domestic = true)
         @test scc2 == 0.1 * scc1
 
+        # Test monte carlo simulation runs without error
+        # bug: a bug in VSCode makes this crash the terminal when run line by line
         tmp_dir = joinpath(@__DIR__, "tmp")
         MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir, domestic = true)
         rm(tmp_dir, recursive=true)
@@ -49,7 +56,6 @@ using XLSX: readxlsx
         end
 
     end 
-
     
     @testset "Deterministic SC-CH4 validation" begin 
 
@@ -103,7 +109,7 @@ using XLSX: readxlsx
         scc3 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
         scc4 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1.5, gas = :CO2, year = 2020)
 
-        @test scc1 > scc2 > scc3 > scc4
+        # TODO we need some testing here
 
     end
 end 
