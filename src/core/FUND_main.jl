@@ -141,15 +141,31 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
 end
 
 """
-    Returns the Social Cost of `gas` for a given `year` and discount rate determined
-    by `eta` and `prtp` from one deterministic run of the IWG-FUND model.
-    User must specify an IWG scenario `scenario_choice`.
-    If no `gas` is specified, will retrun the SC-CO2.
-    If no `year` is specified, will return SC for $_default_year.
-    If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
-"""
-function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, prtp::Float64; eta::Float64 = 0., domestic::Bool = false, income_normalized::Bool = true)
+    compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
+                        prtp::Float64; eta::Float64 = 0., domestic::Bool = false, 
+                        equity_weighting::Bool = false, income_normalized::Bool = true,
+                        normalization_region::Union{Int, Nothing} = nothing)
 
+Returns the Social Cost of `gas` for a given `year` and discount rate determined 
+by `eta` and `prtp` from one deterministic run of the IWG-FUND model. User must 
+specify an IWG scenario `scenario_choice`.
+
+Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
+which default to `false` and `nothing`.
+
+If no `gas` is specified, will retrun the SC-CO2.
+If no `year` is specified, will return SC for $_default_year.
+If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
+"""
+function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
+                        prtp::Float64; eta::Float64 = 0., domestic::Bool = false, 
+                        equity_weighting::Bool = false, income_normalized::Bool = true,
+                        normalization_region::Union{Int, Nothing} = nothing)
+
+    if !isnothing(normalization_region) && !(equity_weighting)
+        error("Cannot set a normalization_region if equity_weighting is false.")
+    end
+    
     # Check the emissions year
     if !(year in fund_years)
         error("$year is not a valid year; can only calculate SCC within the model's time index $fund_years.")
@@ -159,13 +175,17 @@ function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     nyears = length(fund_years)
 
     md, m = get_fund_marginaldamages(scenario_choice, gas, year, 0., income_normalized = income_normalized, regional = true, return_m = true)
-    cpc = m[:socioeconomic, :consumption] ./ m[:socioeconomic, :population] # per capita consumption
+    consumption = m[:socioeconomic, :consumption]
+    pop = m[:socioeconomic, :population]
 
-    if domestic  
-        cpc = cpc[:, 1] # US is the first region
+    if domestic
+        consumption = consumption[:, 1] # US is the first region
+        pop = pop[:, 1]
         md = md[:, 1]
     end
 
-    return get_discrete_scc(md[p_idx:end, :], prtp, eta, cpc[p_idx:nyears, :], collect(fund_years[p_idx:end]))
+    return get_discrete_scc(md[p_idx:end, :], prtp, eta, consumption[p_idx:nyears, :], 
+                            pop[p_idx:nyears, :], collect(fund_years[p_idx:end]), 
+                            equity_weighting = equity_weighting, normalization_region = normalization_region)
     
 end

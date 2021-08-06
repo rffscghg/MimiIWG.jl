@@ -364,12 +364,24 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
 end  
 
 """
-    Returns the Social Cost of the specified `gas` for a given `year` and `discount` rate from one deterministic run of the IWG-PAGE model.
-    User must specify an IWG scenario `scenario_choice`.
-    If no `year` is specified, will return SCC for $_default_year.
-    If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
+    compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
+                        prtp::Float64; eta::Float64 = 0., domestic::Bool = false, 
+                        equity_weighting::Bool = false, income_normalized::Bool = true)
+
+Returns the Social Cost of `gas` for a given `year` and discount rate determined 
+by `eta` and `prtp` from one deterministic run of the IWG-PAGE model. User must 
+specify an IWG scenario `scenario_choice`.
+
+Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
+which default to `false` and `nothing`.
+
+If no `gas` is specified, will retrun the SC-CO2.
+If no `year` is specified, will return SC for $_default_year.
+If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
 """
-function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, prtp::Float64; eta::Float64 = 0., domestic=false)
+function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
+                            prtp::Float64; eta::Float64 = 0., domestic::Bool=false, 
+                            equity_weighting::Bool = false, normalization_region::Union{Int, Nothing} = nothing)
 
     # Check the emissions year
     _need_to_interpolate = false
@@ -391,20 +403,21 @@ function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
 
     pulse_size = gas == :CO2 ? 100_000 : 1
     md = ((marg_impacts .- base_impacts) ./ pulse_size)
-    
-    cpc = base[:GDP, :cons_consumption] ./ base[:GDP, :pop_population] # per capita consumption
 
-    if domestic  
-        cpc = cpc[:, 2] # US is the second region
+    consumption = base[:GDP, :cons_consumption]
+    pop = base[:GDP, :pop_population]
+
+    if domestic
+        consumption = consumption[:, 2] # US is the second region
+        pop = pop[:, 2]
         md = md[:, 2]
     end
 
     p_idx = MimiIWG.getpageindexfromyear(year)
 
-    # note here we are not actually passing annual marginal damages, we are passing
-    # them per time period, so we don't need to pass in timestep lengths (they 
-    # will default to all ones) even though our timesteps here are NOT annual
-    scc = get_discrete_scc(md[p_idx:end, :], prtp, eta, cpc[p_idx:length(MimiIWG.page_years), :], page_years[p_idx:end])
+    scc = get_discrete_scc(md[p_idx:end, :], prtp, eta, consumption[p_idx:length(MimiIWG.page_years), :], 
+                            pop[p_idx:length(MimiIWG.page_years), :], page_years[p_idx:end], 
+                            equity_weighting = equity_weighting, normalization_region = normalization_region)
     scc = scc * MimiIWG.page_inflator
 
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year

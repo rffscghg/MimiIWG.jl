@@ -40,15 +40,17 @@ julia> using MimiIWG
 The main available functions are:
 - `MimiIWG.get_model(MODEL_NAME, SCENARIO_CHOICE)`
 
-- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0)`
+- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0., regional=false)`
 
-- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0.03)`
+- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, prtp=0.03, eta = 0., domestic=false, equity_weighting=false)`
 
 - `MimiIWG.run_scc_mcs(MODEL_NAME; gas=:CO2, trials=10000, perturbation_years=collect(2010:5:2050), discount_rates=[0.025, 0.03, 0.05])`
 
 The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
 The choices for `SCENARIO_CHOICE` are `USG1`, `USG2`, `USG3`, `USG4`, and `USG5`. For more information on these scenarios, see below.
+
+For discount rates, the `discount` parameter in `MimiIWG.get_marginaldamages` indicates a constant discount rate, while `prtp` and `eta` in `MimiIWG.compute_scc` parameterize a Ramsey discount rating scheme (ie. a `discount` used for the former is equivalent to a `prtp` = `discount` combined with `eta` = 0. for the latter). 
 
 For example uses of the code, see ["examples/example.ipynb"](https://github.com/rffscghg/MimiIWG.jl/blob/master/examples/example.ipynb).
 

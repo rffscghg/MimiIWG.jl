@@ -104,19 +104,28 @@ end
         prtp::Union{Float64, Nothing} = nothing,
         eta::Float64 = 0.,
         domestic::Bool = false,
-        discount::Union{Float64, Nothing} = nothing
+        discount::Union{Float64, Nothing} = nothing, 
+        equity_weighting::Bool = false,
+        normalization_region::Union{Int, Nothing} = nothing
         )
 
 Return the deterministic Social Cost of the specified `gas` from one run of the IWG version of 
 the Mimi model `model_choice` with socioeconomic scenario `scenario_choice` for the 
 specified year `year` and discounting with rate specified by `prtp` and `eta`.` 
 
-If `domestic` equals `true`, then only domestic damages are used to calculate the 
-SCC. Units of the returned SCC value are [2007\$ / metric ton of `gas`]. 
-
 `model_choice` must be one of the following enums: DICE, FUND, or PAGE.
 `scenario_choice` must be one of the following enums: USG1, USG2, USG3, USG4, or USG5.
 `gas` can be one of :CO2, :CH4, or :N2O, and will default to :CO2 if nothing is specified.
+
+Units of the returned SCC value are [2007\$ / metric ton of `gas`]. 
+
+If `domestic` is `true`, then only domestic damages are used to calculate the 
+SCC. 
+
+If `equity_weighting` is true, equity weighting is used discounting, and if 
+`normalization_region` is not nothing, that region is used for the equity weighting 
+normalization region.
+
 """
 
 function compute_scc(model::model_choice, scenario_choice::scenario_choice = nothing; 
@@ -125,14 +134,19 @@ function compute_scc(model::model_choice, scenario_choice::scenario_choice = not
     prtp::Union{Float64, Nothing} = nothing,
     eta::Float64 = 0.,
     domestic::Bool = false,
-    discount::Union{Float64, Nothing} = nothing
+    discount::Union{Float64, Nothing} = nothing,
+    equity_weighting::Bool = false, 
+    normalization_region::Union{Int, Nothing} = nothing
     )
+
+    if !isnothing(normalization_region) && !(equity_weighting)
+        error("Cannot set a normalization_region if equity_weighting is false.")
+    end
 
     if !isnothing(discount)
         @warn "The `discount` keyword is deprecated. Use `prtp` keyword for constant discounting instead. ",
         "Now returning the results of calling `compute_scc` with `prtp = $discount`",
         "and `eta = 0.` by default."
-
         prtp = discount
     end
 
@@ -158,11 +172,11 @@ function compute_scc(model::model_choice, scenario_choice::scenario_choice = not
 
     # dispatch on provided model choice
     if model == DICE 
-        return compute_dice_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic)
+        return compute_dice_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region)
     elseif model == FUND 
-        return compute_fund_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic)
+        return compute_fund_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region)
     elseif model == PAGE 
-        return compute_page_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic)
+        return compute_page_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region)
     else
         error()
     end

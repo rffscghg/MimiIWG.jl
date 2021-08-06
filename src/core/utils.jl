@@ -132,41 +132,57 @@ function make_summary_table(output_dir, gas, discount_rates, perturbation_years,
 end
 
 """
-    get_discrete_scc(md::Array{Float64, N}, prtp::Float64, eta::Float64, 
-                    cpc::Array{Float64, N}, years::Vector;
-                    timestep_multipliers = nothing, normalization_region = nothing) where N
+    get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64, 
+                        consumption::Array{T2, N}, pop::Array{T3, N}, 
+                        years::Vector; normalization_region = nothing, 
+                        equity_weighting::Bool = false) where {T1, T2, T3, N}
 
-Calculate the social cost of carbon  using the `eta` as the inequality
-aversion parameter and `prtp` as the pure rate of time preference.  `cpc` is a 
-matrix of per capita consumption levels with time in the rows and regions on the
-columns, mirroring the structure of the `md` marginal damages. The `years` gives
-the actual years pertaining to the rows and the optional the`timestep_multipliers`
-are the lengths by which to multiply timestep-level discounted damages and defaults 
-to all ones ie. that the entered marginal damages represent damages per period. 
-The optional `normalization_region` index can be used to provide a region for 
-normalization, or if left out the normalization will be done with the global average 
-cpc.
+Calculate the social cost of carbon using the following arguments:
+- `md` - marginal damages in a matrix with time in the rows and regions in the column, 
+    importantly noting that these damages must be per REGION not assumed to be ANNUAL
+- `eta` - the inequality aversion parameter
+- `prtp` - pure rate of time preference
+- `consumption` - consumption levels in a matrix with time in the rows and regions on the columns
+- `pop` - population numbers in a matrix with time in the rows and regions on the columns
+- `years` - the years pertaining to the rows 
+- `normalization_region` - the index for the region for normalization, or left as default `nothing` 
+    out the normalization will be done with the global average cpc
+- `equity_weighting` - indicates if we should use equity weighting or not, defaults to false
 """
 
 function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64, 
-                            cpc::Array{T2, N}, years::Vector;
-                            timestep_multipliers = nothing, normalization_region = nothing) where {T1, T2, N}
+                            consumption::Array{T2, N}, pop::Array{T3, N}, 
+                            years::Vector; normalization_region = nothing, 
+                            equity_weighting::Bool = false) where {T1, T2, T3, N}
 
-    if isnothing(timestep_multipliers)
-        timestep_multipliers = ones(size(md, 1))
-    end
-    df = get_discount_factors(prtp, eta, cpc, years; normalization_region = normalization_region)
-    npv_md = sum((md .* df), dims = 2) .* timestep_multipliers # calculate net present value of marginal damages in each year
+    df = get_discount_factors(prtp, eta, consumption, pop, years; normalization_region = normalization_region, equity_weighting = equity_weighting) 
+    npv_md = sum((md .* df), dims = 2) # calculate net present value of marginal damages in each year
     scc = sum(npv_md)    # sum damages to the scc
-    
-    return scc 
+
+    return scc
 end
 
-function get_discount_factors(prtp::Float64, eta::Float64, cpc::Array{T, N}, years::Vector; normalization_region = nothing) where {T, N}
+function get_discount_factors(prtp::Float64, eta::Float64, 
+                                consumption::Array{T1, N}, pop::Array{T2, N}, 
+                                years::Vector; normalization_region = nothing, 
+                                equity_weighting::Bool = false) where {T1, T2, N}
     
-    cpc_0 = isnothing(normalization_region) ? mean(cpc[1, :]) : cpc[1, normalization_region]
-    t_mat = repeat(years, 1, size(cpc,2)) .- years[1]
+    num_regions = size(consumption, 2)
+
+    if isnothing(normalization_region)
+        cpc_0 = sum(consumption[1,:]) / sum(pop[1, :])
+    else
+        cpc_0 = consumption[1, normalization_region] / pop[1, normalization_region]
+    end
+
+    if equity_weighting
+        cpc = consumption ./ pop
+    else
+        cpc = repeat(sum(consumption, dims = 2) ./ sum(pop, dims = 2), 1, num_regions)
+    end
+
+    t_mat = repeat(years, 1, num_regions) .- years[1]
     df = ((cpc_0 ./ cpc) .^ eta) .* ((1 + prtp).^(-t_mat))
-     
+
     return df
 end

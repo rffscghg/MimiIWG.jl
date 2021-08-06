@@ -21,11 +21,11 @@ using XLSX: readxlsx
         scc2 = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1], domestic = true)
         @test scc2 == 0.1 * scc1
 
-        # Test monte carlo simulation runs without error
-        # bug: a bug in VSCode makes this crash the terminal when run line by line
-        tmp_dir = joinpath(@__DIR__, "tmp")
-        MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir, domestic = true)
-        rm(tmp_dir, recursive=true)
+        # # Test monte carlo simulation runs without error
+        # # bug: a bug in VSCode makes this crash the terminal when run line by line
+        # tmp_dir = joinpath(@__DIR__, "tmp")
+        # MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir, domestic = true)
+        # rm(tmp_dir, recursive=true)
 
         # make sure old and new discounting keyword args work
         scc_old = MimiIWG.compute_scc(DICE, USG1; gas=:CO2, year=2020, discount=0.025)
@@ -101,15 +101,18 @@ using XLSX: readxlsx
         end
     end
 
-    @testset "Deterministic Ramsey SCC" begin 
-        
-        scc1 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.01, eta = 1., gas = :CO2, year = 2020)
-        scc2 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.01, eta = 1.5, gas = :CO2, year = 2020)
+    @testset "Deterministic SCC Options" begin 
 
-        scc3 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
-        scc4 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1.5, gas = :CO2, year = 2020)
+        scc1 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true)
+        scc2 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true, equity_weighting = true)
+        @test scc1 ==  scc2 # no difference since global model
 
-        # TODO we need some testing here
+        @test_throws ErrorException MimiIWG.compute_scc(DICE, MimiIWG.USG1, normalization_region = 1) # can't set norm region without equity weighitng
+        scc3 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, eta  = 1., normalization_region = 1, equity_weighting = true) # normalize by US
+        scc4 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, eta = 1., equity_weighting = true)
+        @test scc4 == scc4 # no difference since global model
+
+        # TODO we need some testing here - more comparisons, check normalization region option, etc. 
 
     end
 end 

@@ -25,11 +25,11 @@ _atol = 1e-3
         scc2 = MimiIWG.compute_scc(FUND, MimiIWG.scenarios[1], domestic = true)
         @test scc2 < scc1  # test global SCC is larger than domestic SCC
 
-        # Test monte carlo simulation runs without error
-        # bug: a bug in VSCode makes this crash the terminal when run line by line
-        tmp_dir = joinpath(@__DIR__, "tmp")
-        MimiIWG.run_scc_mcs(FUND, gas=:CO2, trials=2, output_dir = tmp_dir, domestic=true)
-        rm(tmp_dir, recursive=true)
+        # # Test monte carlo simulation runs without error
+        # # bug: a bug in VSCode makes this crash the terminal when run line by line
+        # tmp_dir = joinpath(@__DIR__, "tmp")
+        # MimiIWG.run_scc_mcs(FUND, gas=:CO2, trials=2, output_dir = tmp_dir, domestic=true)
+        # rm(tmp_dir, recursive=true)
 
         # make sure old and new discounting keyword args work
         scc_old = MimiIWG.compute_scc(FUND, USG1; gas=:CO2, year=2020, discount=0.025)
@@ -96,16 +96,18 @@ _atol = 1e-3
         end
     end
 
-    @testset "Deterministic Ramsey SCC" begin 
+    @testset "Deterministic SCC Options" begin 
         
-        scc1 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.01, eta = 1., gas = :CO2, year = 2020)
-        scc2 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.01, eta = 1.5, gas = :CO2, year = 2020)
+        scc2 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true)
+        scc3 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true, equity_weighting = true)
+        @test scc2 ==  scc3 # no difference for equity weighting since domestic - TODO is this right (ask David)
 
-        scc3 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
-        scc4 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, prtp = 0.03, eta = 1.5, gas = :CO2, year = 2020)
+        @test_throws ErrorException MimiIWG.compute_scc(FUND, MimiIWG.USG1, normalization_region = 1) # can't set norm region without equity weighitng
+        scc4 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, eta = 1., normalization_region = 1, equity_weighting = true) # normalize by US
+        scc5 = MimiIWG.compute_scc(FUND, MimiIWG.USG1, eta = 1., equity_weighting = true)
+        @test scc4 < scc5
 
-        # TODO we need some testing here
-
+        # TODO more testing here
     end
 end
 
