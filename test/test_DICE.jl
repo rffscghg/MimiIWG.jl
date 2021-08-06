@@ -103,16 +103,19 @@ using XLSX: readxlsx
 
     @testset "Deterministic SCC Options" begin 
 
-        scc1 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true)
-        scc2 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true, equity_weighting = true)
-        @test scc1 ==  scc2 # no difference since global model
+        # basic option
+        scc_base = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
+        # equity weighting option, and normalized by the US
+        scc_eq = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, equity_weighting = true)
+        scc_eq_norm = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta  = 1., gas = :CO2, year = 2020, normalization_region = 1, equity_weighting = true)
+        # domestic option
+        scc_dom = MimiIWG.compute_scc(DICE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true)
 
+        @test 10 * scc_dom == scc_base == scc_eq == scc_eq_norm 
+        
+        # test errors
         @test_throws ErrorException MimiIWG.compute_scc(DICE, MimiIWG.USG1, normalization_region = 1) # can't set norm region without equity weighitng
-        scc3 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, eta  = 1., normalization_region = 1, equity_weighting = true) # normalize by US
-        scc4 = MimiIWG.compute_scc(DICE, MimiIWG.USG1, eta = 1., equity_weighting = true)
-        @test scc4 == scc4 # no difference since global model
-
-        # TODO we need some testing here - more comparisons, check normalization region option, etc. 
-
+        @test_throws ErrorException MimiIWG.compute_scc(DICE, MimiIWG.USG1, equity_weighting = true, domestic = true) # can't have equity weighting with domestic
+ 
     end
 end 

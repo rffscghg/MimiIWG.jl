@@ -158,8 +158,12 @@ function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
                         equity_weighting::Bool = false, income_normalized::Bool = true,
                         normalization_region::Union{Int, Nothing} = nothing)
 
-    if !isnothing(normalization_region) && !(equity_weighting)
-        error("Cannot set a normalization_region if equity_weighting is false.")
+    # check equity weighting cases, the only options are (1) only domestic (2) only 
+    # equity weighting (3) equity weighting with a normalizationr egion
+    if equity_weighting && domestic
+        error("Cannot set both domestic and equity weighting to true at the same time for SCC computation")
+    elseif !(equity_weighting) && !isnothing(normalization_region)
+        error("Cannot set a normalization region if equity weighting is false for SCC computation.")
     end
     
     # Check the emissions year

@@ -380,6 +380,14 @@ function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
                             prtp::Float64; eta::Float64 = 0., domestic::Bool=false, 
                             equity_weighting::Bool = false, normalization_region::Union{Int, Nothing} = nothing)
 
+    # check equity weighting cases, the only options are (1) only domestic (2) only 
+    # equity weighting (3) equity weighting with a normalization region
+    if equity_weighting && domestic
+        error("Cannot set both domestic and equity weighting to true at the same time for SCC computation")
+    elseif !(equity_weighting) && !isnothing(normalization_region)
+        error("Cannot set a normalization region if equity weighting is false for SCC computation.")
+    end
+
     # Check the emissions year
     _need_to_interpolate = false
     if year < page_years[1] || year > page_years[end]

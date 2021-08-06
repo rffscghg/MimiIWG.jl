@@ -290,8 +290,14 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
                             equity_weighting::Bool = false, horizon::Int = _default_horizon,
                             normalization_region::Union{Int, Nothing} = nothing)
 
-    if equity_weighting
-        @warn("DICE is a global model, equity weighting will have no effect.")
+    # check equity weighting cases, the only options are (1) only domestic (2) only 
+    # equity weighting (3) equity weighting with a normalizationr egion
+    if equity_weighting && domestic
+        error("Cannot set both domestic and equity weighting to true at the same time for SCC computation")
+    elseif !(equity_weighting) && !isnothing(normalization_region)
+        error("Cannot set a normalization region if equity weighting is false for SCC computation.")
+    elseif equity_weighting
+        @warn("DICE is a global model, equity weighting will have no effect on SCC computation results.")
     end
 
     if !isnothing(normalization_region) && !(equity_weighting)

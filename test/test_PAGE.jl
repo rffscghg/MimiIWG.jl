@@ -66,14 +66,19 @@ end
 
     @testset "Deterministic SCC Options" begin 
         
-        scc2 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true)
-        scc3 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true, equity_weighting = true)
-        @test scc2 ==  scc3 # no difference for equity weighting since domestic - TODO is this right (ask David)
+       # basic option
+       scc_base = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
+       # equity weighting option, and normalized by the US
+       scc_eq = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, equity_weighting = true)
+       scc_eq_norm = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta  = 1., gas = :CO2, year = 2020, normalization_region = 1, equity_weighting = true)
+       # domestic option
+       scc_dom = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true)
 
-        @test_throws ErrorException MimiIWG.compute_scc(PAGE, MimiIWG.USG1, normalization_region = 1) # can't set norm region without equity weighitng
-        scc4 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, eta = 1., normalization_region = 1, equity_weighting = true) # normalize by US
-        scc5 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, eta = 1., equity_weighting = true)
-        @test scc5 < scc4
+      @test scc_eq < scc_eq_norm
+
+       # test errors
+       @test_throws ErrorException MimiIWG.compute_scc(PAGE, MimiIWG.USG1, normalization_region = 1) # can't set norm region without equity weighitng
+       @test_throws ErrorException MimiIWG.compute_scc(PAGE, MimiIWG.USG1, equity_weighting = true, domestic = true) # can't have equity weighting with domestic
 
     end
 
