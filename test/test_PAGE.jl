@@ -73,7 +73,7 @@ end
         @test_throws ErrorException MimiIWG.compute_scc(PAGE, MimiIWG.USG1, normalization_region = 1) # can't set norm region without equity weighitng
         scc4 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, eta = 1., normalization_region = 1, equity_weighting = true) # normalize by US
         scc5 = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, eta = 1., equity_weighting = true)
-        @test scc4 < scc5
+        @test scc5 < scc4
 
     end
 
