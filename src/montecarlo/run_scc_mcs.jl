@@ -17,8 +17,12 @@
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
-5 socioeconomic scenarios, and for all specified `perturbation_years` and `discount_rates`. If `domestic` 
-equals `true`, then SCC values will also be calculated using only domestic damages. 
+5 socioeconomic scenarios, and for all specified `perturbation_years` and discount_rates specified by
+pairs of `prtp` and `eta`. 
+
+If `domestic` equals `true`, then SCC values will also be calculated using only domestic damages. 
+
+If `equity_weighting` is true, then the SCC will be
 
 `gas` may be one of :CO2, :CH4, or :N2O. If none is specified, it will default to :CO2.
 

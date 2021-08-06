@@ -39,7 +39,8 @@ function get_dice_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 end 
 
 """
-set_dice_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
+    Sets DICE scenario parameters with the arguments:
+    
     m: a Mimi model with and IWGScenarioChoice component
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
@@ -134,7 +135,7 @@ function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 end
 
 """
-    Returns a dicitonary of IWG parameters that are the same for all IWG scenarios. (Does not include scenario-specific parameters.)
+    Returns a dictionary of IWG parameters that are the same for all IWG scenarios. (Does not include scenario-specific parameters.)
 """
 function load_dice_iwg_params()
 
@@ -273,21 +274,16 @@ function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::In
 end
 
 """
-    compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
-                        prtp::Float64; eta::Float64 = 0., domestic::Bool = false, 
-                        equity_weighting::Bool = false, income_normalized::Bool = true,
-                        normalization_region::Union{Int, Nothing} = nothing)
+    Returns the Social Cost of `gas` for a given `year` and discount rate determined 
+    by `eta` and `prtp` from one deterministic run of the IWG-DICE model. User must 
+    specify an IWG scenario `scenario_choice`.
 
-Returns the Social Cost of `gas` for a given `year` and discount rate determined 
-by `eta` and `prtp` from one deterministic run of the IWG-DICE model. User must 
-specify an IWG scenario `scenario_choice`.
+    Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
+    which default to `false` and `nothing`.
 
-Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
-which default to `false` and `nothing`.
-
-If no `gas` is specified, will retrun the SC-CO2.
-If no `year` is specified, will return SC for $_default_year.
-If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
+    If no `gas` is specified, will retrun the SC-CO2.
+    If no `year` is specified, will return SC for $_default_year.
+    If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
 """
 function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
                             prtp::Float64; eta::Float64 = 0., domestic::Bool = false,
@@ -324,12 +320,15 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     pop = m[:neteconomy, :l] ./ 1000 # Level of population and labor (originally in millions, convert to billions)
     annual_pop = reduce(vcat, map(x -> fill(x, 10), pop)) 
 
-    # note the consumption / population should compute to units of Per capita 
-    # consumption (thousands 2005 USD per year)
-
-    scc = get_discrete_scc(annual_md[p_idx:end], prtp, eta, annual_consumption[p_idx:length(annual_md)], 
-                            annual_pop[p_idx:length(annual_md)], collect(annual_years[p_idx:end]), 
-                            equity_weighting = equity_weighting, normalization_region = normalization_region)
+    scc = get_discrete_scc(annual_md[p_idx:end], 
+                            prtp, 
+                            eta, 
+                            annual_consumption[p_idx:length(annual_md)], 
+                            annual_pop[p_idx:length(annual_md)], 
+                            collect(annual_years[p_idx:end]), 
+                            equity_weighting = equity_weighting, 
+                            normalization_region = normalization_region
+                        )
 
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc

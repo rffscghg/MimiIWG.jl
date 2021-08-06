@@ -132,22 +132,18 @@ function make_summary_table(output_dir, gas, discount_rates, perturbation_years,
 end
 
 """
-    get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64, 
-                        consumption::Array{T2, N}, pop::Array{T3, N}, 
-                        years::Vector; normalization_region = nothing, 
-                        equity_weighting::Bool = false) where {T1, T2, T3, N}
+    Calculate the social cost of carbon using the following arguments:
 
-Calculate the social cost of carbon using the following arguments:
-- `md` - marginal damages in a matrix with time in the rows and regions in the column, 
-    importantly noting that these damages must be per REGION not assumed to be ANNUAL
-- `eta` - the inequality aversion parameter
-- `prtp` - pure rate of time preference
-- `consumption` - consumption levels in a matrix with time in the rows and regions on the columns
-- `pop` - population numbers in a matrix with time in the rows and regions on the columns
-- `years` - the years pertaining to the rows 
-- `normalization_region` - the index for the region for normalization, or left as default `nothing` 
-    out the normalization will be done with the global average cpc
-- `equity_weighting` - indicates if we should use equity weighting or not, defaults to false
+    - `md` - marginal damages in a matrix with time in the rows and regions in the column, 
+        importantly noting that these damages must be per REGION not assumed to be ANNUAL
+    - `eta` - the inequality aversion parameter
+    - `prtp` - pure rate of time preference
+    - `consumption` - consumption levels in a matrix with time in the rows and regions on the columns
+    - `pop` - population numbers in a matrix with time in the rows and regions on the columns
+    - `years` - the years pertaining to the rows 
+    - `normalization_region` - the index for the region for normalization, or left as default `nothing` 
+        out the normalization will be done with the global average cpc
+    - `equity_weighting` - indicates if we should use equity weighting or not, defaults to false
 """
 
 function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64, 
@@ -162,6 +158,9 @@ function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64,
     return scc
 end
 
+"""
+    Get the discount factors to be used in calculating the SCC.
+"""
 function get_discount_factors(prtp::Float64, eta::Float64, 
                                 consumption::Array{T1, N}, pop::Array{T2, N}, 
                                 years::Vector; normalization_region = nothing, 

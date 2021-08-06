@@ -1,5 +1,5 @@
 """
-Returns the IWG version of the PAGE 2009 model for the specified scenario.
+    Returns the IWG version of the PAGE 2009 model for the specified scenario.
 """
 function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
@@ -62,7 +62,8 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 end
 
 """
-set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
+    Sets PAGE scenario parameters with the arguments:
+    
     m: a Mimi model with and IWGScenarioChoice component
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
@@ -364,20 +365,16 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
 end  
 
 """
-    compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
-                        prtp::Float64; eta::Float64 = 0., domestic::Bool = false, 
-                        equity_weighting::Bool = false, income_normalized::Bool = true)
+    Returns the Social Cost of `gas` for a given `year` and discount rate determined 
+    by `eta` and `prtp` from one deterministic run of the IWG-PAGE model. User must 
+    specify an IWG scenario `scenario_choice`.
 
-Returns the Social Cost of `gas` for a given `year` and discount rate determined 
-by `eta` and `prtp` from one deterministic run of the IWG-PAGE model. User must 
-specify an IWG scenario `scenario_choice`.
+    Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
+    which default to `false` and `nothing`.
 
-Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
-which default to `false` and `nothing`.
-
-If no `gas` is specified, will retrun the SC-CO2.
-If no `year` is specified, will return SC for $_default_year.
-If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
+    If no `gas` is specified, will retrun the SC-CO2.
+    If no `year` is specified, will return SC for $_default_year.
+    If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
 """
 function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
                             prtp::Float64; eta::Float64 = 0., domestic::Bool=false, 
@@ -415,9 +412,15 @@ function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
 
     p_idx = MimiIWG.getpageindexfromyear(year)
 
-    scc = get_discrete_scc(md[p_idx:end, :], prtp, eta, consumption[p_idx:length(MimiIWG.page_years), :], 
-                            pop[p_idx:length(MimiIWG.page_years), :], page_years[p_idx:end], 
-                            equity_weighting = equity_weighting, normalization_region = normalization_region)
+    scc = get_discrete_scc(md[p_idx:end, :], 
+                            prtp, 
+                            eta, 
+                            consumption[p_idx:length(MimiIWG.page_years), :], 
+                            pop[p_idx:length(MimiIWG.page_years), :], 
+                            page_years[p_idx:end], 
+                            equity_weighting = equity_weighting, 
+                            normalization_region = normalization_region
+                        )
     scc = scc * MimiIWG.page_inflator
 
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year

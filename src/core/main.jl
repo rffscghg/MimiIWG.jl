@@ -109,15 +109,14 @@ end
         normalization_region::Union{Int, Nothing} = nothing
         )
 
-Return the deterministic Social Cost of the specified `gas` from one run of the IWG version of 
-the Mimi model `model_choice` with socioeconomic scenario `scenario_choice` for the 
-specified year `year` and discounting with rate specified by `prtp` and `eta`.` 
+Return the deterministic Social Cost of the specified `gas` from one run of the 
+IWG version of the Mimi model `model_choice` with socioeconomic scenario `scenario_choice` 
+for the specified year `year` and discounting with rate specified by `prtp` and 
+`eta`.` Units of the returned SCC value are [2007\$ / metric ton of `gas`]. 
 
-`model_choice` must be one of the following enums: DICE, FUND, or PAGE.
-`scenario_choice` must be one of the following enums: USG1, USG2, USG3, USG4, or USG5.
-`gas` can be one of :CO2, :CH4, or :N2O, and will default to :CO2 if nothing is specified.
-
-Units of the returned SCC value are [2007\$ / metric ton of `gas`]. 
+- `model_choice` must be one of the following enums: DICE, FUND, or PAGE.
+- `scenario_choice` must be one of the following enums: USG1, USG2, USG3, USG4, or USG5.
+- `gas` can be one of :CO2, :CH4, or :N2O, and will default to :CO2 if nothing is specified.
 
 If `domestic` is `true`, then only domestic damages are used to calculate the 
 SCC. 
@@ -125,7 +124,6 @@ SCC.
 If `equity_weighting` is true, equity weighting is used discounting, and if 
 `normalization_region` is not nothing, that region is used for the equity weighting 
 normalization region.
-
 """
 
 function compute_scc(model::model_choice, scenario_choice::scenario_choice = nothing; 
@@ -139,10 +137,12 @@ function compute_scc(model::model_choice, scenario_choice::scenario_choice = not
     normalization_region::Union{Int, Nothing} = nothing
     )
 
+    # check equity weighting case
     if !isnothing(normalization_region) && !(equity_weighting)
         error("Cannot set a normalization_region if equity_weighting is false.")
     end
 
+    # check for deprecated discount keyword argument
     if !isnothing(discount)
         @warn "The `discount` keyword is deprecated. Use `prtp` keyword for constant discounting instead. ",
         "Now returning the results of calling `compute_scc` with `prtp = $discount`",
