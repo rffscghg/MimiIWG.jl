@@ -208,16 +208,13 @@ end
 
 function page_scenario_func(mcs::SimulationInstance, tup::Tuple)
     # Unpack the scenario arguments
-    (scenario_choice, rate) = tup 
+    (scenario_choice, ) = tup 
     global scenario_num = Int(scenario_choice)
-    global rate_num = findfirst(isequal(rate), Mimi.payload(mcs)[1])
 
     # Build the page versions for this scenario
     base, marginal = mcs.models
     update_param!(base, :scenario_num, scenario_num)
     update_param!(marginal, :scenario_num, scenario_num)
-    update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
-    update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
 
     Mimi.build!(base)
     Mimi.build!(marginal)
@@ -229,42 +226,69 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     base, marginal = mcs.models 
 
     # Unpack the payload object 
-    discount_rates, discount_factors, discontinuity_mismatch, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
+    prtp_rates, eta_levels, model_years, equity_weighting, normalization_region, discontinuity_mismatch, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
+    
+    # get needed values to calculate the scc that will not vary with perturbation year
+    consumption = base[:GDP, :cons_consumption]
+    consumption_domestic = consumption[:, 2] # US is the second region
+    pop = base[:GDP, :pop_population]
+    pop_domestic = pop[:, 2]
 
-    DF = discount_factors[rate_num]
-    td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
-    if SCC_values_domestic !== nothing 
-        td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
-    end
-    EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
-    UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)    
+    # Loop through perturbation years for scc calculations, and only re-run the marginal model
+    for (i, pyear) in enumerate(perturbation_years)
 
-    for (j, pyear) in enumerate(perturbation_years)
-        idx = getpageindexfromyear(pyear)
+        p_idx = getpageindexfromyear(pyear)
 
         perturb_marginal_page_emissions!(base, marginal, gas, pyear)
         run(marginal)
 
-        # Stores `true` if the base and marginal models trigger the discontinuity damages in different timesteps (0 otherwise)
-        discontinuity_mismatch[trialnum, j, scenario_num, rate_num] = base[:Discontinuity, :occurdis_occurrencedummy] != marginal[:Discontinuity, :occurdis_occurrencedummy]
+        # Stores `true` if the base and marginal models trigger the discontinuity 
+        # damages in different timesteps (0 otherwise)
+        discontinuity_mismatch[trialnum, i, scenario_num] = base[:Discontinuity, :occurdis_occurrencedummy] != marginal[:Discontinuity, :occurdis_occurrencedummy]
 
-        td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]   
-        pulse_size = gas == :CO2 ? 100_000 : 1          
-        scc = ((td_marginal / UDFT_base[idx]) - (td_base / UDFT_base[idx])) / pulse_size * page_inflator
+        # get damages - note these are aggregated across period
+        pulse_size = gas == :CO2 ? 100_000 : 1
 
-        if SCC_values_domestic !== nothing 
-            td_marginal_domestic = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
-            scc_domestic = ((td_marginal_domestic / UDFT_base[idx]) - (td_base_domestic / UDFT_base[idx])) / pulse_size * page_inflator
-            SCC_values_domestic[trialnum, j, scenario_num, rate_num] = scc_domestic
+        base_impacts = base[:TotalCosts, :total_damages_aggregated]
+        marg_impacts = marginal[:TotalCosts, :total_damages_aggregated]
+        md = ((marg_impacts .- base_impacts) ./ pulse_size)
+        domestic_md = marginaldamages[:, 1] # US is region 1
+
+        # optionally save marginal damages - note these are not aggregated across
+        # the period
+        if md_values !== nothing
+            base_impacts_peryear = base[:TotalCosts, :total_damages_peryear]
+            marg_impacts_peryear = marginal[:TotalCosts, :total_damages_peryear]
+            md_peryear = ((marg_impacts_peryear .- base_impacts_peryear) ./ pulse_size)
+            md_values[j, scenario_num, :, trialnum] = sum(md_peryear, dims = 2) # sum along second dimension to get global values            
         end
-        SCC_values[trialnum, j, scenario_num, rate_num] = scc   
 
-        if md_values !== nothing 
-            base_impacts = base[:EquityWeighting, :wit_equityweightedimpact]
-            marg_impacts = marginal[:EquityWeighting, :wit_equityweightedimpact]
-        
-            marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1) .* page_inflator
-            md_values[j, scenario_num, :, trialnum] = sum(marg_damages, dims = 2) # sum along second dimension to get global values
+        for (j, _prtp) in prtp_rates, (k, _eta) in eta_levels
+
+            scc = get_discrete_scc(md[p_idx:end, :], 
+                            _prtp, 
+                            _eta, 
+                            consumption[p_idx:length(page_years), :], 
+                            pop[p_idx:length(page_years), :], 
+                            page_years[p_idx:end], 
+                            equity_weighting = equity_weighting, 
+                            normalization_region = normalization_region
+                        )
+
+            SCC_values[trialnum, i, scenario_num, j, k] = scc * page_inflator
+
+            if SCC_values_domestic !== nothing
+                scc = get_discrete_scc(domestic_md[p_idx:end, :], 
+                            _prtp, 
+                            _eta, 
+                            domestic_consumption[p_idx:length(page_years), :], 
+                            domestic_pop[p_idx:length(page_years), :], 
+                            page_years[p_idx:end], 
+                            equity_weighting = equity_weighting, 
+                            normalization_region = normalization_region
+                        )
+                SCC_values_domestic[trialnum, i, scenario_num, j, k] = domestic_scc * page_inflator
+            end
         end
     end 
 end

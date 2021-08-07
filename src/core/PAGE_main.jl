@@ -300,7 +300,8 @@ function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Noth
     # NOTES:
     # - eta (m[:EquityWeighting, :emuc_utilityconvexity]) is zero in all scenarios 
     # - prtp (:ptp_timepreference) defaults to 3%
-    # - discount settings flow through the EquityWeighting component but not the TotalCosts one
+    # - discount settings flow through the EquityWeighting component but not the TotalCosts 
+    #   one so this is to be consistent but not used
     if !isnothing(discount)
         update_param!(base, :ptp_timepreference, discount * 100)
     end
@@ -418,18 +419,18 @@ function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
         md = md[:, 2]
     end
 
-    p_idx = MimiIWG.getpageindexfromyear(year)
+    p_idx = getpageindexfromyear(year)
 
     scc = get_discrete_scc(md[p_idx:end, :], 
                             prtp, 
                             eta, 
-                            consumption[p_idx:length(MimiIWG.page_years), :], 
-                            pop[p_idx:length(MimiIWG.page_years), :], 
+                            consumption[p_idx:length(page_years), :], 
+                            pop[p_idx:length(page_years), :], 
                             page_years[p_idx:end], 
                             equity_weighting = equity_weighting, 
                             normalization_region = normalization_region
                         )
-    scc = scc * MimiIWG.page_inflator
+    scc = scc * page_inflator
 
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc

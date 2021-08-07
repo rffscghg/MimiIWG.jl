@@ -146,42 +146,61 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     damages1 = base[:impactaggregation, :loss]
 
     # Unpack the payload object 
-    discount_rates, model_years, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
+    prtp_rates, eta_levels, model_years, equity_weighting, normalization_region, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
-    final = length(model_years)
+    # get needed values to calculate the scc that will not vary with perturbation year
+    nyears = length(model_years)
+    consumption = base[:socioeconomic, :consumption]
+    domestic_consumption = consumption[:,1] # first region is US
+    pop = base[:socioeconomic, :population]
+    domestic_pop = pop[:,1] 
 
     # Loop through perturbation years for scc calculations, and only re-run the marginal model
-    for (j, pyear) in enumerate(perturbation_years)
+    for (i, pyear) in enumerate(perturbation_years)
 
+        p_idx = MimiFUND.getindexfromyear(year)
+
+        # get damages
         MimiFUND.perturb_marginal_emissions!(marginal, pyear, gas=gas)
         run(marginal; ntimesteps=ntimesteps)
 
         damages2 = marginal[:impactaggregation, :loss] ./ marginal[:socioeconomic, :income] .* base[:socioeconomic, :income]
-        marginaldamages = (damages2 .- damages1) * 1e-7
-        global_marginaldamages = sum(marginaldamages, dims = 2)    # sum across regions
+        marginaldamages = (damages2 .- damages1) * 1e-7 # regional
+        domestic_marginaldamages = marginaldamages[:, 1] # US is region 1
 
-        function _compute_scc(pyear, marginaldamages, rates)
-            scc = zeros(length(rates))
-            p_idx = MimiFUND.getindexfromyear(pyear)
-            
-            for (i, rate) in enumerate(rates)
-                discount_factor = [(1/(1 + rate)) ^ (t - p_idx) for t in p_idx:final]
-                scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor)
-            end
-            return scc 
-        end
-
-        scc_global = _compute_scc(pyear, global_marginaldamages, discount_rates)
-        SCC_values[trialnum, j, scenario_num, :] = scc_global * fund_inflator
-
-        if SCC_values_domestic !== nothing
-            domestic_marginaldamages = marginaldamages[:, 1]
-            scc_domestic = _compute_scc(pyear, domestic_marginaldamages, discount_rates)
-            SCC_values_domestic[trialnum, j, scenario_num, :] = scc_domestic * fund_inflator
-        end
-
+        # save marginal damages
         if md_values !== nothing
-            md_values[j, scenario_num, :, trialnum] = map(x -> ismissing(x) ? 0 : x, global_marginaldamages[1:length(model_years)]) .* fund_inflator
+            global_marginaldamages = sum(marginaldamages, dims = 2) # sum across regions
+            md_values[i, scenario_num, :, trialnum] = map(x -> ismissing(x) ? 0 : x, global_marginaldamages[1:length(model_years)]) .* fund_inflator
+        end
+
+        for (j, _prtp) in enumerate(prtp_rates), (k, _eta) in enumerate(eta_levels)
+
+            # handle global scc
+            scc = get_discrete_scc(marginaldamages[p_idx:end, :], 
+                                _prtp, 
+                                _eta, 
+                                consumption[p_idx:nyears, :], 
+                                pop[p_idx:nyears, :], 
+                                collect(model_years[p_idx:end]), 
+                                equity_weighting = equity_weighting, 
+                                normalization_region = normalization_region
+                            )
+            SCC_values[trialnum, i, scenario_num, j, k] = scc * fund_inflator
+
+            # handle domestic scc
+            if SCC_values_domestic !== nothing
+                domestic_scc = get_discrete_scc(domestic_marginaldamages[p_idx:end, :], 
+                                _prtp, 
+                                _eta, 
+                                domestic_consumption[p_idx:nyears, :], 
+                                domestic_pop[p_idx:nyears, :], 
+                                collect(model_years[p_idx:end]), 
+                                equity_weighting = equity_weighting, 
+                                normalization_region = normalization_region
+                            )
+                SCC_values_domestic[trialnum, i, scenario_num, j, k] = domestic_scc * fund_inflator
+            end
         end
     end
 end
