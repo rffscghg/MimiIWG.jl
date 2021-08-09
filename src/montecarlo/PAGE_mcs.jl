@@ -268,7 +268,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             marg_impacts_peryear = marginal[:TotalCosts, :total_damages_peryear]
 
             md_peryear = ((marg_impacts_peryear .- base_impacts_peryear) ./ pulse_size)
-            md_values[j, scenario_num, :, trialnum] = sum(md_peryear, dims = 2) # sum along second dimension to get global values            
+            md_values[i, scenario_num, :, trialnum] = sum(md_peryear, dims = 2) # sum along second dimension to get global values            
         end
 
         for (j, _prtp) in enumerate(prtp_rates), (k, _eta) in enumerate(eta_levels)
