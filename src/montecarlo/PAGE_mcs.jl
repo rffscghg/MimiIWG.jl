@@ -216,6 +216,11 @@ function page_scenario_func(mcs::SimulationInstance, tup::Tuple)
     update_param!(base, :scenario_num, scenario_num)
     update_param!(marginal, :scenario_num, scenario_num)
 
+    # Note that here we do not update the discounting parameters that would feed
+    # into the EquityWeighting component, but we do not access these for the SCC
+    # so this should not be a problem even though it means the model's discounted
+    # values will not be consistent with ours
+
     Mimi.build!(base)
     Mimi.build!(marginal)
 end 
@@ -230,9 +235,10 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     
     # get needed values to calculate the scc that will not vary with perturbation year
     consumption = base[:GDP, :cons_consumption]
-    consumption_domestic = consumption[:, 2] # US is the second region
+    domestic_consumption = consumption[:, 2] # US is the second region
+
     pop = base[:GDP, :pop_population]
-    pop_domestic = pop[:, 2]
+    domestic_pop = pop[:, 2]
 
     # Loop through perturbation years for scc calculations, and only re-run the marginal model
     for (i, pyear) in enumerate(perturbation_years)
@@ -251,26 +257,28 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
 
         base_impacts = base[:TotalCosts, :total_damages_aggregated]
         marg_impacts = marginal[:TotalCosts, :total_damages_aggregated]
+
         md = ((marg_impacts .- base_impacts) ./ pulse_size)
-        domestic_md = marginaldamages[:, 1] # US is region 1
+        domestic_md = md[:, 1] # US is region 1
 
         # optionally save marginal damages - note these are not aggregated across
         # the period
         if md_values !== nothing
             base_impacts_peryear = base[:TotalCosts, :total_damages_peryear]
             marg_impacts_peryear = marginal[:TotalCosts, :total_damages_peryear]
+
             md_peryear = ((marg_impacts_peryear .- base_impacts_peryear) ./ pulse_size)
             md_values[j, scenario_num, :, trialnum] = sum(md_peryear, dims = 2) # sum along second dimension to get global values            
         end
 
-        for (j, _prtp) in prtp_rates, (k, _eta) in eta_levels
+        for (j, _prtp) in enumerate(prtp_rates), (k, _eta) in enumerate(eta_levels)
 
             scc = get_discrete_scc(md[p_idx:end, :], 
                             _prtp, 
                             _eta, 
-                            consumption[p_idx:length(page_years), :], 
-                            pop[p_idx:length(page_years), :], 
-                            page_years[p_idx:end], 
+                            consumption[p_idx:length(model_years), :], 
+                            pop[p_idx:length(model_years), :], 
+                            model_years[p_idx:end], 
                             equity_weighting = equity_weighting, 
                             normalization_region = normalization_region
                         )
@@ -278,12 +286,12 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             SCC_values[trialnum, i, scenario_num, j, k] = scc * page_inflator
 
             if SCC_values_domestic !== nothing
-                scc = get_discrete_scc(domestic_md[p_idx:end, :], 
+                domestic_scc = MimiIWG.get_discrete_scc(domestic_md[p_idx:end, :], 
                             _prtp, 
                             _eta, 
-                            domestic_consumption[p_idx:length(page_years), :], 
-                            domestic_pop[p_idx:length(page_years), :], 
-                            page_years[p_idx:end], 
+                            domestic_consumption[p_idx:length(model_years), :], 
+                            domestic_pop[p_idx:length(model_years), :], 
+                            model_years[p_idx:end], 
                             equity_weighting = equity_weighting, 
                             normalization_region = normalization_region
                         )

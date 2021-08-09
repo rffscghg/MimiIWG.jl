@@ -50,14 +50,14 @@ function make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturb
     pcts = [.01, .05, .1, .25, .5, :avg, .75, .90, .95, .99]
 
     for _prtp in prtp_rates, _eta in eta_levels, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SC-$gas Percentiles prtp=$_prtp eta=$_eta.csv")
+        table = joinpath(tables, "$year SC-$gas Percentiles (prtp=$_prtp eta=$_eta).csv")
         open(table, "w") do f 
             write(f, "Scenario,1st,5th,10th,25th,50th,Avg,75th,90th,95th,99th\n")
             for fn in filter(x -> endswith(x, "prtp=$_prtp eta=$_eta.csv"), results)  # Get the results files for this discount rate
                 scenario = split(fn)[1] # get the scenario name
                 d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx]
                 if drop_discontinuities
-                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "scenario.csv"), ',')[2:end, idx])
+                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$scenario.csv"), ',')[2:end, idx])
                     d = d[map(!, disc_idx)]    
                 end
                 filter!(x->!isnan(x), d)
@@ -79,14 +79,14 @@ function make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbat
     results = readdir(scc_dir)      # all saved SCC output files
 
     for _prtp in prtp_rates, _eta in eta_levels, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SC-$gas Std Errors prtp=$_prtp eta=$_eta.csv")
+        table = joinpath(tables, "$year SC-$gas Std Errors (prtp=$_prtp eta=$_eta).csv")
         open(table, "w") do f 
             write(f, "Scenario,Mean,SE\n")
             for fn in filter(x -> endswith(x, "prtp=$_prtp eta=$_eta.csv"), results)  # Get the results files for this discount rate
                 scenario = split(fn)[1] # get the scenario name
                 d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx] 
                 if drop_discontinuities
-                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, fn), ',')[2:end, idx])
+                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$scenario.csv"), ',')[2:end, idx])
                     d = d[map(!, disc_idx)]    
                 end
                 filter!(x->!isnan(x), d)
@@ -106,8 +106,8 @@ function make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbatio
     tables = "$output_dir/Tables"   # folder to save the table to
     mkpath(tables)
 
-    num_combinations = length(prtp_rates) * length(eta_rates)
-    data = Array{Any, 2}(undef, length(perturbation_years)+1, 2*(num_combinations + 1))
+    num_combinations = length(prtp_rates) * length(eta_levels)
+    data = Array{Any, 2}(undef, length(perturbation_years)+1, (2*num_combinations)+1)
 
     column_names = ["Year"]
     for _prtp in prtp_rates, _eta in eta_levels
@@ -123,11 +123,11 @@ function make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbatio
     for _prtp in prtp_rates
         for _eta in eta_levels
             i = i + 1
-            vals = matrix{Union{Missing, Float64}}(undef, 0, length(perturbation_years))
+            vals = Matrix{Union{Missing, Float64}}(undef, 0, length(perturbation_years))
             for scenario in scenarios
                 curr_vals = convert(Array{Union{Missing, Float64}}, readdlm(joinpath(scc_dir, "$(string(scenario)) prtp=$_prtp eta=$_eta.csv"), ',')[2:end, :])
                 if drop_discontinuities
-                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$(string(scenario)) prtp=$_prtp eta=$_eta.csv"), ',')[2:end, :])
+                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$(string(scenario)).csv"), ',')[2:end, :])
                     curr_vals[disc_idx] .= missing
                 end
                 vals = vcat(vals, curr_vals)

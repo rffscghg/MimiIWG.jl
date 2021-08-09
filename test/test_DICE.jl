@@ -21,11 +21,11 @@ using XLSX: readxlsx
         scc2 = MimiIWG.compute_scc(DICE, MimiIWG.scenarios[1], domestic = true)
         @test scc2 == 0.1 * scc1
 
-        # # Test monte carlo simulation runs without error
-        # # bug: a bug in VSCode makes this crash the terminal when run line by line
-        # tmp_dir = joinpath(@__DIR__, "tmp")
-        # MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir, domestic = true)
-        # rm(tmp_dir, recursive=true)
+        # Test monte carlo simulation runs without error
+        # bug: a bug in VSCode makes this crash the terminal when run line by line
+        tmp_dir = joinpath(@__DIR__, "tmp")
+        MimiIWG.run_scc_mcs(DICE, trials=2, output_dir = tmp_dir, domestic = true)
+        rm(tmp_dir, recursive=true)
 
         # make sure old and new discounting keyword args work
         scc_old = MimiIWG.compute_scc(DICE, USG1; gas=:CO2, year=2020, discount=0.025)

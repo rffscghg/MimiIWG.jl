@@ -317,13 +317,13 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     annual_years = dice_years[1]:horizon
     p_idx = findfirst(isequal(year), annual_years)
 
-    md, m = get_dice_marginaldamages(scenario_choice, gas, year, 0., return_m = true)   # Get undiscounted marginal damages
+    md, base = get_dice_marginaldamages(scenario_choice, gas, year, 0., return_m = true)   # Get undiscounted marginal damages
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
-    consumption = m[:neteconomy, :C] # Consumption (trillions 2005 US dollars per year)
+    consumption = base[:neteconomy, :C] # Consumption (trillions 2005 US dollars per year)
     annual_consumption = reduce(vcat, map(x -> fill(x, 10), consumption))
 
-    pop = m[:neteconomy, :l] ./ 1000 # Level of population and labor (originally in millions, convert to billions)
+    pop = base[:neteconomy, :l] ./ 1000 # Level of population and labor (originally in millions, convert to billions)
     annual_pop = reduce(vcat, map(x -> fill(x, 10), pop)) 
 
     scc = get_discrete_scc(annual_md[p_idx:end], 

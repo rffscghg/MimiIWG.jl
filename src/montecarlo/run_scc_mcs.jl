@@ -21,7 +21,7 @@ Mimi model `model_choice` and the specified number of trials `trials`. The SCC i
 all permutations of `prtp_rates` and `eta_levels`. 
 
 - `gas` may be one of :CO2, :CH4, or :N2O. If none is specified, it will default to :CO2.
-- `model_choice` must be one of the following enums: DICE, FUND, or PAGE.
+- `model` must be one of the following enums: DICE, FUND, or PAGE.
 
 Output files will be saved in the `output_dir`. If none is provided, it will default to "./output/". 
 A new sub directory will be created each time this function is called, with the following name: "yyyy-mm-dd HH-MM-SS MODEL SC-\$gas MC\$trials".
@@ -78,7 +78,7 @@ function run_scc_mcs(model::model_choice;
     end
     if isnothing(eta_levels)
         @warn("No values provided for `eta_levels`. Will run with eta = 0.")
-        eta = [0.]
+        eta_levels = [0.]
     end
 
     # Check the gas
@@ -97,7 +97,6 @@ function run_scc_mcs(model::model_choice;
     if model == DICE 
         mcs = get_dice_mcs()
 
-        last_idx = _default_horizon - 2005 + 1
         nyears = length(dice_years) # Run the full length to 2405, but nothing past 2300 gets used for the SCC
         model_years = dice_years
 

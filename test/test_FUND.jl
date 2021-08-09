@@ -25,11 +25,11 @@ _atol = 1e-3
         scc2 = MimiIWG.compute_scc(FUND, MimiIWG.scenarios[1], domestic = true)
         @test scc2 < scc1  # test global SCC is larger than domestic SCC
 
-        # # Test monte carlo simulation runs without error
-        # # bug: a bug in VSCode makes this crash the terminal when run line by line
-        # tmp_dir = joinpath(@__DIR__, "tmp")
-        # MimiIWG.run_scc_mcs(FUND, gas=:CO2, trials=2, output_dir = tmp_dir, domestic=true)
-        # rm(tmp_dir, recursive=true)
+        # Test monte carlo simulation runs without error
+        # bug: a bug in VSCode makes this crash the terminal when run line by line
+        tmp_dir = joinpath(@__DIR__, "tmp")
+        MimiIWG.run_scc_mcs(FUND, gas=:CO2, trials=2, output_dir = tmp_dir, domestic=true)
+        rm(tmp_dir, recursive=true)
 
         # make sure old and new discounting keyword args work
         scc_old = MimiIWG.compute_scc(FUND, USG1; gas=:CO2, year=2020, discount=0.025)

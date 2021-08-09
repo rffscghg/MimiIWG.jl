@@ -146,19 +146,21 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     damages1 = base[:impactaggregation, :loss]
 
     # Unpack the payload object 
-    prtp_rates, eta_levels, model_years, equity_weighting, normalization_region, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
+    prtp_rates, eta_levels, model_years, equity_weighting, normalization_region, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
     # get needed values to calculate the scc that will not vary with perturbation year
     nyears = length(model_years)
+
     consumption = base[:socioeconomic, :consumption]
     domestic_consumption = consumption[:,1] # first region is US
+
     pop = base[:socioeconomic, :population]
     domestic_pop = pop[:,1] 
 
     # Loop through perturbation years for scc calculations, and only re-run the marginal model
     for (i, pyear) in enumerate(perturbation_years)
 
-        p_idx = MimiFUND.getindexfromyear(year)
+        p_idx = MimiFUND.getindexfromyear(pyear)
 
         # get damages
         MimiFUND.perturb_marginal_emissions!(marginal, pyear, gas=gas)
@@ -169,7 +171,7 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
         domestic_marginaldamages = marginaldamages[:, 1] # US is region 1
 
         # save marginal damages
-        if md_values !== nothing
+        if !isnothing(md_values)
             global_marginaldamages = sum(marginaldamages, dims = 2) # sum across regions
             md_values[i, scenario_num, :, trialnum] = map(x -> ismissing(x) ? 0 : x, global_marginaldamages[1:length(model_years)]) .* fund_inflator
         end
@@ -177,7 +179,7 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
         for (j, _prtp) in enumerate(prtp_rates), (k, _eta) in enumerate(eta_levels)
 
             # handle global scc
-            scc = get_discrete_scc(marginaldamages[p_idx:end, :], 
+            scc = get_discrete_scc(marginaldamages[p_idx:nyears, :], 
                                 _prtp, 
                                 _eta, 
                                 consumption[p_idx:nyears, :], 
@@ -189,8 +191,8 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             SCC_values[trialnum, i, scenario_num, j, k] = scc * fund_inflator
 
             # handle domestic scc
-            if SCC_values_domestic !== nothing
-                domestic_scc = get_discrete_scc(domestic_marginaldamages[p_idx:end, :], 
+            if !isnothing(SCC_values_domestic)
+                domestic_scc = get_discrete_scc(domestic_marginaldamages[p_idx:nyears, :], 
                                 _prtp, 
                                 _eta, 
                                 domestic_consumption[p_idx:nyears, :], 
