@@ -163,6 +163,10 @@ function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64,
                             equity_weighting::Bool = false) where {T1, T2, T3, N}
 
     df = get_discount_factors(prtp, eta, consumption, pop, years; normalization_region = normalization_region, equity_weighting = equity_weighting) 
+    
+    # TODO added as a fix for infinites
+    df = map(x -> isinf(x) ? 0 : x, df)
+
     npv_md = sum((md .* df), dims = 2) # calculate net present value of marginal damages in each year
     scc = sum(npv_md)    # sum damages to the scc
 
