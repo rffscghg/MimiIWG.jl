@@ -183,15 +183,9 @@ function run_scc_mcs(model::model_choice;
         md_values = nothing
     end
 
-    # TODO added for debugging
-    # raw_md = Array{Float64, 4}(undef, 281, 16, length(scenarios), trials);
-    # raw_consump = Array{Float64, 4}(undef, 281, 16, length(scenarios), trials);
-    # raw_pop = Array{Float64, 4}(undef, 281, 16, length(scenarios), trials);
-
-    # TODO added for debugging
     # Set the payload object
     push!(payload, [gas, perturbation_years, SCC_values, SCC_values_domestic, md_values]...)
-    # push!(payload, [gas, perturbation_years, raw_md, raw_consump, raw_pop, SCC_values, SCC_values_domestic, md_values]...)
+
     Mimi.set_payload!(mcs, payload)
 
     # Generate trials 
@@ -205,9 +199,8 @@ function run_scc_mcs(model::model_choice;
         scenario_args = [:scenario => scenarios],
         post_trial_func = post_trial_func
     )
-     # TODO added for debugging
+
     SCC_values, SCC_values_domestic, md_values = Mimi.payload(sim_results)[end-2:end]
-    # raw_md, raw_consump, raw_pop, SCC_values, SCC_values_domestic, md_values = Mimi.payload(sim_results)[end-5:end]
 
     # Save the marginal damage matrices
     if save_md
@@ -284,11 +277,13 @@ function run_scc_mcs(model::model_choice;
         write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, prtp_rates, eta_levels, domestic=true)
     end
 
+    drop_infs = model == FUND # explicitly drop the missing values in the saved SCCs which ocurr when consumption -> 0 and SCC -> Inf
+
     # Build the stats tables
     if tables
-        make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities)
-        make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities)
-        make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities)
+        make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities, drop_infs)
+        make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities, drop_infs)
+        make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities, drop_infs)
     end
 
     nothing

@@ -147,10 +147,8 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
 
     # Unpack the payload object 
 
-    # TODO added for debugging
     prtp_rates, eta_levels, model_years, equity_weighting, normalization_region, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
-    # prtp_rates, eta_levels, model_years, equity_weighting, normalization_region, gas, perturbation_years, raw_md, raw_consump, raw_pop, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
-
+   
     # get needed values to calculate the scc that will not vary with perturbation year
     nyears = length(model_years)
 
@@ -178,11 +176,6 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             global_marginaldamages = sum(marginaldamages, dims = 2) # sum across regions
             md_values[i, scenario_num, :, trialnum] = map(x -> ismissing(x) ? 0 : x, global_marginaldamages[1:length(model_years)]) .* fund_inflator
         end
-
-        # TODO added for debugging
-        # raw_consump[:,:,scenario_num, trialnum] = consumption[p_idx:nyears, :]
-        # raw_pop[:,:,scenario_num, trialnum] = pop[p_idx:nyears, :]
-        # raw_md[:,:,scenario_num, trialnum] = marginaldamages[p_idx:nyears, :]
 
         for (j, _prtp) in enumerate(prtp_rates), (k, _eta) in enumerate(eta_levels)
 

@@ -39,7 +39,7 @@ function write_scc_values(values, output_dir, perturbation_years, prtp_rates, et
 end
 
 # helper function for computing percentile tables at the end of a monte carlo simulation
-function make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities=false)
+function make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities=false, drop_infs=false)
     scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
     drop_discontinuities ? disc_dir = joinpath(output_dir, "discontinuity_mismatch/") : nothing
     tables = "$output_dir/Tables/Percentiles"   # folder to save TSD tables to
@@ -60,6 +60,9 @@ function make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturb
                     disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$scenario.csv"), ',')[2:end, idx])
                     d = d[map(!, disc_idx)]    
                 end
+                if drop_infs
+                    map(x -> isinf(x) ? NaN : x, d)
+                end
                 filter!(x->!isnan(x), d)
                 values = [pct == :avg ? Int(round(mean(d))) : Int(round(quantile(d, pct))) for pct in pcts]
                 write(f, "$scenario,", join(values, ","), "\n")
@@ -70,7 +73,7 @@ function make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturb
 end
 
 # helper function for computing std error tables at the end of a monte carlo simulation
-function make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities=false)
+function make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities=false, drop_infs = true)
     scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
     drop_discontinuities ? disc_dir = joinpath(output_dir, "discontinuity_mismatch/") : nothing
     tables = "$output_dir/Tables/Std Errors"   # folder to save the tables to
@@ -89,6 +92,9 @@ function make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbat
                     disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$scenario.csv"), ',')[2:end, idx])
                     d = d[map(!, disc_idx)]    
                 end
+                if drop_infs
+                    map(x -> isinf(x) ? NaN : x, d)
+                end
                 filter!(x->!isnan(x), d)
                 write(f, "$scenario, $(round(mean(d), digits=2)), $(round(sem(d), digits=2)) \n")
             end 
@@ -99,7 +105,7 @@ end
 
 # helper function for computing a summary table. Reports average values for all 
 # discount rates and years, and high impact values (95th pct)
-function make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities=false)
+function make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities=false, drop_infs = true)
 
     scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
     drop_discontinuities ? disc_dir = joinpath(output_dir, "discontinuity_mismatch/") : nothing
@@ -129,6 +135,9 @@ function make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbatio
                 if drop_discontinuities
                     disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$(string(scenario)).csv"), ',')[2:end, :])
                     curr_vals[disc_idx] .= missing
+                end 
+                if drop_infs
+                    map(x -> isinf(x) ? missing : x, d)
                 end
                 vals = vcat(vals, curr_vals)
             end
@@ -164,13 +173,19 @@ function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64,
 
     df = get_discount_factors(prtp, eta, consumption, pop, years; normalization_region = normalization_region, equity_weighting = equity_weighting) 
     
-    # TODO added as a fix for infinites
-    df = map(x -> isinf(x) ? 0 : x, df)
+    # TODO - think this over
+    # This can be added as a fix for infinite discount rates due to a consumption
+    # level of 0, but some of the rates end up extremely large just before consumption
+    # goes to 0, so instead for now we will flag and set the entire SCC to `missing`
+
+    # df = map(x -> isinf(x) ? 0 : x, df)
+    inf_flag = sum(isinf.(x)) > 0
 
     npv_md = sum((md .* df), dims = 2) # calculate net present value of marginal damages in each year
     scc = sum(npv_md)    # sum damages to the scc
 
-    return scc
+    return inf_flag ? Inf : scc
+
 end
 
 """
