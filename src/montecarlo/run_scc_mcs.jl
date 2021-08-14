@@ -281,9 +281,9 @@ function run_scc_mcs(model::model_choice;
 
     # Build the stats tables
     if tables
-        make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities, drop_infs)
-        make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities, drop_infs)
-        make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbation_years, drop_discontinuities, drop_infs)
+        make_percentile_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years; drop_discontinuities = drop_discontinuities, drop_infs = drop_infs)
+        make_stderror_tables(output_dir, gas, prtp_rates, eta_levels, perturbation_years; drop_discontinuities = drop_discontinuities, drop_infs = drop_infs)
+        make_summary_table(output_dir, gas, prtp_rates, eta_levels, perturbation_years; drop_discontinuities = drop_discontinuities, drop_infs = drop_infs)
     end
 
     nothing
