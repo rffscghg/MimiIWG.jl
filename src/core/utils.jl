@@ -40,8 +40,9 @@ function write_scc_values(values, output_dir, perturbation_years, discount_rates
 end
 
 # helper function for computing percentile tables at the end of a monte carlo simulation
-function make_percentile_tables(output_dir, gas, discount_rates, perturbation_years)
+function make_percentile_tables(output_dir, gas, discount_rates, perturbation_years, drop_discontinuities=false)
     scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
+    drop_discontinuities ? disc_dir = joinpath(output_dir, "discontinuity_mismatch/") : nothing
     tables = "$output_dir/Tables/Percentiles"   # folder to save TSD tables to
     mkpath(tables)
 
@@ -55,7 +56,11 @@ function make_percentile_tables(output_dir, gas, discount_rates, perturbation_ye
             write(f, "Scenario,1st,5th,10th,25th,50th,Avg,75th,90th,95th,99th\n")
             for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
                 scenario = split(fn)[1] # get the scenario name
-                d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx] # just keep 2020 values
+                d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx]
+                if drop_discontinuities
+                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, fn), ',')[2:end, idx])
+                    d = d[map(!, disc_idx)]    
+                end
                 filter!(x->!isnan(x), d)
                 values = [pct == :avg ? Int(round(mean(d))) : Int(round(quantile(d, pct))) for pct in pcts]
                 write(f, "$scenario,", join(values, ","), "\n")
@@ -66,8 +71,9 @@ function make_percentile_tables(output_dir, gas, discount_rates, perturbation_ye
 end
 
 # helper funcion for computing std error tables at the end of a monte carlo simulation
-function make_stderror_tables(output_dir, gas, discount_rates, perturbation_years)
+function make_stderror_tables(output_dir, gas, discount_rates, perturbation_years, drop_discontinuities=false)
     scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
+    drop_discontinuities ? disc_dir = joinpath(output_dir, "discontinuity_mismatch/") : nothing
     tables = "$output_dir/Tables/Std Errors"   # folder to save the tables to
     mkpath(tables)
 
@@ -79,7 +85,11 @@ function make_stderror_tables(output_dir, gas, discount_rates, perturbation_year
             write(f, "Scenario,Mean,SE\n")
             for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
                 scenario = split(fn)[1] # get the scenario name
-                d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx] # just keep 2020 values
+                d = readdlm(joinpath(scc_dir, fn), ',')[2:end, idx] 
+                if drop_discontinuities
+                    disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, fn), ',')[2:end, idx])
+                    d = d[map(!, disc_idx)]    
+                end
                 filter!(x->!isnan(x), d)
                 write(f, "$scenario, $(round(mean(d), digits=2)), $(round(sem(d), digits=2)) \n")
             end 
@@ -88,10 +98,11 @@ function make_stderror_tables(output_dir, gas, discount_rates, perturbation_year
     nothing  
 end
 
-# helper function for computing a summary table. Reports average values for all discount rates and years, and high impact value (95th pct) for 3%.
-function make_summary_table(output_dir, gas, discount_rates, perturbation_years)
+# helper function for computing a summary table. Reports average values for all discount rates and years, and high impact values (95th pct)
+function make_summary_table(output_dir, gas, discount_rates, perturbation_years, drop_discontinuities=false)
 
     scc_dir = "$output_dir/SC-$gas"     # folder with output from the MCS runs
+    drop_discontinuities ? disc_dir = joinpath(output_dir, "discontinuity_mismatch/") : nothing
     tables = "$output_dir/Tables"   # folder to save the table to
     mkpath(tables)
 
@@ -102,12 +113,17 @@ function make_summary_table(output_dir, gas, discount_rates, perturbation_years)
     data[2:end, 1] = perturbation_years
 
     for (j, dr) in enumerate(discount_rates)
-        vals = Matrix{Float64}(undef, 0, length(perturbation_years))
+        vals = Matrix{Union{Missing, Float64}}(undef, 0, length(perturbation_years))
         for scenario in scenarios
-            vals = vcat(vals, readdlm(joinpath(scc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
+            curr_vals = convert(Array{Union{Missing, Float64}}, readdlm(joinpath(scc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
+            if drop_discontinuities
+                disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
+                curr_vals[disc_idx] .= missing
+            end
+            vals = vcat(vals, curr_vals)
         end
-        data[2:end, j+1] = mean(vals, dims=1)[:]
-        data[2:end, j+1+length(discount_rates)] = [quantile(vals[2:end, y], .95) for y in 1:length(perturbation_years)]
+        data[2:end, j+1] = mapslices(x -> mean(skipmissing(x)), vals, dims=1)[:]
+        data[2:end, j+1+length(discount_rates)] = [quantile(skipmissing(vals[2:end, y]), .95) for y in 1:length(perturbation_years)]
     end
 
     table = joinpath(tables, "Summary Table.csv")

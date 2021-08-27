@@ -4,10 +4,24 @@ Returns the IWG version of the PAGE 2009 model for the specified scenario.
 function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing)
 
     # Get original version of PAGE
-    m = MimiPAGE2009.getpage()
+    m = MimiPAGE2009.get_model()
 
-    # Reset the time index for the IWG:
-    set_dimension!(m, :time, page_years)
+    # Nowe we need to reset the time dimension from the default PAGE2009 years 
+    # to the IWG PAGE years, or  
+    #
+    # FROM: [2009, 2010, 2020, 2030, 2040, 2050, 2075, 2100, 2150, 2200]
+    # TO: [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300]
+    #
+    # however this reset is illeagl in current resetting time dimension protocol
+    # because it moves the start year forward.  The following is a backdoor way 
+    # to make this change but is unsafe in the way it handles parameter time labels
+    # so it SHOULD NOT be replicated or altered. In the future we should return 
+    # and change page_years to start in 2009 with a missing value and then 
+    # continue to 2300. [Lisa Rennels May 4 2021]
+    
+    dim = Mimi.Dimension(page_years)
+    Mimi._propagate_time_dim!(m.md, dim)
+    Mimi._propagate_first_last!(m.md; first = page_years[1], last = page_years[end])
 
     # Replace modified components
     replace!(m, :GDP => IWG_PAGE_GDP)
@@ -18,13 +32,13 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 
     # Update y_year_0 and y_year parameters used by components
     update_param!(m, :y_year_0, 2000)
-    update_param!(m, :y_year, page_years, update_timesteps = true)
+    update_param!(m, :y_year, page_years)
 
     # Update all parameter values (and their timesteps) from the iwg parameters
     for (k, v) in _page_iwg_params
-        if Symbol(k) in keys(Mimi.external_params(m))
+        if Symbol(k) in keys(Mimi.model_params(m))
             if size(v) == (10, 8) || size(v) == (10,)
-                update_param!(m, Symbol(k), v, update_timesteps=true)
+                update_param!(m, Symbol(k), v)
             else
                 update_param!(m, Symbol(k), v)
             end
@@ -259,7 +273,7 @@ function get_page_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
         marg_impacts = marginal[:EquityWeighting, :widt_equityweightedimpact_discounted]
     end
 
-    marg_damages = (marg_impacts .- base_impacts) ./ 100000     # TODO: comment with specified units here
+    marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1)     # TODO: comment with specified units here
 
     if regional
         return marg_damages
@@ -332,11 +346,12 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
 
         # Marginal emissions model
         md = marginal.mi.md 
-        update_param!(md, :marginal_emissions_growth, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
+        model_param_name = Mimi.get_model_param_name(md,  :marginal_emissions, :marginal_emissions_growth) # TEMPORARY until we can use the new update_param! method
+        update_param!(md, model_param_name, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
     else
         scenario_num = base[:IWGScenarioChoice, :scenario_num]
         forcing_shock = _get_page_forcing_shock(scenario_num, gas, emissionyear)
-        update_param!(marginal.mi.md, :add, forcing_shock)
+        update_param!(marginal.mi.md, :add, forcing_shock) # :add is a shared parameter since it is called with set_param! above
     end
 
     return nothing
