@@ -156,7 +156,7 @@ end
 
     - `md` - marginal damages in a matrix with time in the rows and regions in the column, 
         importantly noting that these damages must be per REGION not assumed to be ANNUAL
-    - `eta` - the inequality aversion parameter
+    - `eta` - the elasticity of marginal utility of consumption
     - `prtp` - pure rate of time preference
     - `consumption` - consumption levels in a matrix with time in the rows and regions on the columns
     - `pop` - population numbers in a matrix with time in the rows and regions on the columns
