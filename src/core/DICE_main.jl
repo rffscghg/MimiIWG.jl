@@ -22,7 +22,7 @@ function get_dice_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 
     # Update all IWG parameter values that are not scenario-specific
     iwg_params = load_dice_iwg_params()
-    update_params!(m, iwg_params, update_timesteps=true)
+    update_params!(m, iwg_params)
 
     # Add the scenario choice component and load all the scenario parameter values
     add_comp!(m, IWG_DICE_ScenarioChoice, :IWGScenarioChoice; before = :grosseconomy)
@@ -218,7 +218,7 @@ function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
         end 
 
         set_param!(m, :co2_pulse, :add, addem)
-        connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the external parameter (exogenous emissions)
+        connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the model parameter (exogenous emissions)
         connect_param!(m, :co2cycle => :E, :co2_pulse => :output)
 
     elseif (gas in [:CH4, :N2O] || gas in HFC_list)
@@ -226,7 +226,7 @@ function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
         if year === nothing
             f_delta = zeros(length(dice_years))
         else
-            scenario_num = Mimi.external_param(m, :scenario_num).value
+            scenario_num = Mimi.model_param(m, :scenario_num).value
             f_delta = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
         end
     
