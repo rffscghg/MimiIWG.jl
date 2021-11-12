@@ -20,9 +20,7 @@ _page_n2o_shocks[2050] = _page_xf["Sheet1"]["AK18:AO27"]
 _page_n2o_shocks[2060] = _page_xf["Sheet1"]["AR18:AV27"]
 
 # Exogenous HFC marginal forcing pathways 
-
-_page_hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
-# _page_hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
+_page_hfc_rf_data = joinpath(@__DIR__, "..", "..", "data", "ghg_radiative_forcing_perturbation.csv")
 _page_hfc_rf = DataFrame(load(_page_hfc_rf_data))
 
 # Pulse years Dict -- used for averaging
@@ -104,7 +102,7 @@ function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
     elseif gas == :N2O
         return convert(Vector{Float64}, _page_n2o_shocks[year][:, col_num])
     elseif gas in HFC_list # see constants.jl for HFC_list
-        _get_hfc_marginal_forcings(gas, year)
+        return _get_hfc_marginal_forcings(gas, year)
     else
         error("Unknown gas :$gas.")
     end
