@@ -221,7 +221,7 @@ function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
         connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the model parameter (exogenous emissions)
         connect_param!(m, :co2cycle => :E, :co2_pulse => :output)
 
-    elseif gas in [:CH4, :N2O]
+    elseif (gas in [:CH4, :N2O] || gas in HFC_list)
 
         if year === nothing
             f_delta = zeros(length(dice_years))
@@ -254,11 +254,11 @@ function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::In
         pulse.data[:] .= 0.0    # pulse is a timestep array, need to access the data array to reset to zero because pulse[:] .= 0 doesn't work even though it doesn't error
         pulse.data[year_idx] = 1.0
 
-    elseif gas in [:CH4, :N2O]
+    elseif (gas in [:CH4, :N2O] || gas in HFC_list)
         ci = Mimi.compinstance(marginal, :additional_forcing)
         pulse = Mimi.get_param_value(ci, :add)
         scenario_num = marginal[:IWGScenarioChoice, :scenario_num]
-        pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+        pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...] # produces 41 element array (last 11 elements are zeros)
 
     else
         error("Unknown gas :$gas.")
