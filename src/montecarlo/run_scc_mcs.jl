@@ -1,14 +1,16 @@
 """
     run_scc_mcs(model::model_choice; 
-        gas::Union{Symbol, Nothing} = nothing,
-        trials::Int = 10000,
-        perturbation_years::Vector{Int} = _default_perturbation_years,
-        discount_rates::Vector{Float64} = _default_discount_rates, 
-        domestic::Bool = false,
-        output_dir::String = nothing, 
-        save_trials::Bool = false,
-        save_md::Bool = false,
-        tables::Bool = true)
+                gas::Union{Symbol, Nothing} = nothing,
+                trials::Int = 10000,
+                perturbation_years::Vector{Int} = _default_perturbation_years,
+                discount_rates::Vector{Float64} = _default_discount_rates, 
+                domestic::Bool = false,
+                output_dir::Union{String, Nothing} = nothing, 
+                save_trials::Bool = false,
+                tables::Bool = true,
+                drop_discontinuities::Bool = false,
+                save_md::Bool = false)
+
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
 5 socioeconomic scenarios, and for all specified `perturbation_years` and `discount_rates`. If `domestic` 
@@ -17,26 +19,30 @@ equals `true`, then SCC values will also be calculated using only domestic damag
 `model_choice` must be one of the following enums: DICE, FUND, or PAGE.
 Output files will be saved in the `output_dir`. If none is provided, it will default to "./output/". 
 A new sub directory will be created each time this function is called, with the following name: "yyyy-mm-dd HH-MM-SS MODEL SC-\$gas MC\$trials".
+
 Several keyword arguments allow for the following:
 If `tables` equals `true`, then a set of summary statistics tables will also be saved in the output folder.
+
 If `save_trials` equals `true`, then a file with all of the sampled input trial data will also be saved in the output folder. 
+
 If `drop_discontinuities` equals `true`, then outliers from the PAGE model (runs where discontinuity damages are triggered
 in different timesteps in the base and perturbed models) will not contribute to summary statistics. An additional folder
 "discontinuity_mismatch" contains files identifying in which runs the discrepencies occured.
+
 If `save_md` equals `true`, then global undiscounted marginal damages from each run of 
 the simulation will be saved in a subdirectory "output/marginal_damages".
 """
 function run_scc_mcs(model::model_choice; 
-    gas::Union{Symbol,Nothing}=nothing,
-    trials::Int=10000,
-    perturbation_years::Vector{Int}=_default_perturbation_years,
-    discount_rates::Vector{Float64}=_default_discount_rates, 
-    domestic::Bool=false,
-    output_dir::Union{String,Nothing}=nothing, 
-    save_trials::Bool=false,
-    tables::Bool=true,
-    drop_discontinuities::Bool=false,
-    save_md::Bool=false)
+    gas::Union{Symbol, Nothing} = nothing,
+    trials::Int = 10000,
+    perturbation_years::Vector{Int} = _default_perturbation_years,
+    discount_rates::Vector{Float64} = _default_discount_rates, 
+    domestic::Bool = false,
+    output_dir::Union{String, Nothing} = nothing, 
+    save_trials::Bool = false,
+    tables::Bool = true,
+    drop_discontinuities::Bool = false,
+    save_md::Bool = false)
 
     # Check the gas
     if gas === nothing
@@ -131,6 +137,12 @@ function run_scc_mcs(model::model_choice;
         push!(payload, discontinuity_mismatch)
     end
 
+    # For each run, this array will store whether there is a discrepency between the base and marginal models triggering the discontinuity damages in different timesteps
+    if model == PAGE
+        discontinuity_mismatch = Array{Bool, 4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
+        push!(payload, discontinuity_mismatch)
+    end
+
     # Make an array to hold all calculated scc values
     SCC_values = Array{Float64,4}(undef, trials, length(perturbation_years), length(scenarios), length(discount_rates))
     if domestic 
@@ -195,7 +207,7 @@ function run_scc_mcs(model::model_choice;
         end
 
         # reset perturbation years to all user requested years, unless model is PAGE, for which this is done below
-    if model != PAGE
+        if model != PAGE
             perturbation_years = all_years
         end
     end
@@ -218,7 +230,7 @@ function run_scc_mcs(model::model_choice;
         # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
         write_scc_values(discontinuity_mismatch, disc_dir, perturbation_years, discount_rates)
 
-        disc_sum = dropdims(sum(discontinuity_mismatch, dims=(1, 3)), dims=(1, 3)) # summary table of how many occured (rows are perturbation years, columns are discount rates)
+        disc_sum = dropdims(sum(discontinuity_mismatch, dims=(1,3)), dims=(1,3)) # summary table of how many occured (rows are perturbation years, columns are discount rates)
         writedlm(joinpath(disc_dir, "discontinuity_summary.csv"), disc_sum, ',') 
     end
 

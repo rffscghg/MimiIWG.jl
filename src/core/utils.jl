@@ -61,7 +61,7 @@ function make_percentile_tables(output_dir, gas, discount_rates, perturbation_ye
                     disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, fn), ',')[2:end, idx])
                     d = d[map(!, disc_idx)]    
                 end
-                filter!(x -> !isnan(x), d)
+                filter!(x->!isnan(x), d)
                 values = [pct == :avg ? Int(round(mean(d))) : Int(round(quantile(d, pct))) for pct in pcts]
                 write(f, "$scenario,", join(values, ","), "\n")
             end 
@@ -90,7 +90,7 @@ function make_stderror_tables(output_dir, gas, discount_rates, perturbation_year
                     disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, fn), ',')[2:end, idx])
                     d = d[map(!, disc_idx)]    
                 end
-                filter!(x -> !isnan(x), d)
+                filter!(x->!isnan(x), d)
                 write(f, "$scenario, $(round(mean(d), digits=2)), $(round(sem(d), digits=2)) \n")
             end 
         end
@@ -113,17 +113,17 @@ function make_summary_table(output_dir, gas, discount_rates, perturbation_years,
     data[2:end, 1] = perturbation_years
 
     for (j, dr) in enumerate(discount_rates)
-        vals = Matrix{Union{Missing,Float64}}(undef, 0, length(perturbation_years))
+        vals = Matrix{Union{Missing, Float64}}(undef, 0, length(perturbation_years))
         for scenario in scenarios
-            curr_vals = convert(Array{Union{Missing,Float64}}, readdlm(joinpath(scc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
+            curr_vals = convert(Array{Union{Missing, Float64}}, readdlm(joinpath(scc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
             if drop_discontinuities
                 disc_idx = convert(Array{Bool}, readdlm(joinpath(disc_dir, "$(string(scenario)) $dr.csv"), ',')[2:end, :])
                 curr_vals[disc_idx] .= missing
             end
             vals = vcat(vals, curr_vals)
         end
-        data[2:end, j + 1] = mapslices(x -> mean(skipmissing(x)), vals, dims=1)[:]
-        data[2:end, j + 1 + length(discount_rates)] = [quantile(skipmissing(vals[2:end, y]), .95) for y in 1:length(perturbation_years)]
+        data[2:end, j+1] = mapslices(x -> mean(skipmissing(x)), vals, dims=1)[:]
+        data[2:end, j+1+length(discount_rates)] = [quantile(skipmissing(vals[2:end, y]), .95) for y in 1:length(perturbation_years)]
     end
 
     table = joinpath(tables, "Summary Table.csv")

@@ -36,7 +36,7 @@ function get_page_model(scenario_choice::Union{scenario_choice,Nothing}=nothing)
 
     # Update all parameter values (and their timesteps) from the iwg parameters
     for (k, v) in _page_iwg_params
-        if Symbol(k) in keys(Mimi.external_params(m))
+        if Symbol(k) in keys(Mimi.model_params(m))
             if size(v) == (10, 8) || size(v) == (10,)
                 update_param!(m, Symbol(k), v)
             else
@@ -346,11 +346,12 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
 
         # Marginal emissions model
         md = marginal.mi.md 
-        update_param!(md, :marginal_emissions_growth, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
+        model_param_name = Mimi.get_model_param_name(md,  :marginal_emissions, :marginal_emissions_growth) # TEMPORARY until we can use the new update_param! method
+        update_param!(md, model_param_name, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
     else
         scenario_num = base[:IWGScenarioChoice, :scenario_num]
         forcing_shock = _get_page_forcing_shock(scenario_num, gas, emissionyear)
-        update_param!(marginal.mi.md, :add, forcing_shock)
+        update_param!(marginal.mi.md, :add, forcing_shock) # :add is a shared parameter since it is called with set_param! above
     end
     
     return nothing

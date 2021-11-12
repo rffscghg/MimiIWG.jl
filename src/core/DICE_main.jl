@@ -218,7 +218,7 @@ function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
         end 
 
         set_param!(m, :co2_pulse, :add, addem)
-        connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the external parameter (exogenous emissions)
+        connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the model parameter (exogenous emissions)
         connect_param!(m, :co2cycle => :E, :co2_pulse => :output)
 
     elseif gas in [:CH4, :N2O]
@@ -226,7 +226,7 @@ function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
         if year === nothing
             f_delta = zeros(length(dice_years))
         else
-            scenario_num = Mimi.external_param(m, :scenario_num).value
+            scenario_num = Mimi.model_param(m, :scenario_num).value
             f_delta = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
         end
     
