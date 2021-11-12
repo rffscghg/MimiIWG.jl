@@ -13,7 +13,8 @@ using MimiPAGE2009
 using StatsBase
 using XLSX: readxlsx
 using CSVFiles
-using DataFrames, Query
+using DataFrames
+using Query
 using Statistics
 
 export DICE, FUND, PAGE, # export the enumerated model_choice options
