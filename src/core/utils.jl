@@ -9,17 +9,17 @@ end
 
 
 # helper function for connecting a list of (compname, paramname) pairs all to the same source pair
-function connect_all!(m::Model, comps::Vector{Pair{Symbol,Symbol}}, src::Pair{Symbol,Symbol})
+function connect_all!(m::Model, comps::Vector{Pair{Symbol, Symbol}}, src::Pair{Symbol, Symbol})
     for dest in comps 
         connect_param!(m, dest, src)
     end
 end
     
-# helper function for connecting a list of compnames all to the same source pair. The parameter name in all the comps must be the same as in the src pair.
-function connect_all!(m::Model, comps::Vector{Symbol}, src::Pair{Symbol,Symbol})
+#helper function for connecting a list of compnames all to the same source pair. The parameter name in all the comps must be the same as in the src pair.
+function connect_all!(m::Model, comps::Vector{Symbol}, src::Pair{Symbol, Symbol})
     src_comp, param = src
     for comp in comps 
-        connect_param!(m, comp => param, src_comp => param)
+        connect_param!(m, comp=>param, src_comp=>param)
     end
 end
 
@@ -51,7 +51,7 @@ function make_percentile_tables(output_dir, gas, discount_rates, perturbation_ye
     pcts = [.01, .05, .1, .25, .5, :avg, .75, .90, .95, .99]
 
     for dr in discount_rates, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SC-$gas Percentiles - $(dr * 100)%.csv")
+        table = joinpath(tables, "$year SC-$gas Percentiles - $(dr*100)%.csv")
         open(table, "w") do f 
             write(f, "Scenario,1st,5th,10th,25th,50th,Avg,75th,90th,95th,99th\n")
             for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
@@ -80,7 +80,7 @@ function make_stderror_tables(output_dir, gas, discount_rates, perturbation_year
     results = readdir(scc_dir)      # all saved SCC output files
 
     for dr in discount_rates, (idx, year) in enumerate(perturbation_years)
-        table = joinpath(tables, "$year SC-$gas Std Errors - $(dr * 100)%.csv")
+        table = joinpath(tables, "$year SC-$gas Std Errors - $(dr*100)%.csv")
         open(table, "w") do f 
             write(f, "Scenario,Mean,SE\n")
             for fn in filter(x -> endswith(x, "$dr.csv"), results)  # Get the results files for this discount rate
@@ -108,8 +108,8 @@ function make_summary_table(output_dir, gas, discount_rates, perturbation_years,
 
     results = readdir(scc_dir)      # all saved SCC output files
 
-    data = Array{Any,2}(undef, length(perturbation_years) + 1, 2 * length(discount_rates) + 1)
-    data[1, :] = ["Year", ["$(r * 100)% Average" for r in discount_rates]..., ["High Impact (95th Pct at $(r * 100)%)" for r in discount_rates]...]
+    data = Array{Any, 2}(undef, length(perturbation_years)+1, 2*length(discount_rates)+1)
+    data[1, :] = ["Year", ["$(r*100)% Average" for r in discount_rates]..., ["High Impact (95th Pct at $(r*100)%)" for r in discount_rates]...]
     data[2:end, 1] = perturbation_years
 
     for (j, dr) in enumerate(discount_rates)

@@ -158,14 +158,14 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
 
         damages2 = marginal[:impactaggregation, :loss] ./ marginal[:socioeconomic, :income] .* base[:socioeconomic, :income]
         marginaldamages = (damages2 .- damages1) * 1e-7
-        global_marginaldamages = sum(marginaldamages, dims=2)    # sum across regions
+        global_marginaldamages = sum(marginaldamages, dims = 2)    # sum across regions
 
         function _compute_scc(pyear, marginaldamages, rates)
             scc = zeros(length(rates))
             p_idx = MimiFUND.getindexfromyear(pyear)
             
             for (i, rate) in enumerate(rates)
-                discount_factor = [(1 / (1 + rate))^(t - p_idx) for t in p_idx:final]
+                discount_factor = [(1/(1 + rate)) ^ (t - p_idx) for t in p_idx:final]
                 scc[i] = sum(marginaldamages[p_idx:final] .* discount_factor)
             end
             return scc 
