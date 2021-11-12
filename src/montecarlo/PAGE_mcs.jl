@@ -216,8 +216,8 @@ function page_scenario_func(mcs::SimulationInstance, tup::Tuple)
     base, marginal = mcs.models
     update_param!(base, :scenario_num, scenario_num)
     update_param!(marginal, :scenario_num, scenario_num)
-    update_param!(base, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
-    update_param!(marginal, :ptp_timepreference, rate*100)  # update the pure rate of time preference for this scenario's discount rate
+    update_param!(base, :ptp_timepreference, rate * 100)  # update the pure rate of time preference for this scenario's discount rate
+    update_param!(marginal, :ptp_timepreference, rate * 100)  # update the pure rate of time preference for this scenario's discount rate
 
     Mimi.build!(base)
     Mimi.build!(marginal)
@@ -237,7 +237,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
         td_base_domestic = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region
     end
     EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
-    UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)    
+    UDFT_base = DF .* (base[:EquityWeighting, :cons_percap_consumption][:, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]).^(-EMUC)    
 
     for (j, pyear) in enumerate(perturbation_years)
         idx = getpageindexfromyear(pyear)
@@ -264,7 +264,7 @@ function page_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
             marg_impacts = marginal[:EquityWeighting, :wit_equityweightedimpact]
         
             marg_damages = (marg_impacts .- base_impacts) ./ (gas == :CO2 ? 100_000 : 1) .* page_inflator
-            md_values[j, scenario_num, :, trialnum] = sum(marg_damages, dims = 2) # sum along second dimension to get global values
+            md_values[j, scenario_num, :, trialnum] = sum(marg_damages, dims=2) # sum along second dimension to get global values
         end
     end 
 end
