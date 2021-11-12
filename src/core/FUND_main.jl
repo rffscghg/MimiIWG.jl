@@ -138,9 +138,6 @@ function add_fund_marginal_emissions!(m::Model, year = nothing; gas, pulse_size 
         elseif gas == :N2O
             connect_param!(m, :emissionspulse, :input, :IWGScenarioChoice, :globn2o)
             connect_param!(m, :climaten2ocycle, :globn2o, :emissionspulse, :output)
-        elseif gas == :SF6
-            connect_param!(m, :emissionspulse, :input, :emissions, :globsf6)
-            connect_param!(m, :climatesf6cycle, :globsf6, :emissionspulse, :output)
         else
             error("Unknown gas: $gas")
         end
