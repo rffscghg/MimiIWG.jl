@@ -102,7 +102,7 @@ function _get_page_forcing_shock(scenario_num::Int, gas::Symbol, year::Int)
     elseif gas == :N2O
         return convert(Vector{Float64}, _page_n2o_shocks[year][:, col_num])
     elseif gas in HFC_list # see constants.jl for HFC_list
-        _get_hfc_marginal_forcings(gas, year)
+        return _get_hfc_marginal_forcings(gas, year)
     else
         error("Unknown gas :$gas.")
     end
