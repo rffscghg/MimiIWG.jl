@@ -37,8 +37,7 @@ function _get_marginal_gas_model(scenario_num::Int, gas::Symbol, year::Int)
 end
 
 ## HFC forcings
-hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
-# hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
+hfc_rf_data = joinpath(@__DIR__, "..", "..", "data", "ghg_radiative_forcing_perturbation.csv")
 hfc_rf_df = DataFrame(load(hfc_rf_data))
 
 # using CSVFiles, DataFrames, Query, Statistics

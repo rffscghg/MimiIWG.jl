@@ -62,8 +62,7 @@ end
 
 ## For HFC implementation
 # Read in rfs from file
-hfc_rf_data = joinpath(@__DIR__, "..\\..\\data\\ghg_radiative_forcing_perturbation.csv")
-# hfc_rf_data = joinpath(@__DIR__, "data\\ghg_radiative_forcing_perturbation.csv")
+hfc_rf_data = joinpath(@__DIR__, "..", "..", "data", "ghg_radiative_forcing_perturbation.csv")
 hfc_rf_df = DataFrame(load(hfc_rf_data))
 
 # Create new component -- see MimiFUND new_marginaldamages.jl
