@@ -1,8 +1,8 @@
 
 _dice_simdef = @defsim begin
     # Use the Roe and Baker distribution defined in a file, read in in src/core/constants.jl
-    t2xco2 = EmpiricalDistribution(RB_cs_values, RB_cs_probs)
-    # save(t2xco2)
+    climatedynamics.t2xco2 = EmpiricalDistribution(RB_cs_values, RB_cs_probs)
+    # save(climatedynamics.t2xco2)
 end 
 
 """
