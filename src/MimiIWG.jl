@@ -4,14 +4,13 @@ module MimiIWG
 using Dates
 using DelimitedFiles
 using Distributions
-using ExcelReaders
 using Interpolations
 using Mimi
 using MimiDICE2010
 using MimiFUND          # pinned to version 3.8 in package registration Compat.toml
 using MimiPAGE2009      
 using StatsBase
-using XLSX: readxlsx
+using XLSX: readxlsx, readdata
 using CSVFiles
 using DataFrames
 using Query

@@ -1,12 +1,11 @@
 
 ## CH4 and N2O emissions
-other_GHG_input_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/CH4N20emissions_annualversion.xls")
-f = openxl(other_GHG_input_file)
+other_GHG_input_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/CH4N20emissions_annualversion.xlsm")
 
-dice_annual_years = Vector{Int}(readxl(f, "CH4annual!A2:A301")[:])
+dice_annual_years = Vector{Int}(readdata(other_GHG_input_file, "CH4annual!A2:A301")[:])
 decades = dice_annual_years[1]:10:dice_annual_years[end]-9
-E_CH4A_all = readxl(f, "CH4annual!B2:F301")
-E_N2OA_all = readxl(f, "N20annual!B2:F301")
+E_CH4A_all = readdata(other_GHG_input_file, "CH4annual!B2:F301")
+E_N2OA_all = readdata(other_GHG_input_file, "N20annual!B2:F301")
 
 function _get_marginal_gas_model(scenario_num::Int, gas::Symbol, year::Int)
 
