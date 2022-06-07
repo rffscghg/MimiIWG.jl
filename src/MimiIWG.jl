@@ -10,7 +10,7 @@ using MimiDICE2010
 using MimiFUND          # pinned to version 3.8 in package registration Compat.toml
 using MimiPAGE2009      
 using StatsBase
-using XLSX: readxlsx, openxlsx
+using XLSX: readxlsx, openxlsx, readdata
 using CSVFiles
 using DataFrames
 using Query

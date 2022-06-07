@@ -14,8 +14,8 @@ const _default_perturbation_years = collect(2010:5:2050)             # years for
 
 # Roe and Baker climate sensitivity distribution file
 const RBdistribution_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xlsx")
-const RB_cs_values = Vector{Float64}(readxlsx(RBdistribution_file, "Sheet1!A2:A1001")[:, 1])  # cs values
-const RB_cs_probs  = Vector{Float64}(readxlsx(RBdistribution_file, "Sheet1!B2:B1001")[:, 1])  # probabilities associated with those values
+const RB_cs_values = Vector{Float64}(readdata(RBdistribution_file, "Sheet1!A2:A1001")[:, 1])  # cs values
+const RB_cs_probs  = Vector{Float64}(readdata(RBdistribution_file, "Sheet1!B2:B1001")[:, 1])  # probabilities associated with those values
 
 #------------------------------------------------------------------------------
 # 1. DICE specific constants

@@ -1,6 +1,6 @@
 using MimiIWG
 using Test
-using XLSX: readxlsx, openxlsx
+using XLSX: readxlsx, openxlsx, readdata
 
 @testset "DICE" begin
 
