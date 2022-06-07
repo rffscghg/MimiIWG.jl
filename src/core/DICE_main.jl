@@ -94,15 +94,15 @@ function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 
     # All scenario data
     scenario_file = scenario_file === nothing ? iwg_dice_input_file : scenario_file
-    f = openxl(scenario_file)
+    f = openxlsx(scenario_file)
 
-    Y = readxl(f, "GDP!B2:F32")[:, idx] * dice_inflate      # GDP
-    N = readxl(f, "Population!B2:F32")[:, idx]              # Population
-    E = readxl(f, "IndustrialCO2!B2:F32")[:, idx]           # Industrial CO2
-    El = readxl(f, "LandCO2!B2:F32")[:, idx]                # Land CO2 
-    Fex1 = readxl(f, "EMFnonCO2forcings!B2:F32")[:, idx]    # EMF non-CO2 forcings
-    Fex2 = readxl(f, "OthernonCO2forcings!B2:B32")          # Other non-CO2 forcings
-    Fex = Fex1 + Fex2                                       # All non-CO2 forcings
+    Y       = f["GDP!B2:F32"][:, idx] * dice_inflate    # GDP
+    N       = f["Population!B2:F32"][:, idx]            # Population
+    E       = f["IndustrialCO2!B2:F32"][:, idx]         # Industrial CO2
+    El      = f["LandCO2!B2:F32"][:, idx]               # Land CO2 
+    Fex1    = f["EMFnonCO2forcings!B2:F32"][:, idx]     # EMF non-CO2 forcings
+    Fex2    = f["OthernonCO2forcings!B2:B32"]           # Other non-CO2 forcings
+    Fex     = Fex1 + Fex2                               # All non-CO2 forcings
 
     # Use 2010 EMF value for dice period 2005-2015 etc. (need additional zeros to run past the 31st timestep)
     Y = [Y[2:end]; zeros(nyears - length(Y[2:end]))]
