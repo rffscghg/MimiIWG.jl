@@ -161,6 +161,8 @@ function fund_post_trial_func(mcs::SimulationInstance, trialnum::Int, ntimesteps
     # Loop through perturbation years for scc calculations, and only re-run the marginal model
     for (i, pyear) in enumerate(perturbation_years)
 
+        p_idx = MimiFUND.getindexfromyear(pyear)
+
         perturb_fund_marginal_emissions!(marginal, pyear, gas=gas)
         run(marginal; ntimesteps=ntimesteps)
 
