@@ -95,15 +95,15 @@ function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 
     # All scenario data
     scenario_file = scenario_file === nothing ? iwg_dice_input_file : scenario_file
-    f = openxl(scenario_file)
+    f = openxlsx(scenario_file)
 
-    Y = readxl(f, "GDP!B2:F32")[:, idx] * dice_inflate      # GDP
-    N = readxl(f, "Population!B2:F32")[:, idx]              # Population
-    E = readxl(f, "IndustrialCO2!B2:F32")[:, idx]           # Industrial CO2
-    El = readxl(f, "LandCO2!B2:F32")[:, idx]                # Land CO2 
-    Fex1 = readxl(f, "EMFnonCO2forcings!B2:F32")[:, idx]    # EMF non-CO2 forcings
-    Fex2 = readxl(f, "OthernonCO2forcings!B2:B32")          # Other non-CO2 forcings
-    Fex = Fex1 + Fex2                                       # All non-CO2 forcings
+    Y       = f["GDP!B2:F32"][:, idx] * dice_inflate    # GDP
+    N       = f["Population!B2:F32"][:, idx]            # Population
+    E       = f["IndustrialCO2!B2:F32"][:, idx]         # Industrial CO2
+    El      = f["LandCO2!B2:F32"][:, idx]               # Land CO2 
+    Fex1    = f["EMFnonCO2forcings!B2:F32"][:, idx]     # EMF non-CO2 forcings
+    Fex2    = f["OthernonCO2forcings!B2:B32"]           # Other non-CO2 forcings
+    Fex     = Fex1 + Fex2                               # All non-CO2 forcings
 
     # Use 2010 EMF value for dice period 2005-2015 etc. (need additional zeros to run past the 31st timestep)
     Y = [Y[2:end]; zeros(nyears - length(Y[2:end]))]
@@ -228,7 +228,7 @@ function add_dice_marginal_emissions!(m::Model, gas::Symbol, year=nothing)
         connect_param!(m, :co2_pulse => :input, :IWGScenarioChoice => :E)    # connect to the model parameter (exogenous emissions)
         connect_param!(m, :co2cycle => :E, :co2_pulse => :output)
 
-    elseif gas in [:CH4, :N2O]
+    elseif (gas in [:CH4, :N2O] || gas in HFC_list)
 
         if year === nothing
             f_delta = zeros(length(dice_years))
@@ -261,11 +261,11 @@ function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::In
         pulse.data[:] .= 0.0    # pulse is a timestep array, need to access the data array to reset to zero because pulse[:] .= 0 doesn't work even though it doesn't error
         pulse.data[year_idx] = 1.0
 
-    elseif gas in [:CH4, :N2O]
+    elseif (gas in [:CH4, :N2O] || gas in HFC_list)
         ci = Mimi.compinstance(marginal, :additional_forcing)
         pulse = Mimi.get_param_value(ci, :add)
         scenario_num = marginal[:IWGScenarioChoice, :scenario_num]
-        pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...]
+        pulse.data[:] = [_get_dice_additional_forcing(scenario_num, gas, year)..., zeros(11)...] # produces 41 element array (last 11 elements are zeros)
 
     else
         error("Unknown gas :$gas.")

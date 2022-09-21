@@ -13,15 +13,15 @@ const _default_discount_rates = [.025, .03, .05]            # used by MCS
 const _default_perturbation_years = collect(2010:5:2050)             # years for which to calculate the SCC
 
 # Roe and Baker climate sensitivity distribution file
-const RBdistribution_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls")
-const RB_cs_values = Vector{Float64}(readxl(RBdistribution_file, "Sheet1!A2:A1001")[:, 1])  # cs values
-const RB_cs_probs  = Vector{Float64}(readxl(RBdistribution_file, "Sheet1!B2:B1001")[:, 1])  # probabilities associated with those values
+const RBdistribution_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xlsx")
+const RB_cs_values = Vector{Float64}(readdata(RBdistribution_file, "Sheet1!A2:A1001")[:, 1])  # cs values
+const RB_cs_probs  = Vector{Float64}(readdata(RBdistribution_file, "Sheet1!B2:B1001")[:, 1])  # probabilities associated with those values
 
 #------------------------------------------------------------------------------
 # 1. DICE specific constants
 #------------------------------------------------------------------------------
 
-const iwg_dice_input_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/SCC_input_EMFscenarios.xls")
+const iwg_dice_input_file = joinpath(@__DIR__, "../../data/IWG_inputs/DICE/SCC_input_EMFscenarios.xlsx")
 
 const dice_ts = 10                              # length of DICE timestep: 10 years
 const dice_years = 2005:dice_ts:2405   # time dimension of the IWG's DICE model
@@ -47,7 +47,7 @@ const dice_scenario_specific_params = [
 function _dice_normalization_factor(gas::Symbol)
     if gas == :CO2
         return 1e3 * 12/44  # Convert from trillion$/GtC/yr to $/tCO2/yr
-    elseif gas in [:CH4, :N2O]
+    elseif (gas in [:CH4, :N2O] || gas in HFC_list)
         return 1e6  # Convert from trillion$/MtX/yr to $/tX/yr
     else
         error("Unknown gas :$gas.")
@@ -111,6 +111,8 @@ const iwg_page_input_file = joinpath(iwg_page_datadir, "PAGE09 v1.7 SCCO2 (550 A
 const page_years = [2010, 2020, 2030, 2040, 2050, 2060, 2080, 2100, 2200, 2300]
 
 const page_inflator = 1.225784    # 2000 USD => 2007 USD
+
+const HFC_list = [:HFC23, :HFC32, :HFC125, :HFC134a, :HFC143a, :HFC152a, :HFC227ea, :HFC236fa, :HFC245fa, :HFC365mfc, :HFC4310mee]
 
 # list of parameters that are different between the IWG scenarios
 const page_scenario_specific_params = [

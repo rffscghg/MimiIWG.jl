@@ -107,7 +107,7 @@ To view the shape of this distribution, try the following:
 using Plots
 plot(MimiIWG.RB_cs_values, MimiIWG.RB_cs_probs)
 ```
-These data are also available as an Excel file in "MimiIWG/data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xls".
+These data are also available as an Excel file in "MimiIWG/data/IWG_inputs/DICE/2009 11 23 Calibrated R&B distribution.xlsx".
 
 ### DICE notes
 
