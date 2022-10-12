@@ -183,6 +183,7 @@ function run_scc_mcs(model::model_choice;
 
     # Run the simulation
     sim_results = run(mcs, models, trials;
+        results_output_dir = joinpath(output_dir, "mcs_data"), 
         trials_output_filename = trials_filepath, 
         ntimesteps = nyears,    
         scenario_func = scenario_func, 
