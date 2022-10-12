@@ -10,7 +10,8 @@
                 tables::Bool = true,
                 drop_discontinuities::Bool = false,
                 save_md::Bool = false,
-                save_list::Vector = []
+                save_list::Vector = [],
+                save_scc::Bool = true
                 )
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
@@ -39,6 +40,9 @@ the simulation will be saved in a subdirectory "output/marginal_damages".
 
 The `save_list` indicates which parameters and variables to save for each monte carlo simulation 
 trial, entered as a vector of Tuples (:component_name, :variable_name (or :parameter_name)).
+
+If `save_scc` equals `true` (default) then the sccs will be saved in the output_dir. If `false`, they will not. 
+This option is useful if the user wishes to only save other model outputs such as those in `save_list`.  
 """
 function run_scc_mcs(model::model_choice; 
     gas::Union{Symbol, Nothing} = nothing,
@@ -51,7 +55,8 @@ function run_scc_mcs(model::model_choice;
     tables::Bool = true,
     drop_discontinuities::Bool = false,
     save_md::Bool = false,
-    save_list::Vector = []
+    save_list::Vector = [],
+    save_scc::Bool = true
     )
 
     # Check the gas
@@ -249,11 +254,13 @@ function run_scc_mcs(model::model_choice;
     end
 
     # Save the SCC values
-    scc_dir = joinpath(output_dir, "SC-$gas/")
-    write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
-    if domestic 
-        model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
-        write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic=true)
+    if save_scc
+        scc_dir = joinpath(output_dir, "SC-$gas/")
+        write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
+        if domestic 
+            model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
+            write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic = true)
+        end
     end
 
     # Build the stats tables
