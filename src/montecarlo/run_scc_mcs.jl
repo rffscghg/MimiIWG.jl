@@ -9,7 +9,9 @@
                 save_trials::Bool = false,
                 tables::Bool = true,
                 drop_discontinuities::Bool = false,
-                save_md::Bool = false)
+                save_md::Bool = false,
+                save_list::Vector = []
+                )
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
@@ -34,6 +36,9 @@ in different timesteps in the base and perturbed models) will not contribute to 
 
 If `save_md` equals `true`, then global undiscounted marginal damages from each run of 
 the simulation will be saved in a subdirectory "output/marginal_damages".
+
+The `save_list` indicates which parameters and variables to save for each monte carlo simulation 
+trial, entered as a vector of Tuples (:component_name, :variable_name (or :parameter_name)).
 """
 function run_scc_mcs(model::model_choice; 
     gas::Union{Symbol, Nothing} = nothing,
@@ -45,7 +50,9 @@ function run_scc_mcs(model::model_choice;
     save_trials::Bool = false,
     tables::Bool = true,
     drop_discontinuities::Bool = false,
-    save_md::Bool = false)
+    save_md::Bool = false,
+    save_list::Vector = []
+    )
 
     # Check the gas
     if gas === nothing
@@ -62,6 +69,9 @@ function run_scc_mcs(model::model_choice;
     # Get specific simulation arguments for the provided model choice
     if model == DICE 
         mcs = get_dice_mcs()
+        for i in save_list
+            Mimi.add_save!(mcs, i)
+        end
         scenario_args = [:scenario => scenarios, :rate => discount_rates]
 
         last_idx = _default_horizon - 2005 + 1
@@ -84,6 +94,9 @@ function run_scc_mcs(model::model_choice;
     elseif model == FUND 
 
         mcs = get_fund_mcs()
+        for i in save_list
+            Mimi.add_save!(mcs, i)
+        end
         scenario_args = [:scenarios => scenarios] 
         
         nyears = length(fund_years)
@@ -103,6 +116,9 @@ function run_scc_mcs(model::model_choice;
     elseif model == PAGE 
 
         mcs = get_page_mcs()
+        for i in save_list
+            Mimi.add_save!(mcs, i)
+        end
         scenario_args = [:scenarios => scenarios, :discount_rates => discount_rates]
 
         # Precompute discount factors for each of the discount rates
