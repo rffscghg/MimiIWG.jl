@@ -245,12 +245,15 @@ function run_scc_mcs(model::model_choice;
             perturbation_years = all_years 
         end
 
-        disc_dir = joinpath(output_dir, "discontinuity_mismatch/")
-        # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
-        write_scc_values(discontinuity_mismatch, disc_dir, perturbation_years, discount_rates)
+        if save_scc
+            disc_dir = joinpath(output_dir, "discontinuity_mismatch/")
+            # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
+            write_scc_values(discontinuity_mismatch, disc_dir, perturbation_years, discount_rates)
 
-        disc_sum = dropdims(sum(discontinuity_mismatch, dims=(1,3)), dims=(1,3)) # summary table of how many occured (rows are perturbation years, columns are discount rates)
-        writedlm(joinpath(disc_dir, "discontinuity_summary.csv"), disc_sum, ',') 
+            disc_sum = dropdims(sum(discontinuity_mismatch, dims=(1,3)), dims=(1,3)) # summary table of how many occured (rows are perturbation years, columns are discount rates)
+            writedlm(joinpath(disc_dir, "discontinuity_summary.csv"), disc_sum, ',') 
+        end 
+
     end
 
     # Save the SCC values
