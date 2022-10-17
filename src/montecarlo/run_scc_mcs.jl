@@ -9,7 +9,10 @@
                 save_trials::Bool = false,
                 tables::Bool = true,
                 drop_discontinuities::Bool = false,
-                save_md::Bool = false)
+                save_md::Bool = false,
+                save_list::Vector = [],
+                save_scc::Bool = true
+                )
 
 Run the Monte Carlo simulation used by the IWG for calculating a distribution of SCC values for the 
 Mimi model `model_choice` and the specified number of trials `trials`. The SCC is calculated for all 
@@ -34,6 +37,12 @@ in different timesteps in the base and perturbed models) will not contribute to 
 
 If `save_md` equals `true`, then global undiscounted marginal damages from each run of 
 the simulation will be saved in a subdirectory "output/marginal_damages".
+
+The `save_list` indicates which parameters and variables to save for each monte carlo simulation 
+trial, entered as a vector of Tuples (:component_name, :variable_name (or :parameter_name)).
+
+If `save_scc` equals `true` (default) then the sccs will be saved in the output_dir. If `false`, they will not. 
+This option is useful if the user wishes to only save other model outputs such as those in `save_list`.  
 """
 function run_scc_mcs(model::model_choice; 
     gas::Union{Symbol, Nothing} = nothing,
@@ -45,7 +54,10 @@ function run_scc_mcs(model::model_choice;
     save_trials::Bool = false,
     tables::Bool = true,
     drop_discontinuities::Bool = false,
-    save_md::Bool = false)
+    save_md::Bool = false,
+    save_list::Vector = [],
+    save_scc::Bool = true
+    )
 
     # Check the gas
     if gas === nothing
@@ -62,6 +74,9 @@ function run_scc_mcs(model::model_choice;
     # Get specific simulation arguments for the provided model choice
     if model == DICE 
         mcs = get_dice_mcs()
+        for i in save_list
+            Mimi.add_save!(mcs, i)
+        end
         scenario_args = [:scenario => scenarios, :rate => discount_rates]
 
         last_idx = _default_horizon - 2005 + 1
@@ -84,6 +99,9 @@ function run_scc_mcs(model::model_choice;
     elseif model == FUND 
 
         mcs = get_fund_mcs()
+        for i in save_list
+            Mimi.add_save!(mcs, i)
+        end
         scenario_args = [:scenarios => scenarios] 
         
         nyears = length(fund_years)
@@ -103,6 +121,9 @@ function run_scc_mcs(model::model_choice;
     elseif model == PAGE 
 
         mcs = get_page_mcs()
+        for i in save_list
+            Mimi.add_save!(mcs, i)
+        end
         scenario_args = [:scenarios => scenarios, :discount_rates => discount_rates]
 
         # Precompute discount factors for each of the discount rates
@@ -167,6 +188,7 @@ function run_scc_mcs(model::model_choice;
 
     # Run the simulation
     sim_results = run(mcs, models, trials;
+        results_output_dir = joinpath(output_dir, "scc_mcs_model_data"), 
         trials_output_filename = trials_filepath, 
         ntimesteps = nyears,    
         scenario_func = scenario_func, 
@@ -223,20 +245,25 @@ function run_scc_mcs(model::model_choice;
             perturbation_years = all_years 
         end
 
-        disc_dir = joinpath(output_dir, "discontinuity_mismatch/")
-        # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
-        write_scc_values(discontinuity_mismatch, disc_dir, perturbation_years, discount_rates)
+        if save_scc
+            disc_dir = joinpath(output_dir, "discontinuity_mismatch/")
+            # has the same 4-D array structure as the SCC values, so can use the same function to save them to files
+            write_scc_values(discontinuity_mismatch, disc_dir, perturbation_years, discount_rates)
 
-        disc_sum = dropdims(sum(discontinuity_mismatch, dims=(1,3)), dims=(1,3)) # summary table of how many occured (rows are perturbation years, columns are discount rates)
-        writedlm(joinpath(disc_dir, "discontinuity_summary.csv"), disc_sum, ',') 
+            disc_sum = dropdims(sum(discontinuity_mismatch, dims=(1,3)), dims=(1,3)) # summary table of how many occured (rows are perturbation years, columns are discount rates)
+            writedlm(joinpath(disc_dir, "discontinuity_summary.csv"), disc_sum, ',') 
+        end 
+
     end
 
     # Save the SCC values
-    scc_dir = joinpath(output_dir, "SC-$gas/")
-    write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
-    if domestic 
-        model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
-        write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic=true)
+    if save_scc
+        scc_dir = joinpath(output_dir, "SC-$gas/")
+        write_scc_values(SCC_values, scc_dir, perturbation_years, discount_rates)
+        if domestic 
+            model == DICE ? SCC_values_domestic = SCC_values .* 0.1 : nothing   # domestic values for DICE calculated as 10% of global values
+            write_scc_values(SCC_values_domestic, scc_dir, perturbation_years, discount_rates, domestic = true)
+        end
     end
 
     # Build the stats tables
