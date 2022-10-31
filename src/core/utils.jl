@@ -169,7 +169,8 @@ end
 function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64, 
                             consumption::Array{T2, N}, pop::Array{T3, N}, 
                             years::Vector; normalization_region = nothing, 
-                            equity_weighting::Bool = false) where {T1, T2, T3, N}
+                            equity_weighting::Bool = false,
+                            offset::Int = 0) where {T1, T2, T3, N}
 
     df = get_discount_factors(prtp, eta, consumption, pop, years; normalization_region = normalization_region, equity_weighting = equity_weighting) 
     
@@ -181,7 +182,7 @@ function get_discrete_scc(md::Array{T1, N}, prtp::Float64, eta::Float64,
     # df = map(x -> isinf(x) ? 0 : x, df)
     inf_flag = sum(isinf.(df)) > 0
 
-    npv_md = sum((md .* df), dims = 2) # calculate net present value of marginal damages in each year
+    npv_md = sum((md .* df)[offset+1:end], dims = 2) # calculate net present value of marginal damages in each year
     scc = sum(npv_md)    # sum damages to the scc
 
     return inf_flag ? Inf : scc

@@ -379,7 +379,16 @@ end
 """
 function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
                             prtp::Float64; eta::Float64 = 0., domestic::Bool=false, 
-                            equity_weighting::Bool = false, normalization_region::Union{Int, Nothing} = nothing)
+                            equity_weighting::Bool = false, normalization_region::Union{Int, Nothing} = nothing,
+                            reference_year::Union{Int, Nothing} = nothing)
+
+    if isnothing(reference_year)
+        reference_year = year
+    else
+        if reference_year > year || !(reference_year in page_years)
+            error("Reference year must be before emissions year and in page years.")
+        end
+    end
 
     # check equity weighting cases, the only options are (1) only domestic (2) only 
     # equity weighting (3) equity weighting with a normalization region
@@ -419,16 +428,21 @@ function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
         md = md[:, 2]
     end
 
-    p_idx = getpageindexfromyear(year)
+    p_idx = getpageindexfromyear(year) # index of the year of the pulse
+    r_idx = getpageindexfromyear(reference_year) # index of the reference year for the discount rate (default to same as p_idx)
+    
+    offset = p_idx - r_idx # difference between the p_idx and r_idx for summing to NPV
 
-    scc = get_discrete_scc(md[p_idx:end, :], 
+
+    scc = get_discrete_scc(md[r_idx:end, :], 
                             prtp, 
                             eta, 
-                            consumption[p_idx:length(page_years), :], 
-                            pop[p_idx:length(page_years), :], 
-                            page_years[p_idx:end], 
+                            consumption[r_idx:length(page_years), :], 
+                            pop[r_idx:length(page_years), :], 
+                            page_years[r_idx:end], 
                             equity_weighting = equity_weighting, 
-                            normalization_region = normalization_region
+                            normalization_region = normalization_region,
+                            offset = offset
                         )
     scc = scc * page_inflator
 

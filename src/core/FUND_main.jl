@@ -246,8 +246,18 @@ end
 function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
                         prtp::Float64; eta::Float64 = 0., domestic::Bool = false, 
                         equity_weighting::Bool = false, income_normalized::Bool = true,
-                        normalization_region::Union{Int, Nothing} = nothing)
+                        normalization_region::Union{Int, Nothing} = nothing,
+                        reference_year::Union{Int, Nothing} = nothing
+                    )
 
+    if isnothing(reference_year)
+        reference_year = year
+    else
+        if reference_year > year
+            error("Reference year must be before emissions year")
+        end
+    end
+    
     # check equity weighting cases, the only options are (1) only domestic (2) only 
     # equity weighting (3) equity weighting with a normalizationr egion
     if equity_weighting && domestic
@@ -261,7 +271,11 @@ function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
         error("$year is not a valid year; can only calculate SCC within the model's time index $fund_years.")
     end
 
-    p_idx = MimiFUND.getindexfromyear(year)
+    p_idx = MimiFUND.getindexfromyear(year) # index of the year of the pulse
+    r_idx = MimiFUND.getindexfromyear(reference_year) # index of the reference year for the discount rate (default to same as p_idx)
+    
+    offset = p_idx - r_idx # difference between the p_idx and r_idx for summing to NPV
+
     nyears = length(fund_years)
 
     md, m = get_fund_marginaldamages(scenario_choice, gas, year, 0., income_normalized = income_normalized, regional = true, return_m = true)
@@ -274,14 +288,15 @@ function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
         md = md[:, 1]
     end
 
-    return get_discrete_scc(md[p_idx:end, :], 
+    return get_discrete_scc(md[r_idx:end, :], 
                             prtp, 
                             eta, 
-                            consumption[p_idx:nyears, :], 
-                            pop[p_idx:nyears, :], 
-                            collect(fund_years[p_idx:end]), 
+                            consumption[r_idx:nyears, :], 
+                            pop[r_idx:nyears, :], 
+                            collect(fund_years[r_idx:end]), 
                             equity_weighting = equity_weighting, 
-                            normalization_region = normalization_region
+                            normalization_region = normalization_region, 
+                            offset = offset
                         )
     
 end
