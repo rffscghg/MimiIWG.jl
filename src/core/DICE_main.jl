@@ -288,7 +288,17 @@ end
 function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
                             prtp::Float64; eta::Float64 = 0., domestic::Bool = false,
                             equity_weighting::Bool = false, horizon::Int = _default_horizon,
-                            normalization_region::Union{Int, Nothing} = nothing)
+                            normalization_region::Union{Int, Nothing} = nothing,
+                            reference_year::Union{Int, Nothing} = nothing
+    )
+
+    if isnothing(reference_year)
+        reference_year = year
+    else
+        if reference_year > year || !(reference_year in dice_years)
+            error("Reference year must be before emissions year and in dice years.")
+        end
+    end
 
     # check equity weighting cases, the only options are (1) only domestic (2) only 
     # equity weighting (3) equity weighting with a normalizationr egion
@@ -315,7 +325,11 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     end
 
     annual_years = dice_years[1]:horizon
-    p_idx = findfirst(isequal(year), annual_years)
+    p_idx = findfirst(isequal(year), annual_years) # index of the year of the pulse
+    r_idx = findfirst(isequal(reference_year), annual_years) # index of the reference year for the discount rate (default to same as p_idx)
+    
+    offset = p_idx - r_idx # difference between the p_idx and r_idx for summing to NPV
+
 
     md, base = get_dice_marginaldamages(scenario_choice, gas, year, 0., return_m = true)   # Get undiscounted marginal damages
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
@@ -333,7 +347,8 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
                             annual_pop[p_idx:length(annual_md)], 
                             collect(annual_years[p_idx:end]), 
                             equity_weighting = equity_weighting, 
-                            normalization_region = normalization_region
+                            normalization_region = normalization_region,
+                            offset = offset
                         )
 
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year

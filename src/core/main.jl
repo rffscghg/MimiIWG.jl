@@ -134,7 +134,8 @@ function compute_scc(model::model_choice, scenario_choice::scenario_choice = not
     domestic::Bool = false,
     discount::Union{Float64, Nothing} = nothing,
     equity_weighting::Bool = false, 
-    normalization_region::Union{Int, Nothing} = nothing
+    normalization_region::Union{Int, Nothing} = nothing,
+    reference_year::Union{Int, Nothing} = nothing
     )
 
     # check equity weighting cases, the only options are (1) only domestic (2) only 
@@ -175,11 +176,11 @@ function compute_scc(model::model_choice, scenario_choice::scenario_choice = not
 
     # dispatch on provided model choice
     if model == DICE 
-        return compute_dice_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region)
+        return compute_dice_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region, reference_year = reference_year)
     elseif model == FUND 
-        return compute_fund_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region)
+        return compute_fund_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region, reference_year = reference_year)
     elseif model == PAGE 
-        return compute_page_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region)
+        return compute_page_scc(scenario_choice, gas, year, prtp, eta = eta, domestic = domestic, equity_weighting = equity_weighting, normalization_region = normalization_region, reference_year = reference_year)
     else
         error()
     end
