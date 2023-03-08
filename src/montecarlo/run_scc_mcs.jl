@@ -185,10 +185,11 @@ function run_scc_mcs(model::model_choice;
 
     # Generate trials 
     trials_filepath = save_trials ? joinpath(output_dir, "trials.csv") : nothing 
+    results_filepath = save_list ? joinpath(output_dir, "scc_mcs_model_data") : nothing
 
     # Run the simulation
     sim_results = run(mcs, models, trials;
-        results_output_dir = joinpath(output_dir, "scc_mcs_model_data"), 
+        results_output_dir = results_filepath, 
         trials_output_filename = trials_filepath, 
         ntimesteps = nyears,    
         scenario_func = scenario_func, 
