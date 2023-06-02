@@ -22,13 +22,13 @@ scn2o = MimiIWG.compute_scc(PAGE, USG1, gas=:N2O, year=2020, discount=0.025)
 
 # DICE
 # (will run for all 3 IWG discount rates if none are specified) 
-MimiIWG.run_scc_mcs(DICE, gas=:CH4, trials=10_000, perturbation_years=[2020], output_dir = "output")
-MimiIWG.run_scc_mcs(DICE, gas=:N2O, trials=10_000, perturbation_years=[2020], output_dir = "output")
+MimiIWG.run_scc_mcs(DICE, gas=:CH4, trials=10_000, perturbation_years=[2020], output_dir="output")
+MimiIWG.run_scc_mcs(DICE, gas=:N2O, trials=10_000, perturbation_years=[2020], output_dir="output")
 
 # FUND
-MimiIWG.run_scc_mcs(FUND, gas=:CH4, trials=10_000, perturbation_years=[2020], output_dir = "output")
-MimiIWG.run_scc_mcs(FUND, gas=:N2O, trials=10_000, perturbation_years=[2020], output_dir = "output")
+MimiIWG.run_scc_mcs(FUND, gas=:CH4, trials=10_000, perturbation_years=[2020], output_dir="output")
+MimiIWG.run_scc_mcs(FUND, gas=:N2O, trials=10_000, perturbation_years=[2020], output_dir="output")
 
 # PAGE
-MimiIWG.run_scc_mcs(PAGE, gas=:CH4, trials=10_000, perturbation_years=[2020],  output_dir = "output")
-MimiIWG.run_scc_mcs(PAGE, gas=:N2O, trials=10_000, perturbation_years=[2020],  output_dir = "output")
+MimiIWG.run_scc_mcs(PAGE, gas=:CH4, trials=10_000, perturbation_years=[2020], output_dir="output")
+MimiIWG.run_scc_mcs(PAGE, gas=:N2O, trials=10_000, perturbation_years=[2020], output_dir="output")

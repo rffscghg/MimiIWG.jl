@@ -60,12 +60,12 @@ function _get_dice_additional_forcing(scenario_num::Int, gas::Symbol, year::Int)
             @collect DataFrame
         end
 
-        years_index = collect(year:(year + 300 - 1)) # 300 is the number of years for which we have the rf data for each HFC
+        years_index = collect(year:(year+300-1)) # 300 is the number of years for which we have the rf data for each HFC
         insertcols!(HFC_df, 2, :years_index => years_index)
 
         pulse_years = collect(year:10:2304)
         dice_years = collect(2005:10:2295)
-        average_rf = DataFrame(year = dice_years, avg_rf = zeros(length(dice_years)))
+        average_rf = DataFrame(year=dice_years, avg_rf=zeros(length(dice_years)))
 
         # Select rfs for the pulse year and 9-year period after each pulse (e.g., 2005 pulse is average of 2005-2014)
         for i in 1:length(pulse_years)

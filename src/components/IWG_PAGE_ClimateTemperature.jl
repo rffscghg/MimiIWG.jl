@@ -39,8 +39,8 @@
     rtl_g_landtemperature = Variable(index=[time], unit="degreeC")
     rto_g_oceantemperature = Variable(index=[time], unit="degreeC")
     rt_g_globaltemperature = Variable(index=[time], unit="degreeC")
-    rt_g0_baseglobaltemp=Variable(unit="degreeC") #needed for feedback in CO2 cycle component
-    rtl_g0_baselandtemp=Variable(unit="degreeC") #needed for feedback in CH4 and N2O cycles
+    rt_g0_baseglobaltemp = Variable(unit="degreeC") #needed for feedback in CO2 cycle component
+    rtl_g0_baselandtemp = Variable(unit="degreeC") #needed for feedback in CH4 and N2O cycles
 
 
     function init(p, v, d)
@@ -52,7 +52,7 @@
         v.rtl_g0_baselandtemp = sum(p.rtl_0_realizedtemperature' .* p.area') / sum(p.area)
 
         # initial ocean and global temperatures
-        rto_g0_baseoceantemp = v.rtl_g0_baselandtemp/ p.rlo_ratiolandocean
+        rto_g0_baseoceantemp = v.rtl_g0_baselandtemp / p.rlo_ratiolandocean
         v.rt_g0_baseglobaltemp = ocean_prop_ortion * rto_g0_baseoceantemp + (1. - ocean_prop_ortion) * v.rtl_g0_baselandtemp
     end
 
@@ -103,7 +103,7 @@
         v.rt_g_globaltemperature[tt] = ocean_prop_ortion * v.rto_g_oceantemperature[tt] + (1. - ocean_prop_ortion) * v.rtl_g_landtemperature[tt]
     end
 
-end 
+end
 
 # function randomizeclimatetemperature(model::Model)
 #     update_external_parameter(model, :rlo_ratiolandocean, rand(TriangularDist(1.2, 1.6, 1.4)))

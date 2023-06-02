@@ -1,7 +1,7 @@
 """
 Returns the IWG version of the PAGE 2009 model for the specified scenario.
 """
-function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing)
+function get_page_model(scenario_choice::Union{scenario_choice,Nothing}=nothing)
 
     # Get original version of PAGE
     m = MimiPAGE2009.get_model()
@@ -18,10 +18,10 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     # so it SHOULD NOT be replicated or altered. In the future we should return 
     # and change page_years to start in 2009 with a missing value and then 
     # continue to 2300. [Lisa Rennels May 4 2021]
-    
+
     dim = Mimi.Dimension(page_years)
     Mimi._propagate_time_dim!(m.md, dim)
-    Mimi._propagate_first_last!(m.md; first = page_years[1], last = page_years[end])
+    Mimi._propagate_first_last!(m.md; first=page_years[1], last=page_years[end])
 
     # Replace modified components
     replace!(m, :GDP => IWG_PAGE_GDP)
@@ -48,12 +48,12 @@ function get_page_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
     end
 
     # Add the scenario choice component and load all the scenario parameter values
-    add_comp!(m, IWG_PAGE_ScenarioChoice, :IWGScenarioChoice; before = :co2emissions)
+    add_comp!(m, IWG_PAGE_ScenarioChoice, :IWGScenarioChoice; before=:co2emissions)
     set_dimension!(m, :scenarios, length(scenarios))
     set_page_all_scenario_params!(m)
-    
+
     # Set the scenario number if a scenario_choice was provided
-    if scenario_choice !== nothing 
+    if scenario_choice !== nothing
         scenario_num = Int(scenario_choice)
         set_param!(m, :IWGScenarioChoice, :scenario_num, scenario_num)
     end
@@ -67,7 +67,7 @@ set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, 
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
 """
-function set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Bool = true)
+function set_page_all_scenario_params!(m::Model; comp_name::Symbol=:IWGScenarioChoice, connect::Bool=true)
 
     # reshape each array of values into one array for each param, then set that value in the model
     for (k, v) in _page_scenario_params_dict
@@ -79,7 +79,7 @@ function set_page_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenari
         set_param!(m, comp_name, Symbol("$(k)_all"), param)
     end
 
-    if connect 
+    if connect
         connect_param!(m, :GDP => :gdp_0, comp_name => :gdp_0)
         connect_all!(m, [:GDP, :EquityWeighting], comp_name => :grw_gdpgrowthrate)
         connect_all!(m, [:Discontinuity, :MarketDamages, :NonMarketDamages, :SLRDamages], comp_name => :GDP_per_cap_focus_0_FocusRegionEU)
@@ -100,7 +100,7 @@ end
 function load_page_iwg_params()
 
     # Build a dictionary of values to return
-    p = Dict{Any, Any}()
+    p = Dict{Any,Any}()
 
     # Specify the scenario parameter file path
     fn = joinpath(iwg_page_input_file)
@@ -142,15 +142,15 @@ function load_page_iwg_params()
     p["f0_LGforcingbase"] = xf["Base data"]["E21:E21"][1]           # LG base forcing
 
     # stimulation, air fractions, and halflifes
-    p["stim_CH4emissionfeedback"] = xf["Base data"]["C15:C15"][1] 
-    p["air_CH4fractioninatm"] = xf["Base data"]["C17:C17"][1] 
-    p["res_CH4atmlifetime"] = xf["Base data"]["C18:C18"][1] 
-    p["stim_N2Oemissionfeedback"] = xf["Base data"]["D15:D15"][1] 
-    p["air_N2Ofractioninatm"] = xf["Base data"]["D17:D17"][1] 
-    p["res_N2Oatmlifetime"] = xf["Base data"]["D18:D18"][1] 
-    p["stim_LGemissionfeedback"] = xf["Base data"]["E15:E15"][1] 
-    p["air_LGfractioninatm"] = xf["Base data"]["E17:E17"][1] 
-    p["res_LGatmlifetime"] = xf["Base data"]["E18:E18"][1] 
+    p["stim_CH4emissionfeedback"] = xf["Base data"]["C15:C15"][1]
+    p["air_CH4fractioninatm"] = xf["Base data"]["C17:C17"][1]
+    p["res_CH4atmlifetime"] = xf["Base data"]["C18:C18"][1]
+    p["stim_N2Oemissionfeedback"] = xf["Base data"]["D15:D15"][1]
+    p["air_N2Ofractioninatm"] = xf["Base data"]["D17:D17"][1]
+    p["res_N2Oatmlifetime"] = xf["Base data"]["D18:D18"][1]
+    p["stim_LGemissionfeedback"] = xf["Base data"]["E15:E15"][1]
+    p["air_LGfractioninatm"] = xf["Base data"]["E17:E17"][1]
+    p["res_LGatmlifetime"] = xf["Base data"]["E18:E18"][1]
 
     # concentrations
     p["stay_fractionCO2emissionsinatm"] = xf["Base data"]["B16:B16"][1] / 100 # percent of CO2 emissions that stay in the air
@@ -180,11 +180,11 @@ function load_page_iwg_params()
     #------------------------
 
     p["sens_climatesensitivity"] = xf["Library data"]["C18:C18"][1]  # Climate sensitivity
-    
+
     # p["cutbacks_at_neg_cost_grw"] = xf["Library data"]["C123:C123"][1]    # cutbacks at negative cost growth rate (??)
     # p["max_cutbacks_grw"] = xf["Library data"]["C125:C125"][1]        # Maximum cutbacks growth rate
     # p["most_neg_grw"] = xf["Library data"]["C127:C127"][1]           # Most negative cost growth rate
-    
+
     # p["automult_autonomoustechchange"] = xf["Library data"]["C134:C134"][1]        # Autonomous technical change
     # p["auto"] = xf["Library data"]["C134:C134"][1]        # Autonomous technical change
 
@@ -208,7 +208,7 @@ function load_page_iwg_params()
     p["AbatementCostsCH4_er_emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B14:K21"]')    # CH4 emissions growth
     p["AbatementCostsN2O_er_emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B23:K30"]')    # N2O emissions growth
     p["AbatementCostsLin_er_emissionsgrowth"] = convert(Array{Float64}, xf["Policy A"]["B32:K39"]')    # Lin emissions growth
-    
+
     p["pse_sulphatevsbase"] = convert(Array{Float64}, xf["Policy A"]["B41:K48"]')
 
     return p
@@ -221,25 +221,25 @@ function getpageindexfromyear(year)
     i = findfirst(isequal(year), page_years)
     if i == 0
         error("Invalid PAGE year: $year.")
-    end 
-    return i 
+    end
+    return i
 end
 
 function getpageindexlengthfromyear(year)
     if year == 2010
         return 10
-    end 
-    
+    end
+
     i = findfirst(page_years, year)
     if i == 0
         error("Invalid PAGE year: $year.")
-    end 
+    end
 
     return page_years[i] - page_years[i-1]
 end
 
 function getperiodlength(year)
-    if year==2010
+    if year == 2010
         return 10
     end
 
@@ -259,7 +259,7 @@ end
 function get_page_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool=false)
 
     # Check the emissions year
-    if ! (year in page_years)
+    if !(year in page_years)
         error("$year not a valid year; must be in model's time index $page_years.")
     end
 
@@ -278,13 +278,13 @@ function get_page_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
     if regional
         return marg_damages
     else
-        return sum(marg_damages, dims = 2) # sum along second dimension to get global values
+        return sum(marg_damages, dims=2) # sum along second dimension to get global values
     end
 end
 
-@defcomp PAGE_marginal_CO2_emissions begin 
-    er_CO2emissionsgrowth = Variable(index=[time,region], unit = "%")
-    marginal_emissions_growth = Parameter(index=[time,region], unit = "%", default = zeros(10,8))
+@defcomp PAGE_marginal_CO2_emissions begin
+    er_CO2emissionsgrowth = Variable(index=[time, region], unit="%")
+    marginal_emissions_growth = Parameter(index=[time, region], unit="%", default=zeros(10, 8))
     function run_timestep(p, v, d, t)
         if is_first(t)
             v.er_CO2emissionsgrowth[:, :] = p.marginal_emissions_growth[:, :]
@@ -292,7 +292,7 @@ end
     end
 end
 
-function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Nothing}=nothing, gas::Symbol=:CO2, year=nothing, discount=nothing)
+function get_marginal_page_models(; scenario_choice::Union{scenario_choice,Nothing}=nothing, gas::Symbol=:CO2, year=nothing, discount=nothing)
 
     base = get_page_model(scenario_choice)
     if discount != nothing
@@ -301,11 +301,11 @@ function get_marginal_page_models(; scenario_choice::Union{scenario_choice, Noth
     marginal = Model(base)
 
     if gas == :CO2
-        add_comp!(marginal, PAGE_marginal_CO2_emissions, :marginal_emissions; before = :co2emissions)
+        add_comp!(marginal, PAGE_marginal_CO2_emissions, :marginal_emissions; before=:co2emissions)
         connect_param!(marginal, :co2emissions => :er_CO2emissionsgrowth, :marginal_emissions => :er_CO2emissionsgrowth)
         connect_param!(marginal, :AbatementCostsCO2 => :er_emissionsgrowth, :marginal_emissions => :er_CO2emissionsgrowth)
     elseif (gas in [:CH4, :N2O] || gas in HFC_list)
-        add_comp!(marginal, Mimi.adder, :marginal_forcing; before = :TotalForcing)
+        add_comp!(marginal, Mimi.adder, :marginal_forcing; before=:TotalForcing)
         set_param!(marginal, :marginal_forcing, :add, zeros(10))
         connect_param!(marginal, :marginal_forcing => :input, :IWGScenarioChoice => :exf_excessforcing, ignoreunits=true)
         connect_param!(marginal, :TotalForcing => :exf_excessforcing, :marginal_forcing => :output, ignoreunits=true)
@@ -331,22 +331,22 @@ end
 function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Symbol, emissionyear::Int)
 
     if gas == :CO2
-        i = getpageindexfromyear(emissionyear) 
+        i = getpageindexfromyear(emissionyear)
 
         # Base model
         base_glob0_emissions = base[:co2cycle, :e0_globalCO2emissions]
         er_co2_a = base[:co2emissions, :er_CO2emissionsgrowth][i, :]
-        e_co2_g = base[:co2emissions, :e_globalCO2emissions]    
+        e_co2_g = base[:co2emissions, :e_globalCO2emissions]
 
         # Calculate pulse 
         ER_SCC = 100 * -100000 / (base_glob0_emissions * getperiodlength(emissionyear))
-        pulse = er_co2_a - ER_SCC * (er_co2_a/100) * (base_glob0_emissions / e_co2_g[i])
+        pulse = er_co2_a - ER_SCC * (er_co2_a / 100) * (base_glob0_emissions / e_co2_g[i])
         marginal_emissions_growth = copy(base[:co2emissions, :er_CO2emissionsgrowth])
         marginal_emissions_growth[i, :] = pulse
 
         # Marginal emissions model
-        md = marginal.mi.md 
-        model_param_name = Mimi.get_model_param_name(md,  :marginal_emissions, :marginal_emissions_growth) # TEMPORARY until we can use the new update_param! method
+        md = marginal.mi.md
+        model_param_name = Mimi.get_model_param_name(md, :marginal_emissions, :marginal_emissions_growth) # TEMPORARY until we can use the new update_param! method
         update_param!(md, model_param_name, marginal_emissions_growth)    # this updates the marginal_emissions_growth parameter that both :er_CO2emissionsgrowth and :AbatementCostsCO2_er_emissionsgrowth are connected to from the PAGE_marginal_emissions comp
     else
         scenario_num = base[:IWGScenarioChoice, :scenario_num]
@@ -355,7 +355,7 @@ function perturb_marginal_page_emissions!(base::Model, marginal::Model, gas::Sym
     end
 
     return nothing
-end  
+end
 
 """
     Returns the Social Cost of the specified `gas` for a given `year` and `discount` rate from one deterministic run of the IWG-PAGE model.
@@ -369,37 +369,37 @@ function compute_page_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
     _need_to_interpolate = false
     if year < page_years[1] || year > page_years[end]
         error("$year is not a valid year; can only calculate SCC within the model's time index $page_years.")
-    elseif ! (year in page_years)
+    elseif !(year in page_years)
         _need_to_interpolate = true         # boolean flag for if the desired SCC years is in the middle of the model's time index
         mid_year = year     # save the desired SCC year to interpolate later
-        year = filter(x-> x < year, page_years)[end]    # use the last year less than the desired year as the lower scc value
+        year = filter(x -> x < year, page_years)[end]    # use the last year less than the desired year as the lower scc value
     end
 
     base, marginal = get_marginal_page_models(scenario_choice=scenario_choice, gas=gas, year=year, discount=discount)
-    DF = [(1 / (1 + discount)) ^ (Y - 2000) for Y in page_years]
+    DF = [(1 / (1 + discount))^(Y - 2000) for Y in page_years]
     idx = getpageindexfromyear(year)
 
     if domestic
         td_base = sum(base[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])  # US is the second region; then sum across time
         td_marginal = sum(marginal[:EquityWeighting, :addt_equityweightedimpact_discountedaggregated][:, 2])
-    else 
+    else
         td_base = base[:EquityWeighting, :td_totaldiscountedimpacts]
-        td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts] 
+        td_marginal = marginal[:EquityWeighting, :td_totaldiscountedimpacts]
     end
-        
+
     EMUC = base[:EquityWeighting, :emuc_utilityconvexity]
     UDFT_base = DF[idx] * (base[:EquityWeighting, :cons_percap_consumption][idx, 1] / base[:EquityWeighting, :cons_percap_consumption_0][1]) .^ (-EMUC)
-    UDFT_marginal = DF[idx] * (marginal[:EquityWeighting, :cons_percap_consumption][idx, 1] / base[:EquityWeighting, :cons_percap_consumption_0][idx]) ^ (-EMUC)
+    UDFT_marginal = DF[idx] * (marginal[:EquityWeighting, :cons_percap_consumption][idx, 1] / base[:EquityWeighting, :cons_percap_consumption_0][idx])^(-EMUC)
 
     pulse_size = gas == :CO2 ? 100_000 : 1
     scc = ((td_marginal / UDFT_marginal) - (td_base / UDFT_base)) / pulse_size * page_inflator
 
     if _need_to_interpolate     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
-        next_year = page_years[findfirst(page_years, year) + 1] 
+        next_year = page_years[findfirst(page_years, year)+1]
         upper_scc = compute_page_scc(scenario_choice, next_year, discount, domestic=domestic)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
-    end 
+    end
 
     return scc
 end
