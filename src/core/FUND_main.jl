@@ -29,7 +29,8 @@ function get_fund_model(scenario_choice::Union{scenario_choice, Nothing} = nothi
 end 
 
 """
-set_fund_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
+    Sets FUND scenario parameters with the arguments:
+    
     m: a Mimi model with and IWGScenarioChoice component
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
@@ -184,10 +185,9 @@ end
     User must specify an IWG scenario `scenario_choice`.
     If no `gas` is sepcified, will run for an emissions pulse of CO2.
     If no `year` is specified, will run for an emissions pulse in $_default_year.
-    If no `discount` is specified, will return undiscounted marginal damages.
     The `income_normalized` parameter indicates whether the damages from the marginal run should be scaled by the ratio of incomes between the base and marginal runs. 
 """
-function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true)
+function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; regional::Bool = false, income_normalized::Bool=true, return_m::Bool = false)
 
     # Check the emissions year
     if ! (year in fund_years)
@@ -219,33 +219,84 @@ function get_fund_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
         DF = zeros(nyears)
         first = MimiFUND.getindexfromyear(year)
         DF[first:end] = [1/(1+discount)^t for t in 0:(nyears-first)]
-        return diff[1:nyears, :] .* DF
+        md = diff[1:nyears, :] .* DF
     else
-        return diff[1:nyears, :]
+        md = diff[1:nyears, :]
     end
 
+    if return_m
+        return (md, base)
+    else
+        return md
+    end
 end
 
 """
-    Returns the Social Cost of `gas` for a given `year` and `discount` rate from one deterministic run of the IWG-FUND model.
-    User must specify an IWG scenario `scenario_choice`.
+    Returns the Social Cost of `gas` for a given `year` and discount rate determined 
+    by `eta` and `prtp` from one deterministic run of the IWG-FUND model. User must 
+    specify an IWG scenario `scenario_choice`.
+
+    Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
+    which default to `false` and `nothing`.
+
     If no `gas` is specified, will retrun the SC-CO2.
     If no `year` is specified, will return SC for $_default_year.
-    If no `discount` is specified, will return SC for a discount rate of $(_default_discount * 100)%.
+    If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
 """
-function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; domestic::Bool = false, income_normalized::Bool = true)
+function compute_fund_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
+                        prtp::Float64; eta::Float64 = 0., domestic::Bool = false, 
+                        equity_weighting::Bool = false, income_normalized::Bool = true,
+                        normalization_region::Union{Int, Nothing} = nothing,
+                        reference_year::Union{Int, Nothing} = nothing
+                    )
 
+    if isnothing(reference_year)
+        reference_year = year
+    else
+        if reference_year > year
+            error("Reference year must be before emissions year")
+        end
+    end
+    
+    # check equity weighting cases, the only options are (1) only domestic (2) only 
+    # equity weighting (3) equity weighting with a normalizationr egion
+    if equity_weighting && domestic
+        error("Cannot set both domestic and equity weighting to true at the same time for SCC computation")
+    elseif !(equity_weighting) && !isnothing(normalization_region)
+        error("Cannot set a normalization region if equity weighting is false for SCC computation.")
+    end
+    
     # Check the emissions year
     if !(year in fund_years)
         error("$year is not a valid year; can only calculate SCC within the model's time index $fund_years.")
     end
 
+    p_idx = MimiFUND.getindexfromyear(year) # index of the year of the pulse
+    r_idx = MimiFUND.getindexfromyear(reference_year) # index of the reference year for the discount rate (default to same as p_idx)
+    
+    offset = p_idx - r_idx # difference between the p_idx and r_idx for summing to NPV
+
+    nyears = length(fund_years)
+
+    md, m = get_fund_marginaldamages(scenario_choice, gas, year, 0., income_normalized = income_normalized, regional = true, return_m = true)
+    consumption = m[:socioeconomic, :consumption]
+    pop = m[:socioeconomic, :population]
+
     if domestic
-        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized = income_normalized, regional = true)[:, 1]
-    else
-        md = get_fund_marginaldamages(scenario_choice, gas, year, discount, income_normalized = income_normalized, regional = false)
+        consumption = consumption[:, 1] # US is the first region
+        pop = pop[:, 1]
+        md = md[:, 1]
     end
-        
-    scc = sum(md[MimiFUND.getindexfromyear(year):end])    # Sum from the perturbation year to the end (avoid the NaN in the first timestep)
-    return scc 
+
+    return get_discrete_scc(md[r_idx:end, :], 
+                            prtp, 
+                            eta, 
+                            consumption[r_idx:nyears, :], 
+                            pop[r_idx:nyears, :], 
+                            collect(fund_years[r_idx:end]), 
+                            equity_weighting = equity_weighting, 
+                            normalization_region = normalization_region, 
+                            offset = offset
+                        )
+    
 end

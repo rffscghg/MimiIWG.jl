@@ -14,9 +14,8 @@ function get_dice_mcs()
 end
 
 function dice_scenario_func(mcs::SimulationInstance, tup::Tuple)
-    (scenario_choice, rate) = tup
+    (scenario_choice, ) = tup
     global scenario_num = Int(scenario_choice)
-    global rate_num = findfirst(isequal(rate), Mimi.payload(mcs)[1])
 
     base, marginal = mcs.models
     update_param!(base, :scenario_num, scenario_num)
@@ -27,35 +26,51 @@ function dice_scenario_func(mcs::SimulationInstance, tup::Tuple)
 end
 
 function dice_post_trial_func(mcs::SimulationInstance, trial::Int, ntimesteps::Int, tup::Tuple)
-    (name, rate) = tup
+    
+    #access the models
     (base, marginal) = mcs.models
 
-    rates, discount_factors, model_years, horizon, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
+    # unpack payload object
+    prtp_rates, eta_levels, model_years, equity_weighting, normalization_region, horizon, gas, perturbation_years, SCC_values, SCC_values_domestic, md_values = Mimi.payload(mcs)
 
-    last_idx = horizon - 2005 + 1
-    annual_years = dice_years[1]:horizon
+    # get needed values to calculate the scc that will not vary with perturbation year
+    annual_years = model_years[1]:horizon
+    
+    base_consumption = base[:neteconomy, :C] # Consumption (trillions 2005 US dollars per year)
+    annual_base_consumption = reduce(vcat, map(x -> fill(x, 10), base_consumption))
+    
+    pop = base[:neteconomy, :l] ./ 1000 # Level of population and labor (originally in millions, convert to billions)
+    annual_pop = reduce(vcat, map(x -> fill(x, 10), pop))
 
-    base_consump = base[:neteconomy, :C] 
+    for (i, pyear) in enumerate(perturbation_years)
 
-    DF = discount_factors[rate]             # access the pre-computed discount factor for this rate
-
-    for (idx, pyear) in enumerate(perturbation_years)
+        p_idx = findfirst(isequal(pyear), annual_years)
 
         # Call the marginal model with perturbations in each year
         perturb_dice_marginal_emissions!(marginal, gas, pyear)
         run(marginal)
 
         marg_consump = marginal[:neteconomy, :C]
-        md = (base_consump .- marg_consump)  * _dice_normalization_factor(gas)     # get marginal damages
+        md = (base_consumption .- marg_consump)  * _dice_normalization_factor(gas)     # get marginal damages
         annual_md = _interpolate(md, dice_years, annual_years)  # get annual marginal damages
 
-        first_idx = pyear - 2005 + 1
+        # save marginal damages
+        if !isnothing(md_values)
+            md_values[i, scenario_num, :, trial] = md
+        end
 
-        scc = sum(annual_md[first_idx:last_idx] ./ DF[1:horizon - pyear + 1])
-
-        SCC_values[trial, idx, scenario_num, rate_num] = scc 
-        if md_values !== nothing
-            md_values[idx, scenario_num, :, trial] = md
+        for (j, _prtp) in enumerate(prtp_rates), (k, _eta) in enumerate(eta_levels)
+            scc = MimiIWG.get_discrete_scc(annual_md[p_idx:end], 
+                                _prtp, 
+                                _eta, 
+                                annual_base_consumption[p_idx:length(annual_md)], 
+                                annual_pop[p_idx:length(annual_md)], 
+                                collect(annual_years[p_idx:end]), 
+                                equity_weighting = equity_weighting, 
+                                normalization_region = normalization_region
+                            )
+        
+            SCC_values[trial, i, scenario_num, j, k] = scc
         end
     end
 end

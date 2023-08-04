@@ -7,5 +7,6 @@ using MimiIWG
 include("test_DICE.jl")
 include("test_FUND.jl")
 include("test_PAGE.jl")
+include("test_mcs.jl")
 
 end

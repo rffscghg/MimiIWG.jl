@@ -40,15 +40,17 @@ julia> using MimiIWG
 The main available functions are:
 - `MimiIWG.get_model(MODEL_NAME, SCENARIO_CHOICE)`
 
-- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0)`
+- `MimiIWG.get_marginaldamages(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0., regional=false)`
 
-- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, discount=0.03)`
+- `MimiIWG.compute_scc(MODEL_NAME, SCENARIO_CHOICE, gas=:CO2, year=2020, prtp=0.03, eta = 0., domestic=false)`
 
-- `MimiIWG.run_scc_mcs(MODEL_NAME; gas=:CO2, trials=10000, perturbation_years=collect(2010:5:2050), discount_rates=[0.025, 0.03, 0.05])`
+- `MimiIWG.run_scc_mcs(MODEL_NAME; gas=:CO2, trials=10000, perturbation_years=collect(2010:5:2050), prtp_rates=[0.025, 0.03, 0.05], eta_levels = [0.], domestic = false)`
 
 The choices for `MODEL_NAME` are `DICE`, `FUND`, or `PAGE`.
 
 The choices for `SCENARIO_CHOICE` are `USG1`, `USG2`, `USG3`, `USG4`, and `USG5`. For more information on these scenarios, see below.
+
+For discount rates, the `discount` parameter in `MimiIWG.get_marginaldamages` indicates a constant discount rate, while `prtp` and `eta` in `MimiIWG.compute_scc` parameterize a Ramsey discount rating scheme (ie. a `discount` used for the former is equivalent to a `prtp` = `discount` combined with `eta` = 0. for the latter). You may optionally use the `equity_weighting` and `normalization_region` keyword arguments to indicate equity weighting preferences.
 
 For example uses of the code, see ["examples/example.ipynb"](https://github.com/rffscghg/MimiIWG.jl/blob/master/examples/example.ipynb).
 
@@ -62,14 +64,18 @@ MimiIWG.run_scc_mcs(MODEL,
     gas = :CO2,     # specify the greenhouse gas. :CH4 and :N2O also available
     trials = 10000,  # the size of the Monte Carlo sample
     perturbation_years = collect(2010:5:2050),  # List of years for which to calculate the SCC
-    discount_rates = [0.025, 0.03, 0.05],  # List of discount rates for which to calculate the SCC
-    domestic = false,  # Whether to calculate domestic SCC values, in addition to calculating the global values
+    prtp_rates = [0.025, 0.03, 0.05],  # List of pure rate of time preference rates for which to calculate the SCC
+    eta_levels = [0.], # List of inequity aversion levels for which to calculate the SCC
+    domestic = false,  # Whether to calculate domestic SCC values, in addition to calculating the global values,
+    equity_weighting = false, # Whether to use equity weighting for calculation of the SCC
+    normalization_region = nothing, # Region by which to normalize for equity weighting option
     output_dir = nothing,  # Output directory. If unspecified, a directory with the following name will be created: "output/MODEL yyyy-mm-dd HH-MM-SS SC-$gas MC$trials"
     save_trials = false,   # Whether to save all of the input data sampled for each trial of the Monte Carlo Simulation. If true, values get saved to "output_dir/trials.csv"
     tables = true   # Whether to save a series of summary tables in the output folder; these include statistics such as percentiles and std errors of the SCC values.
     drop_discontinuities = false # PAGE specific see below
     save_md = false # Whether to save the global undiscounted marginal damages from each run of the simulation in a subdirectory "output/marginal_damages"
 )
+
 ```
 Note that the Monte Carlo Simulations are run across all five of the USG socioeconomics scenarios.
 

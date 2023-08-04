@@ -39,7 +39,8 @@ function get_dice_model(scenario_choice::Union{scenario_choice, Nothing}=nothing
 end 
 
 """
-set_dice_all_scenario_params!(m::Model; comp_name::Symbol = :IWGScenarioChoice, connect::Boolean = true)
+    Sets DICE scenario parameters with the arguments:
+    
     m: a Mimi model with and IWGScenarioChoice component
     comp_name: the name of the IWGScenarioChoice component in the model, defaults to :IWGScenarioChoice
     connect: whether or not to connect the outgoing variables to the other components who depend on them as parameter values
@@ -134,7 +135,7 @@ function load_dice_scenario_params(scenario_choice, scenario_file=nothing)
 end
 
 """
-    Returns a dicitonary of IWG parameters that are the same for all IWG scenarios. (Does not include scenario-specific parameters.)
+    Returns a dictionary of IWG parameters that are the same for all IWG scenarios. (Does not include scenario-specific parameters.)
 """
 function load_dice_iwg_params()
 
@@ -153,7 +154,7 @@ function load_dice_iwg_params()
     return params
 end
 
-function get_dice_marginal_model(scen::scenario_choice; gas::Symbol, year::Int)
+function get_dice_marginal_model(scen::scenario_choice; gas::Symbol = :CO2, year::Int = 2020)
     base = get_dice_model(scen)
     mm = create_marginal_model(base)
     add_dice_marginal_emissions!(mm.modified, gas, year)
@@ -163,7 +164,7 @@ end
 """
     Returns marginal damages each year from an additional ton of the specified `gas` in the specified year. 
  """
-function get_dice_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64) 
+function get_dice_marginaldamages(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; return_m::Bool = false) 
 
     # Check the emissions year
     _is_mid_year = false
@@ -191,9 +192,15 @@ function get_dice_marginaldamages(scenario_choice::scenario_choice, gas::Symbol,
         DF = zeros(nyears)
         first = findfirst(isequal(year), dice_years)
         DF[first:end] = [1/(1+discount)^t for t in 0:(nyears-first)]
-        return diff .* DF
+        md = diff .* DF
     else
-        return diff
+        md = diff
+    end
+
+    if return_m
+        return (md, mm.base)
+    else
+        return md
     end
 
 end
@@ -267,11 +274,46 @@ function perturb_dice_marginal_emissions!(marginal::Model, gas::Symbol, year::In
 end
 
 """
-    Returns the Social Cost of the specified `gas` for a given `year` and `discount` rate 
-    from one deterministic run of the IWG-DICE model for the specified scenario.
-"""
-function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, discount::Float64; domestic::Bool = false, horizon::Int = _default_horizon)
+    Returns the Social Cost of `gas` for a given `year` and discount rate determined 
+    by `eta` and `prtp` from one deterministic run of the IWG-DICE model. User must 
+    specify an IWG scenario `scenario_choice`.
 
+    Users can optionally turn on `equity_weighting` and an optional `normalization_region`, 
+    which default to `false` and `nothing`.
+
+    If no `gas` is specified, will retrun the SC-CO2.
+    If no `year` is specified, will return SC for $_default_year.
+    If no `prtp` is specified, will return SC for a prtp of $(_default_discount * 100)%.
+"""
+function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::Int, 
+                            prtp::Float64; eta::Float64 = 0., domestic::Bool = false,
+                            equity_weighting::Bool = false, horizon::Int = _default_horizon,
+                            normalization_region::Union{Int, Nothing} = nothing,
+                            reference_year::Union{Int, Nothing} = nothing
+    )
+
+    if isnothing(reference_year)
+        reference_year = year
+    else
+        if reference_year > year || !(reference_year in dice_years)
+            error("Reference year must be before emissions year and in dice years.")
+        end
+    end
+
+    # check equity weighting cases, the only options are (1) only domestic (2) only 
+    # equity weighting (3) equity weighting with a normalizationr egion
+    if equity_weighting && domestic
+        error("Cannot set both domestic and equity weighting to true at the same time for SCC computation")
+    elseif !(equity_weighting) && !isnothing(normalization_region)
+        error("Cannot set a normalization region if equity weighting is false for SCC computation.")
+    elseif equity_weighting
+        @warn("DICE is a global model, equity weighting will have no effect on SCC computation results.")
+    end
+
+    if !isnothing(normalization_region) && !(equity_weighting)
+        error("Cannot set a normalization_region if equity_weighting is false.")
+    end
+    
     # Check if the emissions year is valid, and whether or not we need to interpolate
     _is_mid_year = false
     if year < dice_years[1] || year > dice_years[end]
@@ -282,20 +324,37 @@ function compute_dice_scc(scenario_choice::scenario_choice, gas::Symbol, year::I
         year = dice_years[Int(floor((year - dice_years[1]) / dice_ts) + 1)]    # first calculate for the DICE year below the specified year
     end
 
-    md = get_dice_marginaldamages(scenario_choice, gas, year, 0.)   # Get undiscounted marginal damages
     annual_years = dice_years[1]:horizon
+    p_idx = findfirst(isequal(year), annual_years) # index of the year of the pulse
+    r_idx = findfirst(isequal(reference_year), annual_years) # index of the reference year for the discount rate (default to same as p_idx)
+    
+    offset = p_idx - r_idx # difference between the p_idx and r_idx for summing to NPV
+
+
+    md, base = get_dice_marginaldamages(scenario_choice, gas, year, 0., return_m = true)   # Get undiscounted marginal damages
     annual_md = _interpolate(md, dice_years, annual_years)   # Interpolate to annual timesteps
 
-    DF = zeros(length(annual_years)) 
-    first = findfirst(isequal(year), annual_years)
-    DF[first:end] = [1/(1+discount)^t for t in 0:(length(annual_years)-first)]
+    consumption = base[:neteconomy, :C] # Consumption (trillions 2005 US dollars per year)
+    annual_consumption = reduce(vcat, map(x -> fill(x, 10), consumption))
 
-    scc = sum(annual_md .* DF)
+    pop = base[:neteconomy, :l] ./ 1000 # Level of population and labor (originally in millions, convert to billions)
+    annual_pop = reduce(vcat, map(x -> fill(x, 10), pop)) 
+
+    scc = get_discrete_scc(annual_md[p_idx:end], 
+                            prtp, 
+                            eta, 
+                            annual_consumption[p_idx:length(annual_md)], 
+                            annual_pop[p_idx:length(annual_md)], 
+                            collect(annual_years[p_idx:end]), 
+                            equity_weighting = equity_weighting, 
+                            normalization_region = normalization_region,
+                            offset = offset
+                        )
 
     if _is_mid_year     # need to calculate SCC for next year in time index as well, then interpolate for desired year
         lower_scc = scc
         next_year = dice_years[findfirst(isequal(year), dice_years) + 1]
-        upper_scc = compute_dice_scc(scenario_choice, gas, next_year, discount, domestic = false, horizon = horizon)
+        upper_scc = compute_dice_scc(scenario_choice, gas, next_year, prtp, eta = eta, domestic = false, horizon = horizon)
         scc = _interpolate([lower_scc, upper_scc], [year, next_year], [mid_year])[1]
     end 
 

@@ -10,11 +10,17 @@ using DelimitedFiles
 
     md1 = MimiIWG.get_marginaldamages(PAGE, MimiIWG.scenarios[1])
     md2 = MimiIWG.get_marginaldamages(PAGE, MimiIWG.scenarios[1], regional = true)
+    md3 = MimiIWG.get_marginaldamages(PAGE, MimiIWG.scenarios[1], discount = 0.03)
+
+    @test sum(md2, dims = 2) ≈ md1 atol = 1e-12 # sum regional to global 
+    @test sum(md3) < sum(md1) # discount of 0. v discount of 0.03
 
     scc1 = MimiIWG.compute_scc(PAGE, MimiIWG.scenarios[1])
     scc2 = MimiIWG.compute_scc(PAGE, MimiIWG.scenarios[1], domestic = true)
-    @test scc2 < scc1
+    @test scc2 < scc1  # test global SCC is larger than domestic SCC
 
+    # Test monte carlo simulation runs without error
+    # bug: a bug in VSCode makes this crash the terminal when run line by line
     tmp_dir = joinpath(@__DIR__, "tmp")
     MimiIWG.run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir, domestic=true)
     rm(tmp_dir, recursive=true)
@@ -23,6 +29,11 @@ using DelimitedFiles
     tmp_dir = joinpath(@__DIR__, "tmp")
     MimiIWG.run_scc_mcs(PAGE, trials=2, output_dir = tmp_dir, domestic=true, drop_discontinuities = true)
     rm(tmp_dir, recursive=true)
+
+    # make sure old and new discounting keyword args work
+    scc_old = MimiIWG.compute_scc(PAGE, USG1; gas=:CO2, year=2020, discount=0.025)
+    scc_new = MimiIWG.compute_scc(PAGE, USG1; gas=:CO2, year=2020, prtp=0.025)
+    @test scc_old ≈ scc_new atol = 1e-12
 
 end
 
@@ -46,12 +57,30 @@ end
                 discount    = validation_data[line, 2]
                 iwg_scc     = validation_data[line, 3] * MimiIWG.page_inflator     # 2000$ => $2007
 
-                mimi_scc = MimiIWG.compute_scc(PAGE, scenario_convert_flip[scenario], year=year, discount=discount)
+                mimi_scc = MimiIWG.compute_scc(PAGE, scenario_convert_flip[scenario], year=year, prtp=discount)
                 # println(iwg_scc, ",", mimi_scc)
                 @test iwg_scc ≈ mimi_scc atol = _atol
             end
         end
     end 
+
+    @testset "Deterministic SCC Options" begin 
+        
+       # basic option
+       scc_base = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020)
+       # equity weighting option, and normalized by the US
+       scc_eq = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, equity_weighting = true)
+       scc_eq_norm = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta  = 1., gas = :CO2, year = 2020, normalization_region = 1, equity_weighting = true)
+       # domestic option
+       scc_dom = MimiIWG.compute_scc(PAGE, MimiIWG.USG1, prtp = 0.03, eta = 1., gas = :CO2, year = 2020, domestic = true)
+
+      @test scc_eq < scc_eq_norm
+
+       # test errors
+       @test_throws ErrorException MimiIWG.compute_scc(PAGE, MimiIWG.USG1, normalization_region = 1) # can't set norm region without equity weighitng
+       @test_throws ErrorException MimiIWG.compute_scc(PAGE, MimiIWG.USG1, equity_weighting = true, domestic = true) # can't have equity weighting with domestic
+
+    end
 
 end 
 
