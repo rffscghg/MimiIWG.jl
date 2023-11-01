@@ -8,7 +8,7 @@ using Interpolations
 using Mimi
 using MimiDICE2010
 using MimiFUND          # pinned to version 3.8 in package registration Compat.toml
-using MimiPAGE2009      
+using MimiPAGE2009
 using StatsBase
 using XLSX: readxlsx, openxlsx, readdata
 using CSVFiles
@@ -17,7 +17,7 @@ using Query
 using Statistics
 
 export DICE, FUND, PAGE, # export the enumerated model_choice options
-        USG1, USG2, USG3, USG4, USG5 # export the enumerated scenario_choice options 
+    USG1, USG2, USG3, USG4, USG5 # export the enumerated scenario_choice options 
 
 # General constants and functions
 include("core/constants.jl")
